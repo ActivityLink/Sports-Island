@@ -23,7 +23,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         #msg-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 85%; max-width: 320px; display: none; }
         #loading.hidden { display: none !important; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -31,7 +30,7 @@
     <div id="msg-box" class="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl text-center font-bold text-sm"></div>
 
     <header class="bg-[#1a73e8] text-white pt-6 pb-2 px-4 text-center sticky top-0 z-50 shadow-md">
-        <h1 class="text-xl font-black italic tracking-tighter uppercase">MOVEMENT ISLAND</h1>
+        <h1 class="text-xl font-black italic tracking-tighter uppercase leading-none">MOVEMENT ISLAND</h1>
         <div class="flex mt-4">
             <div onclick="switchMainTab('activity')" id="tab-activity" class="main-tab active">活動專區</div>
             <div onclick="switchMainTab('member')" id="tab-member" class="main-tab">會員專區</div>
@@ -42,45 +41,44 @@
     <main id="app" class="mobile-container p-4 mx-auto max-w-[450px]">
         <div id="loading" class="py-32 text-center">
             <div class="inline-block w-10 h-10 border-4 border-[#1a73e8] border-t-transparent rounded-full animate-spin"></div>
-            <p id="loading-text" class="mt-4 font-black text-slate-400 text-sm tracking-widest uppercase">Connecting to Proxy...</p>
+            <p id="loading-text" class="mt-4 font-black text-slate-400 text-sm tracking-widest uppercase">Connecting to Database...</p>
         </div>
 
         <div id="view-activity" class="section-view">
             <div id="event-list" class="space-y-4"></div>
         </div>
 
-        <!-- 會員專區 (14 個欄位對齊 Students 表) -->
+        <!-- 會員專區 -->
         <div id="view-member" class="section-view">
             <div class="info-card shadow-sm border-t-4 border-[#1a73e8]">
                 <h2 class="text-xl font-black mb-6 text-[#1a73e8] border-b pb-2 italic text-sm uppercase">Student Profile</h2>
                 <div class="space-y-5">
-                    <div><label class="tag-label">姓名 (C)</label><input type="text" id="stu-name" class="input-giant" placeholder="真實姓名"></div>
+                    <div><label class="tag-label">姓名</label><input type="text" id="stu-name" class="input-giant" placeholder="真實姓名"></div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="tag-label">性別 (D)</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
-                        <div><label class="tag-label">生日 (E)</label><input type="date" id="stu-birthday" class="input-giant" onchange="autoDetectGrade()"></div>
+                        <div><label class="tag-label">性別</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
+                        <div><label class="tag-label">生日</label><input type="date" id="stu-birthday" class="input-giant" onchange="autoDetectGrade()"></div>
                     </div>
-                    <div><label class="tag-label">身分證字號 (F)</label><input type="text" id="stu-id" class="input-giant uppercase" placeholder="投保專用"></div>
+                    <div><label class="tag-label">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase" placeholder="投保專用"></div>
                     <div class="grid grid-cols-3 gap-4">
-                        <div><label class="tag-label">身高 (G)</label><input type="number" id="stu-height" class="input-giant" placeholder="cm"></div>
-                        <div><label class="tag-label">體重 (H)</label><input type="number" id="stu-weight" class="input-giant" placeholder="kg"></div>
-                        <div><label class="tag-label">腳長 (I)</label><input type="number" id="stu-foot" class="input-giant" placeholder="cm"></div>
+                        <div><label class="tag-label">身高 cm</label><input type="number" id="stu-height" class="input-giant"></div>
+                        <div><label class="tag-label">體重 kg</label><input type="number" id="stu-weight" class="input-giant"></div>
+                        <div><label class="tag-label">腳長 cm</label><input type="number" id="stu-foot" class="input-giant"></div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="tag-label">學校 (J)</label><input type="text" id="stu-school" class="input-giant"></div>
-                        <div><label class="tag-label">年級 (K)</label><input type="text" id="stu-grade" class="input-giant bg-slate-50" readonly></div>
+                        <div><label class="tag-label">學校</label><input type="text" id="stu-school" class="input-giant"></div>
+                        <div><label class="tag-label">目前年級</label><input type="text" id="stu-grade" class="input-giant bg-slate-50" readonly></div>
                     </div>
-                    <div><label class="tag-label">健康狀況 (L)</label><textarea id="stu-health" rows="2" class="input-giant !h-auto text-sm" placeholder="特殊病史或過敏"></textarea></div>
-                    <div><label class="tag-label">飲食習慣 (M)</label><select id="stu-diet" class="input-giant font-bold"><option value="葷食">葷食</option><option value="素食">素食</option></select></div>
-                    
+                    <div><label class="tag-label">健康狀況與過敏</label><textarea id="stu-health" rows="2" class="input-giant !h-auto text-sm" placeholder="過敏或病史"></textarea></div>
+                    <div><label class="tag-label">飲食習慣</label><select id="stu-diet" class="input-giant font-bold"><option value="葷食">葷食</option><option value="素食">素食</option></select></div>
                     <button onclick="saveStudentToSheet()" id="btn-save-stu" class="btn-mega btn-primary mt-6 shadow-md italic">
-                        <span id="txt-save-stu">SYNC DATA TO CLOUD ➜</span>
+                        <span id="txt-save-stu">SYNC TO DATABASE ➜</span>
                         <div id="spin-save-stu" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-white mx-auto"></div>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 管理後台 (15 個欄位對齊 Events 表) -->
+        <!-- 管理後台 -->
         <div id="view-admin" class="section-view">
             <div class="flex justify-around bg-white rounded-2xl mb-6 shadow-sm border overflow-hidden text-xs font-black">
                 <div onclick="showAdminSubPage('list')" id="sub-tab-list" class="flex-1 text-center py-3 cursor-pointer border-r active">活動管理</div>
@@ -96,22 +94,17 @@
                 <div class="info-card shadow-xl border-t-8 border-[#1a73e8]">
                     <div class="space-y-6">
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="tag-label">活動型態 (B)</label><select id="edit-type" class="input-giant font-black"><option value="單日型">單日型</option><option value="梯次型">梯次型</option></select></div>
-                            <div><label class="tag-label">狀態 (O)</label><select id="edit-status" class="input-giant font-black"><option value="上架">上架</option><option value="隱藏">隱藏</option></select></div>
+                            <div><label class="tag-label">型態</label><select id="edit-type" class="input-giant font-black"><option value="單日型">單日型</option><option value="梯次型">梯次型</option></select></div>
+                            <div><label class="tag-label">狀態</label><select id="edit-status" class="input-giant font-black"><option value="上架">上架</option><option value="隱藏">隱藏</option></select></div>
                         </div>
-                        <div><label class="tag-label">分類標籤 (C)</label><input type="text" id="edit-category" class="input-giant" placeholder="營隊, 課程"></div>
-                        <div><label class="tag-label">活動名稱 (D)</label><input type="text" id="edit-name" class="input-giant"></div>
+                        <div><label class="tag-label">分類標籤</label><input type="text" id="edit-category" class="input-giant"></div>
+                        <div><label class="tag-label">活動名稱</label><input type="text" id="edit-name" class="input-giant"></div>
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="tag-label">原價標價 (H)</label><input type="number" id="edit-price" class="input-giant"></div>
-                            <div><label class="tag-label">總名額 (K)</label><input type="number" id="edit-quota" class="input-giant"></div>
+                            <div><label class="tag-label">標價</label><input type="number" id="edit-price" class="input-giant"></div>
+                            <div><label class="tag-label">總名額</label><input type="number" id="edit-quota" class="input-giant"></div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 bg-red-50 p-3 rounded-xl">
-                            <div><label class="tag-label">全日扣 (I)</label><input type="number" id="edit-full-deduct" class="input-giant" value="0"></div>
-                            <div><label class="tag-label">半日扣 (J)</label><input type="number" id="edit-half-deduct" class="input-giant" value="0"></div>
-                        </div>
-                        <div><label class="tag-label">描述 (L)</label><textarea id="edit-desc" rows="2" class="input-giant !h-auto text-sm"></textarea></div>
-                        <div><label class="tag-label">多媒體 URL (M)</label><input type="text" id="edit-media" class="input-giant"></div>
-                        <div><label class="tag-label">封面圖網址 (N)</label><input type="text" id="edit-img" class="input-giant"></div>
+                        <div><label class="tag-label">描述介紹</label><textarea id="edit-desc" rows="2" class="input-giant !h-auto text-sm"></textarea></div>
+                        <div><label class="tag-label">封面網址</label><input type="text" id="edit-img" class="input-giant"></div>
                         <button onclick="saveEventToSheet()" id="btn-save-event" class="btn-mega btn-primary">確認更新試算表</button>
                         <button onclick="showAdminSubPage('list')" class="btn-mega btn-ghost text-xs mt-2 italic uppercase">Cancel</button>
                     </div>
@@ -122,7 +115,7 @@
                 <div class="info-card">
                     <label class="tag-label">全站匯款帳號</label>
                     <textarea id="param-bank-info" rows="4" class="input-giant !h-auto text-sm font-bold"></textarea>
-                    <label class="tag-label mt-4">運動分類項目</label>
+                    <label class="tag-label mt-4">運動分類標籤</label>
                     <textarea id="param-sport-cats" rows="2" class="input-giant !h-auto text-sm font-bold"></textarea>
                     <button onclick="saveParamsToSheet()" id="btn-save-params" class="btn-mega btn-primary mt-4 shadow-md">同步系統設定</button>
                 </div>
@@ -132,7 +125,7 @@
 
     <script>
         /**
-         * 重要：請在此填入部署後的 Cloudflare Worker 網址
+         * 已更新為您的 Cloudflare Worker 網址
          */
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
 
@@ -163,8 +156,10 @@
                     if (state.config.sportCategories) document.getElementById('param-sport-cats').value = state.config.sportCategories;
                     document.getElementById('loading').classList.add('hidden');
                     if (state.isAdmin) renderAdminList(); else renderActivityList();
+                } else {
+                    showMsg("錯誤: " + result.message);
                 }
-            } catch (e) { showMsg("連線代理伺服器失敗，請確認 Worker 網址"); }
+            } catch (e) { showMsg("連線 Worker 失敗，請確認網址正確且 GAS 權限已開放"); }
         }
 
         async function callProxyAPI(action, payload) {
@@ -181,32 +176,31 @@
             } catch (e) { return false; } finally { state.isProcessing = false; }
         }
 
-        // 儲存學員 (對齊 Students 14 欄位 A-N)
         async function saveStudentToSheet() {
             toggleBtn('btn-save-stu', true);
             const student = {
-                id: "STU-" + Date.now(), // A
-                parentUid: "WEB_USER",   // B
-                name: document.getElementById('stu-name').value, // C
-                gender: document.getElementById('stu-gender').value, // D
-                birthday: document.getElementById('stu-birthday').value, // E
-                idNumber: document.getElementById('stu-id').value, // F
-                height: document.getElementById('stu-height').value, // G
-                weight: document.getElementById('stu-weight').value, // H
-                footSize: document.getElementById('stu-foot').value, // I
-                school: document.getElementById('stu-school').value, // J
-                grade: document.getElementById('stu-grade').value, // K
-                health: document.getElementById('stu-health').value, // L
-                diet: document.getElementById('stu-diet').value, // M
-                updated: new Date().toLocaleString() // N
+                id: "STU-" + Date.now(),
+                parentUid: "WEB_USER",
+                name: document.getElementById('stu-name').value,
+                gender: document.getElementById('stu-gender').value,
+                birthday: document.getElementById('stu-birthday').value,
+                idNumber: document.getElementById('stu-id').value,
+                height: document.getElementById('stu-height').value,
+                weight: document.getElementById('stu-weight').value,
+                footSize: document.getElementById('stu-foot').value,
+                school: document.getElementById('stu-school').value,
+                grade: document.getElementById('stu-grade').value,
+                health: document.getElementById('stu-health').value,
+                diet: document.getElementById('stu-diet').value,
+                updated: new Date().toLocaleString(),
+                interests: "" 
             };
 
-            const ok = await callProxyAPI('submitRegistration', { student: student, eventId: "SYNC", totalPrice: 0 });
-            showMsg(ok ? "✅ 試算表寫入成功！" : "❌ 寫入失敗");
+            const ok = await callProxyAPI('submitRegistration', { student: student });
+            showMsg(ok ? "✅ 寫入成功！" : "❌ 寫入失敗");
             setTimeout(() => toggleBtn('btn-save-stu', false), 1500);
         }
 
-        // 儲存活動 (對齊 Events 15 欄位 A-O)
         async function saveEventToSheet() {
             const payload = {
                 "活動ID": state.currentEditId || ("EVT-" + Date.now()),
@@ -215,13 +209,10 @@
                 "活動名稱": document.getElementById('edit-name').value,
                 "全日價": document.getElementById('edit-price').value,
                 "總名額": document.getElementById('edit-quota').value,
-                "全日扣除": document.getElementById('edit-full-deduct').value || 0,
-                "半日扣除": document.getElementById('edit-half-deduct').value || 0,
                 "描述": document.getElementById('edit-desc').value,
-                "內容媒體": document.getElementById('edit-media').value,
                 "圖片URL": document.getElementById('edit-img').value,
                 "狀態": document.getElementById('edit-status').value,
-                "梯次資料": "[]", "開始日期": "", "結束日期": ""
+                "梯次資料": "[]", "開始日期": "", "結束日期": "", "全日扣除": 0, "半日扣除": 0, "內容媒體": ""
             };
             const ok = await callProxyAPI('updateEvent', payload);
             if(ok) { showMsg("✅ 活動更新完成！"); fetchData(); showAdminSubPage('list'); }
@@ -232,10 +223,9 @@
                 bankInfo: document.getElementById('param-bank-info').value, 
                 sportCategories: document.getElementById('param-sport-cats').value 
             });
-            if(ok) { showMsg("✅ 系統設定已同步！"); fetchData(); }
+            if(ok) { showMsg("✅ 設定已更新！"); fetchData(); }
         }
 
-        // 工具
         function toggleBtn(id, loading) {
             const btn = document.getElementById(id);
             const txt = btn.querySelector('span');
@@ -281,10 +271,6 @@
             document.getElementById('edit-quota').value = ev['總名額'] || 0;
             document.getElementById('edit-status').value = ev['狀態'] || "上架";
             document.getElementById('edit-img').value = ev['圖片URL'] || "";
-            document.getElementById('edit-full-deduct').value = ev['全日扣除'] || 0;
-            document.getElementById('edit-half-deduct').value = ev['半日扣除'] || 0;
-            document.getElementById('edit-desc').value = ev['描述'] || "";
-            document.getElementById('edit-media').value = ev['內容媒體'] || "";
         }
         function showAdminSubPage(p) {
             document.getElementById('admin-page-list').classList.toggle('hidden', p !== 'list');
