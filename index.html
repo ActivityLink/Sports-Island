@@ -3,42 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- 解決 favicon 404 -->
     <link rel="icon" href="data:,">
-    <title>運動島 MOVEMENT ISLAND - 整合系統</title>
+    <title>運動島 MOVEMENT ISLAND - 穩定版系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #0f172a; -webkit-tap-highlight-color: transparent; font-size: 14px; }
-        
         .btn-mega { width: 100%; font-weight: 900; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 14px; padding: 12px 8px; border-radius: 12px; border: none; cursor: pointer; }
         .btn-primary { background-color: #1a73e8; color: white; }
         .btn-secondary { background-color: white; color: #1a73e8; border: 2.5px solid #1a73e8; }
         .btn-success { background-color: #10b981; color: white; }
-        .btn-ghost { background-color: #f1f5f9; color: #64748b; font-size: 12px; padding: 10px; border-radius: 10px; }
-        
         .input-giant { width: 100%; border: none !important; border-bottom: 2px solid #e2e8f0 !important; outline: none !important; padding: 10px 0 !important; font-weight: 700; background-color: transparent !important; font-size: 16px; border-radius: 0 !important; }
-        .input-giant:focus { border-color: #1a73e8 !important; }
-        
         .chip { display: inline-block; padding: 6px 14px; border-radius: 99px; border: 2px solid #e2e8f0; font-weight: 700; font-size: 11px; margin: 4px 2px; cursor: pointer; background: white; transition: all 0.2s; }
         .chip.active { background-color: #1a73e8; color: white; border-color: #1a73e8; }
-        
         .main-tab { flex: 1; text-align: center; padding: 14px 0; font-weight: 900; font-size: 15px; color: rgba(255,255,255,0.6); border-bottom: 4px solid transparent; cursor: pointer; }
         .main-tab.active { color: white !important; border-bottom-color: white !important; }
-        
-        .admin-sub-tab { padding: 10px 16px; font-weight: 900; font-size: 13px; color: #94a3b8; border-bottom: 3px solid transparent; cursor: pointer; }
-        .admin-sub-tab.active { color: #1a73e8; border-bottom-color: #1a73e8; }
-        
         .info-card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .tag-label { color: #64748b; font-weight: 900; margin-bottom: 2px; display: block; font-size: 11px; text-transform: uppercase; }
-        
         .section-view { display: none; }
         .section-view.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
         #msg-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 85%; max-width: 320px; display: none; }
         #loading.hidden { display: none !important; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
         .session-row { border-bottom: 1px solid #f1f5f9; padding: 8px 0; display: flex; gap: 8px; align-items: flex-end; }
     </style>
 </head>
@@ -56,76 +42,57 @@
     </header>
 
     <main id="app" class="mobile-container p-4 mx-auto max-w-[450px]">
-        <!-- 載入中 -->
         <div id="loading" class="py-32 text-center">
             <div class="inline-block w-10 h-10 border-4 border-[#1a73e8] border-t-transparent rounded-full animate-spin"></div>
-            <p id="loading-text" class="mt-4 font-black text-slate-400 text-sm tracking-widest uppercase">System Initializing...</p>
-            <div id="error-display" class="hidden mt-4 p-4 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-100">
-                <p id="error-msg" class="mb-2"></p>
-                <button onclick="fetchEvents()" class="underline uppercase">Retry Sync</button>
-            </div>
+            <p id="loading-text" class="mt-4 font-black text-slate-400 text-sm tracking-widest uppercase">System Syncing...</p>
         </div>
 
-        <!-- 視圖：活動專區 -->
+        <!-- 活動專區 -->
         <div id="view-activity" class="section-view">
-            <div id="activity-cat-list" class="flex overflow-x-auto pb-4 -mx-1 px-1 no-scrollbar"></div>
+            <div id="activity-cat-list" class="flex overflow-x-auto pb-4 px-1"></div>
             <div id="event-list" class="space-y-4"></div>
         </div>
 
-        <!-- 視圖：會員專區 (14 欄位完全對齊) -->
+        <!-- 會員專區 (14 欄位完全對齊) -->
         <div id="view-member" class="section-view">
             <div class="info-card shadow-sm">
                 <h2 class="text-xl font-black mb-6 text-[#1a73e8] border-b-2 pb-2 italic text-sm uppercase tracking-widest">Student Profile</h2>
                 <div class="space-y-6">
-                    <div><label class="tag-label">學員姓名 (姓名)</label><input type="text" id="stu-name" class="input-giant" placeholder="請填寫真實姓名"></div>
-                    
+                    <div><label class="tag-label">學員姓名 (C)</label><input type="text" id="stu-name" class="input-giant" placeholder="真實姓名"></div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="tag-label">性別</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
-                        <div><label class="tag-label">生日</label><input type="date" id="stu-birthday" class="input-giant" onchange="autoDetectGrade()"></div>
+                        <div><label class="tag-label">性別 (D)</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
+                        <div><label class="tag-label">生日 (E)</label><input type="date" id="stu-birthday" class="input-giant" onchange="autoDetectGrade()"></div>
                     </div>
-
-                    <div><label class="tag-label">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase" placeholder="投保專用"></div>
-
+                    <div><label class="tag-label">身分證字號 (F)</label><input type="text" id="stu-id" class="input-giant uppercase" placeholder="投保專用"></div>
                     <div class="grid grid-cols-3 gap-4">
-                        <div><label class="tag-label">身高 cm</label><input type="number" id="stu-height" class="input-giant" placeholder="140"></div>
-                        <div><label class="tag-label">體重 kg</label><input type="number" id="stu-weight" class="input-giant" placeholder="35"></div>
-                        <div><label class="tag-label">腳長 cm</label><input type="number" id="stu-foot" class="input-giant" placeholder="24.5"></div>
+                        <div><label class="tag-label">身高 (G)</label><input type="number" id="stu-height" class="input-giant" placeholder="cm"></div>
+                        <div><label class="tag-label">體重 (H)</label><input type="number" id="stu-weight" class="input-giant" placeholder="kg"></div>
+                        <div><label class="tag-label">腳長 (I)</label><input type="number" id="stu-foot" class="input-giant" placeholder="cm"></div>
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="tag-label">就讀學校</label><input type="text" id="stu-school" class="input-giant" placeholder="成功國小"></div>
-                        <div><label class="tag-label">目前年級</label><input type="text" id="stu-grade" class="input-giant bg-slate-50" readonly placeholder="自動推算"></div>
+                        <div><label class="tag-label">學校 (J)</label><input type="text" id="stu-school" class="input-giant"></div>
+                        <div><label class="tag-label">年級 (K)</label><input type="text" id="stu-grade" class="input-giant bg-slate-50" readonly></div>
                     </div>
-
-                    <div><label class="tag-label">飲食習慣</label><select id="stu-diet" class="input-giant font-bold"><option value="葷食">葷食</option><option value="素食">素食</option></select></div>
-
-                    <div><label class="tag-label">特殊病史需求 (健康狀況)</label><textarea id="stu-health" rows="2" class="input-giant !h-auto text-sm" placeholder="如：氣喘、藥物過敏、受傷史等。若無請填『無』"></textarea></div>
-
-                    <div>
-                        <label class="tag-label">感興趣運動項目 (興趣調查)</label>
-                        <div id="interest-list" class="flex flex-wrap mt-2"></div>
-                    </div>
-
-                    <button onclick="saveMemberLocal()" id="btn-save-member" class="btn-mega btn-primary mt-6 shadow-md italic">UPDATE TO CLOUD ➜</button>
-                    <p class="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest">Data will be synced to Google Sheets</p>
+                    <div><label class="tag-label">健康狀況 (L)</label><textarea id="stu-health" rows="2" class="input-giant !h-auto text-sm" placeholder="過敏或病史"></textarea></div>
+                    <div><label class="tag-label">飲食習慣 (M)</label><select id="stu-diet" class="input-giant font-bold"><option value="葷食">葷食</option><option value="素食">素食</option></select></div>
+                    <button onclick="saveMemberCloud()" id="btn-save-member" class="btn-mega btn-primary mt-6 shadow-md italic">UPDATE TO CLOUD ➜</button>
                 </div>
             </div>
         </div>
 
-        <!-- 視圖：管理後台 -->
+        <!-- 管理後台 -->
         <div id="view-admin" class="section-view">
             <div id="admin-nav" class="flex justify-around bg-white rounded-2xl mb-6 shadow-sm border overflow-hidden">
-                <div onclick="showAdminSubPage('list')" id="sub-tab-list" class="flex-1 text-center py-3 font-black text-xs cursor-pointer border-r active">活動管理</div>
-                <div onclick="showAdminSubPage('params')" id="sub-tab-params" class="flex-1 text-center py-3 font-black text-xs cursor-pointer">系統參數</div>
+                <div onclick="showAdminSubPage('list')" class="flex-1 text-center py-3 font-black text-xs cursor-pointer border-r active">活動管理</div>
+                <div onclick="showAdminSubPage('params')" class="flex-1 text-center py-3 font-black text-xs cursor-pointer">系統參數</div>
             </div>
             
             <div id="admin-page-list">
-                <div class="flex justify-between items-center mb-6"><h3 class="font-black text-slate-800 text-xs uppercase tracking-widest">Activity Database</h3><button onclick="openEditor(null)" class="bg-[#1a73e8] text-white px-4 py-2 rounded-xl text-xs font-black shadow-md">+ 新增活動</button></div>
+                <div class="flex justify-between items-center mb-6"><h3 class="font-black text-slate-800 text-xs">Events</h3><button onclick="openEditor(null)" class="bg-[#1a73e8] text-white px-4 py-2 rounded-xl text-xs font-black">+ 新增</button></div>
                 <div id="admin-event-grid" class="space-y-3"></div>
             </div>
 
             <div id="admin-edit-page" class="hidden">
-                <button onclick="showAdminSubPage('list')" class="mb-4 font-bold text-slate-400 text-xs uppercase">← BACK TO LIST</button>
                 <div class="info-card shadow-xl border-t-8 border-[#1a73e8]">
                     <div class="space-y-8">
                         <div class="grid grid-cols-2 gap-6">
@@ -133,37 +100,38 @@
                             <div><label class="tag-label">狀態 (O)</label><select id="edit-status" class="input-giant font-black"><option value="上架">上架</option><option value="隱藏">隱藏</option></select></div>
                         </div>
                         <div id="admin-session-section" class="bg-slate-50 p-4 rounded-xl hidden">
-                            <div class="flex justify-between items-center mb-2"><label class="tag-label !mb-0 text-[#1a73e8]">梯次日期設定 (E)</label><button onclick="addAdminSessionRow('', '')" class="text-[10px] bg-slate-900 text-white px-2 py-1 rounded">＋新增</button></div>
+                            <div class="flex justify-between items-center mb-2"><label class="tag-label !mb-0 text-blue-600">梯次日期 (E)</label><button onclick="addAdminSessionRow('', '')" class="text-[10px] bg-slate-900 text-white px-2 py-1 rounded">＋新增</button></div>
                             <div id="admin-session-rows" class="space-y-2"></div>
                         </div>
                         <div><label class="tag-label">分類標籤 (C)</label><input type="text" id="edit-category" class="input-giant" placeholder="營隊, 平日課程"></div>
                         <div><label class="tag-label">活動名稱 (D)</label><input type="text" id="edit-name" class="input-giant"></div>
                         <div id="admin-single-date-ui" class="grid grid-cols-2 gap-6">
-                            <div><label class="tag-label">開始日期 (F)</label><input type="date" id="edit-start" class="input-giant"></div>
-                            <div><label class="tag-label">結束日期 (G)</label><input type="date" id="edit-end" class="input-giant"></div>
+                            <div><label class="tag-label">開始 (F)</label><input type="date" id="edit-start" class="input-giant"></div>
+                            <div><label class="tag-label">結束 (G)</label><input type="date" id="edit-end" class="input-giant"></div>
                         </div>
                         <div class="grid grid-cols-2 gap-6">
-                            <div><label class="tag-label">標價 (H)</label><input type="number" id="edit-price" class="input-giant"></div>
-                            <div><label class="tag-label">總名額 (K)</label><input type="number" id="edit-quota" class="input-giant"></div>
+                            <div><label class="tag-label">價格 (H)</label><input type="number" id="edit-price" class="input-giant"></div>
+                            <div><label class="tag-label">名額 (K)</label><input type="number" id="edit-quota" class="input-giant"></div>
                         </div>
                         <div class="grid grid-cols-2 gap-6 bg-red-50 p-4 rounded-xl">
                             <div><label class="tag-label">全日折抵 (I)</label><input type="number" id="edit-full-deduct" class="input-giant font-black" placeholder="0"></div>
                             <div><label class="tag-label">半日折抵 (J)</label><input type="number" id="edit-half-deduct" class="input-giant font-black" placeholder="0"></div>
                         </div>
-                        <div><label class="tag-label">詳細介紹 (L)</label><textarea id="edit-desc" rows="4" class="input-giant !h-auto text-sm"></textarea></div>
-                        <div><label class="tag-label">封面圖網址 (N)</label><input type="text" id="edit-img" class="input-giant"></div>
-                        <button onclick="saveEvent()" id="btn-save-event" class="btn-mega btn-primary shadow-md">儲存並同步至試算表</button>
+                        <div><label class="tag-label">描述 (L)</label><textarea id="edit-desc" rows="4" class="input-giant !h-auto text-sm"></textarea></div>
+                        <div><label class="tag-label">圖片網址 (N)</label><input type="text" id="edit-img" class="input-giant"></div>
+                        <button onclick="saveEvent()" id="btn-save-event" class="btn-mega btn-primary shadow-md">儲存並同步試算表</button>
+                        <button onclick="showAdminSubPage('list')" class="btn-mega btn-ghost text-xs mt-2 italic">CANCEL</button>
                     </div>
                 </div>
             </div>
             
             <div id="admin-page-params" class="hidden">
                 <div class="info-card">
-                    <label class="tag-label">匯款繳費帳號設定</label>
+                    <label class="tag-label">全站匯款繳費帳號</label>
                     <textarea id="param-bank-info" rows="4" class="input-giant !h-auto text-sm font-bold"></textarea>
-                    <label class="tag-label mt-4">運動分類標籤 (逗號隔開)</label>
+                    <label class="tag-label mt-4">運動分類項目 (以逗號隔開)</label>
                     <textarea id="param-sport-cats" rows="3" class="input-giant !h-auto text-sm font-bold"></textarea>
-                    <button onclick="saveSystemParams()" id="btn-save-params" class="btn-mega btn-primary mt-4 shadow-md">更新系統參數</button>
+                    <button onclick="saveSystemParams()" id="btn-save-params" class="btn-mega btn-primary mt-4 shadow-md">同步系統設定</button>
                 </div>
             </div>
         </div>
@@ -172,12 +140,12 @@
     <script>
         /**
          * ==========================================
-         * 核心 API URL (對接 GAS Web App)
+         * 1. 核心 API 設定
          * ==========================================
          */
         var GAS_API_URL = "https://script.google.com/macros/s/AKfycbz1KMf4hl3Z313sDoFNBwFs9Wt1KnFMTaDz_xSj1jREp9DbVEuPd_A8erKlKLOdFbL1/exec"; 
 
-        var state = { isAdmin: false, events: [], config: {}, currentEditId: null, userInterests: [] };
+        var state = { isAdmin: false, events: [], config: {}, currentEditId: null };
 
         window.onload = function() {
             var p = new URLSearchParams(window.location.search);
@@ -192,63 +160,105 @@
         };
 
         function showMsg(t) { 
-            var b = document.getElementById('msg-box'); 
-            b.innerText = t; 
-            b.style.display='block'; 
-            setTimeout(function(){ b.style.display='none'; }, 3500); 
+            var b = document.getElementById('msg-box'); b.innerText = t; 
+            b.style.display='block'; setTimeout(function(){ b.style.display='none'; }, 3500); 
         }
 
+        /**
+         * 2. 優化連線邏輯 (解決 Failed to fetch 與內容消失問題)
+         */
         async function fetchEvents() {
-            var loadText = document.getElementById('loading-text');
-            var errorDisplay = document.getElementById('error-display');
-            var errorMsg = document.getElementById('error-msg');
-            
-            loadText.innerText = "Connecting to GAS...";
-            errorDisplay.classList.add('hidden');
-
             try {
+                // 使用快取破壞參數並明確設定 redirect
                 const res = await fetch(GAS_API_URL + "?action=getEvents&_t=" + Date.now(), {
                     method: 'GET',
                     mode: 'cors',
                     redirect: 'follow'
                 });
 
-                if (!res.ok) throw new Error("HTTP " + res.status);
+                if (!res.ok) throw new Error("Network Error");
 
                 const result = await res.json();
                 state.events = result.data || [];
                 state.config = result.config || {};
                 
-                // 填充參數
-                document.getElementById('param-bank-info').value = state.config.bankInfo || "";
-                document.getElementById('param-sport-cats').value = state.config.sportCategories || "";
+                // 填充管理後台 UI (防止內容消失)
+                if (state.config.bankInfo) document.getElementById('param-bank-info').value = state.config.bankInfo;
+                if (state.config.sportCategories) document.getElementById('param-sport-cats').value = state.config.sportCategories;
                 
                 document.getElementById('loading').classList.add('hidden');
                 if (state.isAdmin) renderAdminList(); else renderActivityList();
-                renderInterestOptions();
             } catch (e) { 
-                console.error("連線錯誤:", e);
-                loadText.innerText = "SYNC FAILED";
-                errorMsg.innerText = "無法與資料庫同步。請檢查 GAS 權限。";
-                errorDisplay.classList.remove('hidden');
+                console.error("Fetch Error:", e);
+                document.getElementById('loading-text').innerText = "CONNECTION FAILED";
+                showMsg("資料庫同步失敗，請確認網路連線與 GAS 權限");
             }
         }
 
-        function renderInterestOptions() {
-            var container = document.getElementById('interest-list');
-            if(!container || !state.config.sportCategories) return;
-            var cats = state.config.sportCategories.split(',').filter(c => c.trim() !== "");
-            container.innerHTML = cats.map(opt => {
-                var activeClass = state.userInterests.indexOf(opt) > -1 ? 'active' : '';
-                return '<span class="chip ' + activeClass + '" onclick="toggleInterest(this)">' + opt + '</span>';
-            }).join('');
+        async function saveSystemParams() {
+            var btn = document.getElementById('btn-save-params'); 
+            var oldText = btn.innerText; btn.disabled = true; btn.innerText = "Syncing...";
+            
+            var payload = { 
+                bankInfo: document.getElementById('param-bank-info').value, 
+                sportCategories: document.getElementById('param-sport-cats').value 
+            };
+
+            try {
+                // 使用 POST 提交，並採用 no-cors 模式確保請求能送達 GAS
+                await fetch(GAS_API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'updateConfig', payload: payload }),
+                    mode: 'no-cors'
+                });
+                showMsg("系統參數已同步！重新讀取中...");
+                // 給 Google Sheet 一點時間處理再重讀
+                setTimeout(fetchEvents, 2000);
+            } catch(e) { showMsg("同步失敗"); }
+            btn.disabled = false; btn.innerText = oldText;
         }
 
-        function toggleInterest(el) {
-            var val = el.innerText;
-            var idx = state.userInterests.indexOf(val);
-            if (idx > -1) state.userInterests.splice(idx, 1); else state.userInterests.push(val);
-            renderInterestOptions();
+        /**
+         * 3. 會員個資同步 (精確對齊 14 個欄位)
+         */
+        async function saveMemberCloud() {
+            var btn = document.getElementById('btn-save-member');
+            btn.disabled = true;
+            
+            var student = {
+                "學員ID": "STU-" + Date.now(),
+                "家長UID": "GITHUB_USER",
+                "姓名": document.getElementById('stu-name').value,
+                "性別": document.getElementById('stu-gender').value,
+                "生日": document.getElementById('stu-birthday').value,
+                "身分證字號": document.getElementById('stu-id').value,
+                "身高": document.getElementById('stu-height').value,
+                "體重": document.getElementById('stu-weight').value,
+                "腳長": document.getElementById('stu-foot').value,
+                "學校": document.getElementById('stu-school').value,
+                "年級": document.getElementById('stu-grade').value,
+                "健康狀況": document.getElementById('stu-health').value,
+                "飲食習慣": document.getElementById('stu-diet').value,
+                "更新日期": new Date().toISOString().split('T')[0]
+            };
+
+            try {
+                await fetch(GAS_API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'submitRegistration', payload: { student: student, eventId: "PROFILE_SYNC", totalPrice: 0 } }),
+                    mode: 'no-cors'
+                });
+                showMsg("資料已成功同步至雲端試算表！");
+            } catch(e) { showMsg("連線失敗"); }
+            btn.disabled = false;
+        }
+
+        // --- 核心工具函數 ---
+
+        function autoDetectGrade() {
+            var bDate = document.getElementById('stu-birthday').value; if (!bDate) return;
+            var age = new Date().getFullYear() - new Date(bDate).getFullYear();
+            document.getElementById('stu-grade').value = (age <= 6) ? "幼兒園" : (age >= 13 ? "中學以上" : "小學 (" + (age - 6) + "年級)");
         }
 
         function switchMainTab(m) {
@@ -263,8 +273,8 @@
             var list = document.getElementById('event-list');
             list.innerHTML = state.events.map(ev => {
                 if(ev['狀態'] !== '上架') return '';
-                return '<div class="info-card p-0 overflow-hidden shadow-sm border border-slate-100"><img src="' + (ev['圖片URL'] || 'https://placehold.co/600x300') + '" class="w-full h-44 object-cover"><div class="p-5 text-center"><span class="text-[10px] font-black text-slate-400 border px-2 py-0.5 rounded-full mb-2 inline-block">' + ev['分類'] + '</span><h3 class="text-lg font-black mb-1">' + ev['活動名稱'] + '</h3><p class="text-[#1a73e8] font-black text-xl mb-4">NT$ ' + parseInt(ev['全日價'] || 0).toLocaleString() + '</p><button class="btn-mega btn-primary">立即預約</button></div></div>';
-            }).join('') || '<p class="text-center py-20 font-bold text-slate-300 italic">目前無開放活動</p>';
+                return '<div class="info-card p-0 overflow-hidden shadow-sm border border-slate-100"><img src="' + (ev['圖片URL'] || 'https://placehold.co/600x300') + '" class="w-full h-44 object-cover"><div class="p-5 text-center"><h3 class="text-lg font-black">' + ev['活動名稱'] + '</h3><p class="text-[#1a73e8] font-black text-xl mb-4">NT$ ' + parseInt(ev['全日價'] || 0).toLocaleString() + '</p><button class="btn-mega btn-primary">立即預約</button></div></div>';
+            }).join('') || '<p class="text-center py-20 font-bold text-slate-300">目前無開放活動</p>';
         }
 
         function renderAdminList() {
@@ -280,7 +290,6 @@
             var ev = state.events.find(e => String(e['活動ID']) === String(id)) || {};
             document.getElementById('admin-page-list').classList.add('hidden');
             document.getElementById('admin-edit-page').classList.remove('hidden');
-            
             document.getElementById('edit-type').value = ev['活動型態'] || "單日型";
             document.getElementById('edit-category').value = ev['分類'] || "";
             document.getElementById('edit-name').value = ev['活動名稱'] || "";
@@ -293,7 +302,6 @@
             document.getElementById('edit-desc').value = ev['描述'] || "";
             document.getElementById('edit-img').value = ev['圖片URL'] || "";
             document.getElementById('edit-status').value = ev['狀態'] || "上架";
-            
             var rowContainer = document.getElementById('admin-session-rows');
             rowContainer.innerHTML = "";
             if(ev['梯次資料']) {
@@ -331,66 +339,11 @@
                     body: JSON.stringify({ action: 'updateEvent', payload: payload }),
                     mode: 'no-cors'
                 });
-                showMsg("資料已同步！1.5秒後重刷...");
+                showMsg("資料已同步！1.5秒後重整...");
                 setTimeout(fetchEvents, 1500);
                 showAdminSubPage('list');
             } catch (e) { showMsg("同步失敗"); }
             btn.disabled = false; btn.innerText = "儲存並同步試算表";
-        }
-
-        /**
-         * 儲存會員個資 (精確對應 14 個欄位)
-         */
-        async function saveMemberLocal() {
-            var btn = document.getElementById('btn-save-member');
-            btn.disabled = true; btn.innerText = "Syncing to Cloud...";
-
-            // 抓取手動填寫資料，並組合 14 個欄位
-            var student = {
-                "學員ID": "STU-" + Date.now(), // 自動產生
-                "家長UID": "WEB_USER",         // LINE 開發時可由 LIFF 取得
-                "姓名": document.getElementById('stu-name').value,
-                "性別": document.getElementById('stu-gender').value,
-                "生日": document.getElementById('stu-birthday').value,
-                "身分證字號": document.getElementById('stu-id').value,
-                "身高": document.getElementById('stu-height').value,
-                "體重": document.getElementById('stu-weight').value,
-                "腳長": document.getElementById('stu-foot').value,
-                "學校": document.getElementById('stu-school').value,
-                "年級": document.getElementById('stu-grade').value,
-                "健康狀況": document.getElementById('stu-health').value,
-                "飲食習慣": document.getElementById('stu-diet').value,
-                "更新日期": new Date().toISOString().split('T')[0] // 自動產生
-            };
-
-            try {
-                await fetch(GAS_API_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'submitRegistration', payload: { student: student, eventId: "PROFILE_SYNC", totalPrice: 0 } }),
-                    mode: 'no-cors'
-                });
-                showMsg("會員資料已成功同步雲端！");
-            } catch(e) { showMsg("連線失敗"); }
-            btn.disabled = false; btn.innerText = "儲存個人資料";
-        }
-
-        async function saveSystemParams() {
-            var btn = document.getElementById('btn-save-params'); btn.disabled = true;
-            var payload = { bankInfo: document.getElementById('param-bank-info').value, sportCategories: document.getElementById('param-sport-cats').value };
-            try {
-                await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateConfig', payload: payload }), mode: 'no-cors' });
-                showMsg("系統設定已更新！"); fetchEvents();
-            } catch(e) { showMsg("失敗"); }
-            btn.disabled = false;
-        }
-
-        function autoDetectGrade() {
-            var bDate = document.getElementById('stu-birthday').value; if (!bDate) return;
-            var birthYear = new Date(bDate).getFullYear();
-            var nowYear = new Date().getFullYear();
-            var age = nowYear - birthYear;
-            var grade = (age <= 6) ? "幼兒園" : (age >= 13 ? "中學以上" : "小學 (" + (age - 6) + "年級)");
-            document.getElementById('stu-grade').value = grade;
         }
 
         function showAdminSubPage(p) {
