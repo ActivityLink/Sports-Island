@@ -12,7 +12,7 @@
         
         .btn-mega { width: 100%; font-weight: 900; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 14px; padding: 12px 8px; border-radius: 12px; border: none; cursor: pointer; }
         .btn-primary { background-color: #1a73e8; color: white; box-shadow: 0 4px 6px -1px rgba(26, 115, 232, 0.2); }
-        .btn-secondary { background-color: white; color: #1a73e8; border: 2.5px solid #1a73e8; }
+        .btn-secondary { background-color: white; color: #1a73e8; border: 2px solid #1a73e8; }
         .btn-ghost { background-color: #f1f5f9; color: #64748b; font-size: 12px; padding: 10px; border-radius: 10px; }
         
         .input-giant { width: 100%; border: none !important; border-bottom: 2px solid #e2e8f0 !important; outline: none !important; padding: 10px 0 !important; font-weight: 700; background-color: transparent !important; font-size: 16px; border-radius: 0 !important; }
@@ -55,7 +55,7 @@
     <main id="app" class="mobile-container p-4 mx-auto max-w-[480px]">
         <div id="loading" class="py-40 text-center">
             <div class="inline-block w-12 h-12 border-4 border-[#1a73e8] border-t-transparent rounded-full animate-spin"></div>
-            <p class="mt-6 font-black text-slate-400 text-xs tracking-widest uppercase">Initializing Portal...</p>
+            <p id="loading-text" class="mt-6 font-black text-slate-400 text-sm tracking-widest uppercase">Initializing Portal...</p>
         </div>
 
         <!-- 視圖：活動專區 -->
@@ -92,13 +92,13 @@
         <!-- 視圖：管理後台 -->
         <div id="view-admin" class="section-view">
             <div class="flex justify-around bg-white rounded-2xl mb-8 shadow-sm border overflow-hidden text-xs font-black">
-                <div onclick="showAdminSubPage('list')" id="sub-tab-list" class="flex-1 text-center py-4 cursor-pointer border-r active">活動管理</div>
+                <div onclick="showAdminSubPage('list')" id="sub-tab-list" class="flex-1 text-center py-4 cursor-pointer border-r active">活動庫管理</div>
                 <div onclick="showAdminSubPage('params')" id="sub-tab-params" class="flex-1 text-center py-4 cursor-pointer">系統設定</div>
             </div>
             
             <div id="admin-page-list">
                 <div class="flex justify-between items-center mb-6 px-1">
-                    <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest">Events DB</h3>
+                    <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest text-xs">Events Database</h3>
                     <button onclick="openEditor(null)" class="bg-[#1a73e8] text-white px-5 py-2 rounded-xl text-xs font-black shadow-lg">+ 新增活動</button>
                 </div>
                 <div id="admin-event-grid" class="space-y-4"></div>
@@ -111,7 +111,7 @@
                             <div><label class="tag-label">活動型態 (B)</label><select id="edit-type" class="input-giant font-black" onchange="toggleSessionUI()"><option value="單日型">單日型</option><option value="梯次型">梯次型</option></select></div>
                             <div><label class="tag-label">顯示狀態 (O)</label><select id="edit-status" class="input-giant font-black"><option value="上架">上架</option><option value="隱藏">隱藏</option></select></div>
                         </div>
-                        <div><label class="tag-label">類別標籤 (C)</label><select id="edit-category" class="input-giant font-black"></select></div>
+                        <div><label class="tag-label">分類標籤 (C)</label><select id="edit-category" class="input-giant font-black"></select></div>
                         <div><label class="tag-label">活動名稱 (D)</label><input type="text" id="edit-name" class="input-giant"></div>
                         
                         <div class="grid grid-cols-2 gap-4">
@@ -139,23 +139,23 @@
                             <div><label class="tag-label">半日扣 (J)</label><input type="number" id="edit-half-deduct" class="input-giant"></div>
                         </div>
 
-                        <div><label class="tag-label">描述 (L)</label><textarea id="edit-desc" rows="3" class="input-giant !h-auto text-sm"></textarea></div>
+                        <div><label class="tag-label">詳細大綱描述 (L)</label><textarea id="edit-desc" rows="4" class="input-giant !h-auto text-sm"></textarea></div>
                         <div><label class="tag-label">媒體 URL (M)</label><input type="text" id="edit-media" class="input-giant"></div>
                         <div><label class="tag-label">封面網址 (N)</label><input type="text" id="edit-img" class="input-giant"></div>
                         
-                        <button onclick="saveEventToSheet()" id="btn-save-event" class="btn-mega btn-primary mt-4 shadow-xl italic">SAVE TO CLOUD ➜</button>
-                        <button onclick="showAdminSubPage('list')" class="btn-mega btn-ghost mt-2">CANCEL</button>
+                        <button onclick="saveEventToSheet()" id="btn-save-event" class="btn-mega btn-primary mt-4 shadow-xl italic uppercase">Save Activity to Sheet ➜</button>
+                        <button onclick="showAdminSubPage('list')" class="btn-mega btn-ghost mt-2 tracking-widest uppercase">Cancel</button>
                     </div>
                 </div>
             </div>
 
             <div id="admin-page-params" class="hidden">
                 <div class="info-card">
-                    <label class="tag-label">匯款帳號</label>
+                    <label class="tag-label">全站匯款對帳帳號</label>
                     <textarea id="param-bank-info" rows="4" class="input-giant !h-auto text-sm font-bold"></textarea>
-                    <label class="tag-label mt-4">運動分類項目</label>
-                    <textarea id="param-sport-cats" rows="2" class="input-giant !h-auto text-sm font-bold"></textarea>
-                    <button onclick="saveParamsToSheet()" class="btn-mega btn-primary mt-4">更新系統設定</button>
+                    <label class="tag-label mt-6">運動分類項目 (以半形逗號隔開)</label>
+                    <textarea id="param-sport-cats" rows="2" class="input-giant !h-auto text-sm font-bold" placeholder="籃球,足球,溜冰"></textarea>
+                    <button onclick="saveParamsToSheet()" class="btn-mega btn-primary mt-6 shadow-lg">同步系統參數設定</button>
                 </div>
             </div>
         </div>
@@ -163,7 +163,7 @@
 
     <script>
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
-        let state = { isAdmin: false, events: [], config: {}, currentEditId: null, isProcessing: false, currentFilter: "全部" };
+        let state = { isAdmin: false, events: [], config: {}, currentEditId: null, userInterests: [], isProcessing: false, currentFilter: "全部" };
 
         window.onload = function() {
             const p = new URLSearchParams(window.location.search);
@@ -185,25 +185,32 @@
                 const result = await res.json();
                 if (result.status === 'success') {
                     state.events = result.data || [];
-                    state.config = result.config || {};
+                    state.config = result.config || { bankInfo: "", sportCategories: "" };
+                    
+                    // 關鍵：將抓到的資料同步到輸入框，防止顯示空白
+                    if (state.config.bankInfo) document.getElementById('param-bank-info').value = state.config.bankInfo;
                     if (state.config.sportCategories) {
+                        document.getElementById('param-sport-cats').value = state.config.sportCategories;
                         renderAdminCategorySelect();
                         renderClientCatFilter();
                     }
+                    
                     document.getElementById('loading').classList.add('hidden');
                     if (state.isAdmin) renderAdminList(); else renderActivityList();
                 }
-            } catch (e) { showMsg("連線失敗"); }
+            } catch (e) { showMsg("連線失敗，請檢查網路設定"); }
         }
 
         function renderAdminCategorySelect() {
             const select = document.getElementById('edit-category');
+            if(!state.config.sportCategories) return;
             const cats = state.config.sportCategories.split(',').filter(c => c.trim() !== "");
             select.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
         }
 
         function renderClientCatFilter() {
             const container = document.getElementById('client-cat-filter');
+            if(!state.config.sportCategories) return;
             const cats = ["全部", ...state.config.sportCategories.split(',').filter(c => c.trim() !== "")];
             container.innerHTML = cats.map(c => `<span class="chip ${state.currentFilter === c ? 'active' : ''}" onclick="filterActivities('${c}')">${c}</span>`).join('');
         }
@@ -211,7 +218,7 @@
         function filterActivities(cat) { state.currentFilter = cat; renderClientCatFilter(); renderActivityList(); }
 
         /**
-         * 渲染活動列表 - 優化詳細說明佈局
+         * 渲染活動列表 - 支援換行、文字放大、自動捲動
          */
         function renderActivityList() {
             const list = document.getElementById('event-list');
@@ -226,40 +233,38 @@
                     ${isEarly ? `<div class="early-bird-badge">早鳥優惠中 ⏳</div>` : ''}
                     <img src="${ev['圖片URL'] || 'https://placehold.co/600x300'}" class="w-full h-48 object-cover">
                     <div class="p-6 text-center">
-                        <span class="text-[10px] font-black text-blue-500 bg-blue-50 px-3 py-1 rounded-full uppercase">${ev['分類']}</span>
-                        <h3 class="text-xl font-black mt-3 mb-1">${ev['活動名稱']}</h3>
-                        <p class="text-slate-400 text-xs font-bold mb-4">${ev['開始日期']} ~ ${ev['結束日期']}</p>
+                        <span class="text-[10px] font-black text-blue-500 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-widest">${ev['分類']}</span>
+                        <h3 class="text-xl font-black mt-3 mb-1 text-slate-800">${ev['活動名稱']}</h3>
+                        <p class="text-slate-400 text-xs font-bold mb-4 italic">${ev['開始日期']} ~ ${ev['結束日期']}</p>
                         
                         <div class="flex justify-center items-center gap-2 mb-6">
-                            <span class="text-xs text-slate-400 font-bold">NT$</span>
+                            <span class="text-xs text-slate-400 font-bold uppercase">Price NT$</span>
                             <span class="text-3xl font-black text-[#1a73e8]">${parseInt(displayPrice||0).toLocaleString()}</span>
                             ${isEarly ? `<span class="text-xs text-slate-300 line-through">原價 ${ev['全日價']}</span>` : ''}
                         </div>
 
-                        <!-- 預設按鈕區 -->
                         <div id="btn-group-summary-${ev['活動ID']}" class="flex gap-2">
                             <button onclick="toggleDetail('${ev['活動ID']}', true)" class="btn-mega btn-secondary flex-1">詳細說明</button>
                             <button onclick="startBooking('${ev['活動ID']}')" class="btn-mega btn-primary flex-[1.5]">立即預約</button>
                         </div>
 
-                        <!-- 詳細內容區 (文字放大、黑色、支援換行) -->
+                        <!-- 詳細說明區：放大黑色、換行支援 -->
                         <div id="detail-${ev['活動ID']}" class="hidden mt-6 text-left border-t pt-6">
                             <label class="tag-label">活動詳細大綱</label>
                             <div class="text-base text-black font-medium leading-relaxed whitespace-pre-wrap mb-6">
-                                ${ev['描述'] || '目前尚無詳細說明。'}
+                                ${ev['描述'] || '目前尚無詳細描述。'}
                             </div>
                             
                             ${ev['內容媒體'] ? `
                             <div class="mb-8">
                                 <a href="${ev['內容媒體']}" target="_blank" class="flex items-center gap-2 text-blue-600 font-bold text-sm bg-blue-50 p-3 rounded-xl border border-blue-100">
-                                    <span>📎</span> 查看相關媒體或參考連結
+                                    <span>🔗</span> 點擊查看相關媒體或地圖連結
                                 </a>
                             </div>` : ''}
 
-                            <!-- 展開後的底部按鈕區 -->
                             <div class="flex gap-2">
                                 <button onclick="toggleDetail('${ev['活動ID']}', false)" class="btn-mega btn-ghost flex-1">返回收起</button>
-                                <button onclick="startBooking('${ev['活動ID']}')" class="btn-mega btn-primary flex-[1.5]">立即報名預約</button>
+                                <button onclick="startBooking('${ev['活動ID']}')" class="btn-mega btn-primary flex-[1.5]">立即預約報名</button>
                             </div>
                         </div>
                     </div>
@@ -267,24 +272,16 @@
             }).join('') || '<p class="text-center py-20 font-bold text-slate-300 italic">目前無開放活動</p>';
         }
 
-        /**
-         * 切換詳細說明並處理捲動
-         */
         function toggleDetail(id, show) {
             const detailEl = document.getElementById(`detail-${id}`);
             const summaryBtnEl = document.getElementById(`btn-group-summary-${id}`);
-            
             if (show) {
                 detailEl.classList.remove('hidden');
                 summaryBtnEl.classList.add('hidden');
-                // 確保平滑捲動到內容開始處
-                setTimeout(() => {
-                    detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 50);
+                setTimeout(() => { detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
             } else {
                 detailEl.classList.add('hidden');
                 summaryBtnEl.classList.remove('hidden');
-                // 返回時捲動回卡片頂部
                 document.getElementById(`card-${id}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
@@ -325,14 +322,10 @@
 
             state.isProcessing = true;
             try {
-                const res = await fetch(PROXY_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'updateEvent', payload: payload })
-                });
+                const res = await fetch(PROXY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'updateEvent', payload: payload }) });
                 const result = await res.json();
-                if(result.status === 'success') { showMsg("✅ 活動已儲存！"); fetchData(); showAdminSubPage('list'); }
-            } catch (e) { showMsg("儲存失敗"); }
+                if(result.status === 'success') { showMsg("✅ 活動儲存成功！"); fetchData(); showAdminSubPage('list'); }
+            } catch (e) { showMsg("同步失敗"); }
             state.isProcessing = false;
         }
 
@@ -341,6 +334,7 @@
             const ev = state.events.find(e => String(e['活動ID']) === String(id)) || {};
             document.getElementById('admin-page-list').classList.add('hidden');
             document.getElementById('admin-edit-page').classList.remove('hidden');
+            
             document.getElementById('edit-type').value = ev['活動型態'] || "單日型";
             document.getElementById('edit-category').value = ev['分類'] || "";
             document.getElementById('edit-name').value = ev['活動名稱'] || "";
@@ -357,6 +351,7 @@
             document.getElementById('edit-media').value = ev['內容媒體'] || "";
             document.getElementById('edit-img').value = ev['圖片URL'] || "";
             document.getElementById('edit-status').value = ev['狀態'] || "上架";
+            
             const container = document.getElementById('session-list-container');
             container.innerHTML = "";
             if(ev['梯次資料']) try { JSON.parse(ev['梯次資料']).forEach(s => addSessionRow(s.s, s.e)); } catch(e) {}
@@ -375,6 +370,31 @@
             const isSession = document.getElementById('edit-type').value === '梯次型';
             document.getElementById('session-manager').classList.toggle('hidden', !isSession);
             document.getElementById('date-range-ui').classList.toggle('hidden', isSession);
+        }
+
+        async function saveParamsToSheet() {
+            const ok = await callProxyAPI('updateConfig', { bankInfo: document.getElementById('param-bank-info').value, sportCategories: document.getElementById('param-sport-cats').value });
+            if(ok) { showMsg("✅ 系統設定已同步至雲端！"); fetchData(); }
+        }
+
+        async function callProxyAPI(action, payload) {
+            try {
+                const res = await fetch(PROXY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: action, payload: payload }) });
+                const result = await res.json();
+                return result.status === 'success';
+            } catch (e) { return false; }
+        }
+
+        function renderAdminList() {
+            const grid = document.getElementById('admin-event-grid');
+            grid.innerHTML = state.events.map(ev => `
+                <div class="info-card p-4 flex justify-between items-center border-l-8 ${ev['狀態'] === '上架' ? 'border-green-500' : 'border-slate-300'} bg-white">
+                    <div class="pr-2 overflow-hidden">
+                        <h4 class="font-black text-sm text-slate-800 truncate">${ev['活動名稱']}</h4>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">${ev['分類']} | NT$${ev['全日價']}</p>
+                    </div>
+                    <button onclick="openEditor('${ev['活動ID']}')" class="flex-shrink-0 text-xs font-black text-blue-600 bg-blue-50 px-4 py-2 rounded-xl">編輯</button>
+                </div>`).join('');
         }
 
         function switchMainTab(m) {
@@ -399,46 +419,15 @@
 
         async function saveStudentToSheet() {
             const student = {
-                id: "STU-" + Date.now(),
-                parentUid: "WEB_USER",
-                name: document.getElementById('stu-name').value,
-                gender: document.getElementById('stu-gender').value,
-                birthday: document.getElementById('stu-birthday').value,
-                idNumber: document.getElementById('stu-id').value,
-                height: document.getElementById('stu-height').value,
-                weight: document.getElementById('stu-weight').value,
-                footSize: document.getElementById('stu-foot').value,
-                school: document.getElementById('stu-school').value,
-                grade: document.getElementById('stu-grade').value,
+                id: "STU-" + Date.now(), parentUid: "WEB_USER", name: document.getElementById('stu-name').value,
+                gender: document.getElementById('stu-gender').value, birthday: document.getElementById('stu-birthday').value,
+                idNumber: document.getElementById('stu-id').value, height: document.getElementById('stu-height').value,
+                weight: document.getElementById('stu-weight').value, footSize: document.getElementById('stu-foot').value,
+                school: document.getElementById('stu-school').value, grade: document.getElementById('stu-grade').value,
                 health: "", diet: "", interests: "", updated: new Date().toLocaleString()
             };
             const ok = await callProxyAPI('submitRegistration', { student: student, eventId: "SYNC", totalPrice: 0 });
-            showMsg(ok ? "✅ 個人資料已儲存！" : "❌ 儲存失敗");
-        }
-
-        async function saveParamsToSheet() {
-            const ok = await callProxyAPI('updateConfig', { bankInfo: document.getElementById('param-bank-info').value, sportCategories: document.getElementById('param-sport-cats').value });
-            if(ok) { showMsg("✅ 系統參數已更新！"); fetchData(); }
-        }
-
-        async function callProxyAPI(action, payload) {
-            try {
-                const res = await fetch(PROXY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: action, payload: payload }) });
-                const result = await res.json();
-                return result.status === 'success';
-            } catch (e) { return false; }
-        }
-
-        function renderAdminList() {
-            const grid = document.getElementById('admin-event-grid');
-            grid.innerHTML = state.events.map(ev => `
-                <div class="info-card p-4 flex justify-between items-center border-l-8 ${ev['狀態'] === '上架' ? 'border-green-500' : 'border-slate-300'} bg-white">
-                    <div class="pr-2 overflow-hidden">
-                        <h4 class="font-black text-sm text-slate-800 truncate">${ev['活動名稱']}</h4>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">${ev['分類']} | NT$${ev['全日價']}</p>
-                    </div>
-                    <button onclick="openEditor('${ev['活動ID']}')" class="flex-shrink-0 text-xs font-black text-blue-600 bg-blue-50 px-4 py-2 rounded-xl">編輯</button>
-                </div>`).join('');
+            showMsg(ok ? "✅ 個人資料已儲存！" : "❌ 同步失敗");
         }
     </script>
 </body>
