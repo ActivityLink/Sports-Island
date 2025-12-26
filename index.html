@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- 解決 favicon 404 -->
     <link rel="icon" href="data:,">
     <title>運動島 MOVEMENT ISLAND</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,8 +12,6 @@
         .btn-mega { width: 100%; font-weight: 900; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 14px; padding: 12px 8px; border-radius: 12px; border: none; cursor: pointer; }
         .btn-primary { background-color: #1a73e8; color: white; }
         .btn-secondary { background-color: white; color: #1a73e8; border: 2.5px solid #1a73e8; }
-        .btn-success { background-color: #10b981; color: white; }
-        .btn-ghost { background-color: #f1f5f9; color: #64748b; font-size: 12px; padding: 10px; border-radius: 10px; }
         .input-giant { width: 100%; border: none !important; border-bottom: 2px solid #e2e8f0 !important; outline: none !important; padding: 10px 0 !important; font-weight: 700; background-color: transparent !important; font-size: 16px; border-radius: 0 !important; }
         .input-giant:focus { border-color: #1a73e8 !important; }
         .chip { display: inline-block; padding: 6px 14px; border-radius: 99px; border: 2px solid #e2e8f0; font-weight: 700; font-size: 11px; margin: 4px 2px; cursor: pointer; background: white; transition: all 0.2s; }
@@ -29,11 +26,18 @@
         #msg-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 85%; max-width: 320px; display: none; }
         #loading.hidden { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        #debug-console { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15, 23, 42, 0.95); color: #10b981; padding: 12px; font-family: monospace; font-size: 10px; max-height: 200px; overflow-y: auto; z-index: 9998; display: none; }
+        #debug-console.show { display: block; }
+        .debug-toggle { position: fixed; bottom: 10px; right: 10px; background: #1a73e8; color: white; padding: 8px 12px; border-radius: 8px; font-size: 10px; cursor: pointer; z-index: 9999; }
     </style>
 </head>
 <body class="bg-slate-50">
 
     <div id="msg-box" class="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl text-center font-bold text-sm"></div>
+    
+    <!-- 除錯控制台 -->
+    <div class="debug-toggle" onclick="toggleDebug()">🐛 DEBUG</div>
+    <div id="debug-console"></div>
 
     <header class="bg-[#1a73e8] text-white pt-6 pb-2 px-4 text-center sticky top-0 z-50 shadow-md">
         <h1 class="text-xl font-black italic tracking-tighter uppercase leading-none">MOVEMENT ISLAND</h1>
@@ -48,15 +52,15 @@
         <!-- 載入動畫 -->
         <div id="loading" class="py-32 text-center">
             <div class="inline-block w-10 h-10 border-4 border-[#1a73e8] border-t-transparent rounded-full animate-spin"></div>
-            <p id="loading-text" class="mt-4 font-black text-slate-400 text-sm tracking-widest uppercase">Syncing with Google...</p>
+            <p id="loading-text" class="mt-4 font-black text-slate-400 text-sm tracking-widest uppercase">初始化中...</p>
             <div id="error-display" class="hidden mt-4 p-4 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-100">
-                <p id="error-msg"></p>
-                <button onclick="fetchEvents()" class="mt-2 underline uppercase">Retry Connection</button>
+                <p id="error-msg" class="mb-2"></p>
+                <button onclick="fetchEvents()" class="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg uppercase text-xs">重新連線</button>
+                <button onclick="testAPIDirectly()" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg uppercase text-xs ml-2">測試 API</button>
             </div>
         </div>
 
         <div id="view-activity" class="section-view">
-            <div id="activity-cat-list" class="flex overflow-x-auto pb-4 -mx-1 px-1 no-scrollbar"></div>
             <div id="event-list" class="space-y-4"></div>
         </div>
 
@@ -64,14 +68,14 @@
             <div class="info-card">
                 <h2 class="text-xl font-black mb-6 text-[#1a73e8] border-b-2 pb-2 italic text-sm uppercase">Student Info</h2>
                 <div class="space-y-6">
-                    <div><label class="tag-label">學員姓名 (姓名)</label><input type="text" id="stu-name" class="input-giant" placeholder="真實姓名"></div>
+                    <div><label class="tag-label">學員姓名</label><input type="text" id="stu-name" class="input-giant" placeholder="真實姓名"></div>
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="tag-label">性別</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
                         <div><label class="tag-label">生日</label><input type="date" id="stu-birthday" class="input-giant" onchange="autoDetectGrade()"></div>
                     </div>
                     <div><label class="tag-label">年級</label><input type="text" id="stu-grade" class="input-giant bg-slate-50" readonly placeholder="自動計算"></div>
                     <div>
-                        <label class="tag-label">感興趣運動項目 (興趣調查)</label>
+                        <label class="tag-label">感興趣運動項目</label>
                         <div id="interest-list" class="flex flex-wrap mt-2"></div>
                     </div>
                     <button onclick="saveMemberLocal()" class="btn-mega btn-secondary mt-6 shadow-md">同步資料至雲端</button>
@@ -80,38 +84,75 @@
         </div>
 
         <div id="view-admin" class="section-view">
-            <div id="admin-nav" class="flex justify-around bg-white rounded-2xl mb-6 shadow-sm border overflow-hidden">
-                <div onclick="showAdminSubPage('list')" class="flex-1 text-center py-3 font-black text-xs cursor-pointer border-r bg-slate-50">活動管理</div>
-                <div onclick="showAdminSubPage('params')" class="flex-1 text-center py-3 font-black text-xs cursor-pointer">系統參數</div>
+            <div class="info-card">
+                <h3 class="font-black text-slate-800 mb-4">管理後台</h3>
+                <p class="text-xs text-slate-500">此區域用於管理活動與查看報名資料</p>
+                <div id="admin-event-grid" class="space-y-3 mt-4"></div>
             </div>
-            <div id="admin-page-list">
-                <div class="flex justify-between items-center mb-6"><h3 class="font-black text-slate-800 text-xs">Activity List</h3><button onclick="openEditor(null)" class="bg-[#1a73e8] text-white px-4 py-2 rounded-xl text-xs font-black">+ 新增活動</button></div>
-                <div id="admin-event-grid" class="space-y-3"></div>
-            </div>
-            <!-- ...編輯器介面... -->
         </div>
     </main>
 
     <script>
-        /**
-         * ==========================================
-         * 1. 核心 API 設定
-         * 請確保 GAS 部署為「所有人(Anyone)」
-         * ==========================================
-         */
-        var GAS_API_URL = "https://script.google.com/macros/s/AKfycby3TTas04cgaBnvDwkMSOO1AfQj5T-iLj6wYOuo5v-c7VBR-MdApjJIvUEkT6O5--1P/exec"; 
+        // ==========================================
+        // 1. 核心設定 - 請更新為您的 GAS 部署網址
+        // ==========================================
+        var GAS_API_URL = "https://script.google.com/macros/s/AKfycby3TTas04cgaBnvDwkMSOO1AfQj5T-iLj6wYOuo5v-c7VBR-MdApjJIvUEkT6O5--1P/exec";
 
         var state = { isAdmin: false, events: [], config: {}, userInterests: [] };
+        var debugMode = false;
 
+        // ==========================================
+        // 2. 除錯工具
+        // ==========================================
+        function debugLog(msg, type = 'info') {
+            const console_div = document.getElementById('debug-console');
+            const colors = { info: '#10b981', error: '#ef4444', warning: '#f59e0b', success: '#3b82f6' };
+            const timestamp = new Date().toLocaleTimeString();
+            console_div.innerHTML += `<div style="color:${colors[type]}">[${timestamp}] ${msg}</div>`;
+            console_div.scrollTop = console_div.scrollHeight;
+            console.log(`[${type.toUpperCase()}]`, msg);
+        }
+
+        function toggleDebug() {
+            debugMode = !debugMode;
+            document.getElementById('debug-console').classList.toggle('show', debugMode);
+            if (debugMode) debugLog('除錯模式已啟用', 'success');
+        }
+
+        async function testAPIDirectly() {
+            debugLog('開始直接測試 API...', 'info');
+            try {
+                const testUrl = GAS_API_URL + "?action=getEvents&test=" + Date.now();
+                debugLog('測試網址: ' + testUrl, 'info');
+                
+                const response = await fetch(testUrl, { method: 'GET', mode: 'cors' });
+                debugLog('HTTP 狀態: ' + response.status + ' ' + response.statusText, response.ok ? 'success' : 'error');
+                
+                const data = await response.json();
+                debugLog('回應資料: ' + JSON.stringify(data).substring(0, 200), 'success');
+                
+                window.open(testUrl, '_blank');
+            } catch (e) {
+                debugLog('測試失敗: ' + e.message, 'error');
+            }
+        }
+
+        // ==========================================
+        // 3. 初始化
+        // ==========================================
         window.onload = function() {
+            debugLog('頁面載入完成', 'success');
+            
             var p = new URLSearchParams(window.location.search);
             if (p.get('action') === 'admin') {
                 state.isAdmin = true;
                 document.getElementById('tab-admin').classList.remove('hidden');
                 switchMainTab('admin');
+                debugLog('進入管理模式', 'info');
             } else {
                 switchMainTab('activity');
             }
+            
             fetchEvents();
         };
 
@@ -122,50 +163,73 @@
             setTimeout(function(){ b.style.display='none'; }, 3000); 
         }
 
-        /**
-         * 2. 優化連線邏輯 (解決 Failed to fetch)
-         * 重點：明確設定 redirect, 不主動發送特殊 Header 以免觸發 Preflight 失敗
-         */
+        // ==========================================
+        // 4. API 連線 (強化錯誤處理)
+        // ==========================================
         async function fetchEvents() {
             var loadingText = document.getElementById('loading-text');
             var errorDisplay = document.getElementById('error-display');
             var errorMsg = document.getElementById('error-msg');
             
-            loadingText.innerText = "Connecting to GAS...";
+            loadingText.innerText = "正在連接伺服器...";
             errorDisplay.classList.add('hidden');
+            debugLog('開始連接 GAS API', 'info');
 
             try {
-                // 加上隨機參數避免快取，使用最簡潔的 GET
                 var url = GAS_API_URL + "?action=getEvents&nocache=" + Date.now();
+                debugLog('請求網址: ' + url, 'info');
                 
                 const res = await fetch(url, {
                     method: 'GET',
                     mode: 'cors',
-                    redirect: 'follow', // 重要：追蹤 Google 的 302 重新導向
-                    credentials: 'omit'  // 不攜帶 Cookie 以提高 CORS 相容性
+                    redirect: 'follow',
+                    credentials: 'omit'
                 });
 
-                if (!res.ok) throw new Error("HTTP Status: " + res.status);
+                debugLog('HTTP 回應: ' + res.status + ' ' + res.statusText, res.ok ? 'success' : 'error');
+
+                if (!res.ok) {
+                    throw new Error("HTTP " + res.status + ": " + res.statusText);
+                }
 
                 const result = await res.json();
+                debugLog('資料解析成功，活動數量: ' + (result.data ? result.data.length : 0), 'success');
+                
                 state.events = result.data || [];
                 state.config = result.config || {};
                 
                 document.getElementById('loading').classList.add('hidden');
                 if (state.isAdmin) renderAdminList(); else renderActivityList();
                 renderInterestOptions();
+                
+                showMsg('✅ 資料載入成功！');
+                
             } catch (e) { 
-                console.error("Fetch Error Details:", e);
-                loadingText.innerText = "CONNECTION FAILED";
-                errorMsg.innerText = "Error: " + e.message + ". 請確認已在瀏覽器登入 Google 帳號且後端權限已開放。";
+                debugLog('連線錯誤: ' + e.message, 'error');
+                console.error("完整錯誤:", e);
+                
+                loadingText.innerText = "⚠️ 連線失敗";
+                
+                let errorText = e.message;
+                if (errorText.includes("Failed to fetch")) {
+                    errorText = "無法連接到伺服器\n\n可能原因：\n1. GAS 網址錯誤\n2. 未部署或權限未開放\n3. 網路連線問題\n\n請開啟除錯模式查看詳情";
+                }
+                
+                errorMsg.innerHTML = errorText.replace(/\n/g, '<br>');
                 errorDisplay.classList.remove('hidden');
             }
         }
 
+        // ==========================================
+        // 5. UI 渲染
+        // ==========================================
         function renderInterestOptions() {
             var container = document.getElementById('interest-list');
             if(!container || !state.config.sportCategories) return;
+            
             var cats = state.config.sportCategories.split(',').filter(c => c.trim() !== "");
+            debugLog('載入運動類別: ' + cats.join(', '), 'info');
+            
             container.innerHTML = cats.map(opt => {
                 var activeClass = state.userInterests.indexOf(opt) > -1 ? 'active' : '';
                 return '<span class="chip ' + activeClass + '" onclick="toggleInterest(this)">' + opt + '</span>';
@@ -177,6 +241,7 @@
             var idx = state.userInterests.indexOf(val);
             if (idx > -1) state.userInterests.splice(idx, 1); else state.userInterests.push(val);
             renderInterestOptions();
+            debugLog('更新興趣: ' + state.userInterests.join(', '), 'info');
         }
 
         function switchMainTab(m) {
@@ -184,50 +249,89 @@
             var target = document.getElementById('tab-' + m); if(target) target.classList.add('active');
             document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
             var view = document.getElementById('view-' + m); if(view) view.classList.add('active');
+            debugLog('切換分頁: ' + m, 'info');
         }
 
         function renderActivityList() {
             var list = document.getElementById('event-list');
-            list.innerHTML = state.events.map(ev => {
-                if(ev['狀態'] !== '上架') return '';
-                return '<div class="info-card p-0 overflow-hidden shadow-sm"><img src="' + (ev['圖片URL'] || 'https://placehold.co/600x300') + '" class="w-full h-44 object-cover"><div class="p-5 text-center"><h3 class="text-lg font-black">' + ev['活動名稱'] + '</h3><p class="text-[#1a73e8] font-black text-xl mb-4">NT$ ' + parseInt(ev['全日價'] || 0).toLocaleString() + '</p><button class="btn-mega btn-primary">立即預約</button></div></div>';
-            }).join('') || '<p class="text-center py-20 font-bold text-slate-300">目前無開放活動</p>';
+            var activeEvents = state.events.filter(ev => ev['狀態'] === '上架');
+            
+            debugLog('顯示活動數: ' + activeEvents.length, 'info');
+            
+            if (activeEvents.length === 0) {
+                list.innerHTML = '<div class="info-card text-center py-20"><p class="font-bold text-slate-300 text-lg">目前無開放活動</p><p class="text-xs text-slate-400 mt-2">請稍後再來查看</p></div>';
+                return;
+            }
+            
+            list.innerHTML = activeEvents.map(ev => {
+                return '<div class="info-card p-0 overflow-hidden shadow-sm"><img src="' + (ev['圖片URL'] || 'https://placehold.co/600x300/1a73e8/white?text=' + encodeURIComponent(ev['活動名稱'])) + '" class="w-full h-44 object-cover"><div class="p-5 text-center"><h3 class="text-lg font-black">' + ev['活動名稱'] + '</h3><p class="text-xs text-slate-500 my-2">' + (ev['描述'] || '') + '</p><p class="text-[#1a73e8] font-black text-xl mb-4">NT$ ' + parseInt(ev['全日價'] || 0).toLocaleString() + '</p><button class="btn-mega btn-primary">立即預約</button></div></div>';
+            }).join('');
         }
 
         function renderAdminList() {
             var grid = document.getElementById('admin-event-grid');
+            debugLog('管理模式：載入 ' + state.events.length + ' 個活動', 'info');
+            
+            if (state.events.length === 0) {
+                grid.innerHTML = '<p class="text-center text-slate-400 py-8">尚無活動資料</p>';
+                return;
+            }
+            
             grid.innerHTML = state.events.map(ev => {
                 var statusColor = ev['狀態'] === '上架' ? 'border-green-500' : 'border-slate-300';
-                return '<div class="info-card p-3 flex justify-between border-l-4 ' + statusColor + ' shadow-sm"><div><h4 class="font-black text-sm">' + ev['活動名稱'] + '</h4><p class="text-[10px] text-slate-400">' + ev['活動ID'] + '</p></div><button class="text-xs font-bold text-blue-600 underline">編輯</button></div>';
+                var statusText = ev['狀態'] === '上架' ? '✓ 上架中' : '○ 下架';
+                return '<div class="flex justify-between items-center p-3 border-l-4 ' + statusColor + ' bg-white rounded-lg shadow-sm"><div><h4 class="font-black text-sm">' + ev['活動名稱'] + '</h4><p class="text-[10px] text-slate-400">' + ev['活動ID'] + ' | ' + statusText + '</p></div><button class="text-xs font-bold text-blue-600 underline">編輯</button></div>';
             }).join('');
         }
 
+        // ==========================================
+        // 6. 會員資料同步
+        // ==========================================
         async function saveMemberLocal() {
+            var name = document.getElementById('stu-name').value;
+            if (!name) {
+                showMsg('⚠️ 請填寫學員姓名');
+                return;
+            }
+            
             var student = {
-                name: document.getElementById('stu-name').value,
+                name: name,
+                gender: document.getElementById('stu-gender').value,
                 birthday: document.getElementById('stu-birthday').value,
                 interests: state.userInterests.join(','),
                 parentUid: "USER_WEB"
             };
+            
+            debugLog('準備同步資料: ' + JSON.stringify(student), 'info');
+            
             try {
-                // 使用 POST 同步至雲端
+                showMsg('⏳ 正在上傳...');
+                
                 const res = await fetch(GAS_API_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'submitRegistration', payload: { student: student, eventId: "SYNC", totalPrice: 0 } }),
-                    mode: 'no-cors' // 在 GitHub Pages 上使用 no-cors 避免跨來源限制
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'submitRegistration', 
+                        payload: { student: student, eventId: "SYNC", totalPrice: 0 } 
+                    })
                 });
-                showMsg("資料已成功送出！");
-            } catch(e) { showMsg("同步失敗: " + e.message); }
+                
+                debugLog('資料已送出 (no-cors 模式無法確認結果)', 'warning');
+                showMsg("✅ 資料已成功送出！");
+                
+            } catch(e) { 
+                debugLog('同步失敗: ' + e.message, 'error');
+                showMsg("❌ 同步失敗: " + e.message); 
+            }
         }
 
         function autoDetectGrade() {
             var bDate = document.getElementById('stu-birthday').value; if (!bDate) return;
             var age = new Date().getFullYear() - new Date(bDate).getFullYear();
-            document.getElementById('stu-grade').value = age > 6 ? "小學階段" : "幼兒階段";
-        }
-
-        function showAdminSubPage(p) {
-            document.getElementById('admin-page-list').classList.toggle('hidden', p !== 'list');
+            var grade = age > 6 ? "小學階段 (約" + (age-6) + "年級)" : "幼兒階段";
+            document.getElementById('stu-grade').value = grade;
+            debugLog('自動計算年級: ' + grade, 'info');
         }
     </script>
 </body>
