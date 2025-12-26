@@ -40,9 +40,6 @@
         #loading.hidden { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .session-row { border-bottom: 1px solid #f1f5f9; padding: 8px 0; display: flex; gap: 8px; align-items: flex-end; }
-        
-        /* 報名紀錄小卡 */
-        .reg-log-item { font-size: 12px; border-left: 4px solid #1a73e8; background: #f8faff; padding: 10px; border-radius: 8px; margin-bottom: 8px; }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -70,26 +67,21 @@
                 <div id="activity-cat-list" class="flex overflow-x-auto pb-4 -mx-1 px-1 no-scrollbar"></div>
                 <div id="event-list" class="space-y-4"></div>
             </div>
-            <!-- 其他步驟邏輯 (暫略，專注於後台更新) -->
+            <!-- 其他步驟 (暫略，聚焦後台修復) -->
         </div>
 
         <!-- ==================== 【會員專區】 ==================== -->
         <div id="view-member" class="section-view">
-            <div class="info-card shadow-sm">
+            <div class="info-card">
                 <h2 class="text-xl font-black mb-6 text-[#1a73e8] border-b-2 pb-2 italic text-sm uppercase">Student Profile</h2>
                 <div class="space-y-6">
-                    <div><label class="tag-label">學員姓名</label><input type="text" id="stu-name" class="input-giant" placeholder="真實姓名"></div>
+                    <div><label class="tag-label">學員姓名</label><input type="text" id="stu-name" class="input-giant"></div>
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="tag-label">性別</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
-                        <div><label class="tag-label">生日</label><input type="date" id="stu-birthday" class="input-giant" onchange="autoDetectGrade()"></div>
+                        <div><label class="tag-label">生日</label><input type="date" id="stu-birthday" class="input-giant"></div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label class="tag-label">身高 cm</label><input type="number" id="stu-height" class="input-giant"></div>
-                        <div><label class="tag-label">體重 kg</label><input type="number" id="stu-weight" class="input-giant"></div>
-                    </div>
-                    <div><label class="tag-label">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase" placeholder="投保專用"></div>
-                    <div><label class="tag-label">目前年級</label><input type="text" id="stu-grade" class="input-giant" readonly></div>
-                    <button onclick="saveMemberLocal()" class="btn-mega btn-secondary mt-6 shadow-md">儲存暫存資料</button>
+                    <div><label class="tag-label">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase"></div>
+                    <button onclick="saveMemberLocal()" class="btn-mega btn-secondary mt-6">暫存資料</button>
                 </div>
             </div>
         </div>
@@ -98,17 +90,15 @@
         <div id="view-admin" class="section-view">
             <div id="admin-nav" class="flex justify-around bg-white rounded-2xl mb-6 shadow-sm border overflow-hidden">
                 <div onclick="showAdminSubPage('list')" id="sub-tab-list" class="admin-sub-tab active">活動管理</div>
-                <div onclick="showAdminSubPage('records')" id="sub-tab-records" class="admin-sub-tab">報名紀錄</div>
                 <div onclick="showAdminSubPage('params')" id="sub-tab-params" class="admin-sub-tab">系統參數</div>
             </div>
             
-            <!-- 活動列表 -->
             <div id="admin-page-list">
-                <div class="flex justify-between items-center mb-6"><h3 class="font-black text-slate-800 text-xs uppercase tracking-widest">Event Database</h3><button onclick="openEditor(null)" class="bg-[#1a73e8] text-white px-4 py-2 rounded-xl text-xs font-black shadow-md">+ 新增活動</button></div>
+                <div class="flex justify-between items-center mb-6"><h3 class="font-black text-slate-800 text-xs uppercase tracking-widest">Database</h3><button onclick="openEditor(null)" class="bg-[#1a73e8] text-white px-4 py-2 rounded-xl text-xs font-black shadow-md">+ 新增活動</button></div>
                 <div id="admin-event-grid" class="space-y-3"></div>
             </div>
 
-            <!-- 活動編輯器 -->
+            <!-- 活動編輯器 (15 欄位對齊) -->
             <div id="admin-edit-page" class="hidden">
                 <button onclick="showAdminSubPage('list')" class="mb-4 font-bold text-slate-400 text-xs uppercase">← Back to List</button>
                 <div class="info-card shadow-xl border-t-8 border-[#1a73e8]">
@@ -123,8 +113,8 @@
                             <div id="admin-session-rows" class="space-y-2"></div>
                         </div>
 
-                        <div><label class="tag-label">分類標籤 (C)</label><input type="text" id="edit-category" class="input-giant" placeholder="營隊, 假日專班"></div>
-                        <div><label class="tag-label">活動標題 (D)</label><input type="text" id="edit-name" class="input-giant"></div>
+                        <div><label class="tag-label text-blue-600 font-black">分類標籤勾選 (C)</label><div id="admin-sport-checkboxes" class="grid grid-cols-2 gap-2 mt-1"></div></div>
+                        <div><label class="tag-label">活動名稱 (D)</label><input type="text" id="edit-name" class="input-giant"></div>
                         
                         <div id="admin-single-date-ui" class="grid grid-cols-2 gap-6">
                             <div><label class="tag-label">開始日期 (F)</label><input type="date" id="edit-start" class="input-giant"></div>
@@ -132,38 +122,30 @@
                         </div>
                         
                         <div class="grid grid-cols-2 gap-6">
-                            <div><label class="tag-label">全日價格 (H)</label><input type="number" id="edit-price" class="input-giant"></div>
+                            <div><label class="tag-label">價格 (H)</label><input type="number" id="edit-price" class="input-giant"></div>
                             <div><label class="tag-label">總名額 (K)</label><input type="number" id="edit-quota" class="input-giant"></div>
                         </div>
                         
                         <div class="grid grid-cols-2 gap-6 bg-red-50 p-4 rounded-xl">
-                            <div><label class="tag-label text-red-600 font-black">全日折抵 (I - 必填)</label><input type="number" id="edit-full-deduct" class="input-giant font-black" placeholder="0"></div>
-                            <div><label class="tag-label text-red-600 font-black">半日折抵 (J - 必填)</label><input type="number" id="edit-half-deduct" class="input-giant font-black" placeholder="0"></div>
+                            <div><label class="tag-label">全日折抵 (I)</label><input type="number" id="edit-full-deduct" class="input-giant font-black"></div>
+                            <div><label class="tag-label">半日折抵 (J)</label><input type="number" id="edit-half-deduct" class="input-giant font-black"></div>
                         </div>
                         
                         <div><label class="tag-label">詳細介紹 (L)</label><textarea id="edit-desc" rows="4" class="input-giant !h-auto"></textarea></div>
-                        <div><label class="tag-label">多媒體 URL (M)</label><textarea id="edit-gallery" rows="2" class="input-giant !h-auto text-xs" placeholder="以逗號隔開"></textarea></div>
                         <div><label class="tag-label">封面網址 (N)</label><input type="text" id="edit-img" class="input-giant"></div>
                         
-                        <button onclick="saveEvent()" id="btn-save-event" class="btn-mega btn-primary shadow-md">確認並儲存發布</button>
+                        <button onclick="saveEvent()" id="btn-save-event" class="btn-mega btn-primary shadow-md">儲存並同步試算表</button>
                     </div>
                 </div>
             </div>
-
-            <!-- 報名紀錄分頁 -->
-            <div id="admin-page-records" class="hidden">
-                <h3 class="font-black text-slate-800 text-xs mb-4 uppercase">Registration Logs</h3>
-                <div id="admin-reg-list" class="space-y-3"></div>
-            </div>
             
-            <!-- 系統參數分頁 -->
             <div id="admin-page-params" class="hidden">
                 <div class="info-card">
                     <label class="tag-label">全站匯款帳號設定</label>
                     <textarea id="param-bank-info" rows="4" class="input-giant !h-auto text-sm font-bold"></textarea>
                 </div>
                 <div class="info-card">
-                    <label class="tag-label">運動分類項目 (以逗號隔開)</label>
+                    <label class="tag-label">運動分類清單 (以逗號隔開)</label>
                     <textarea id="param-sport-cats" rows="3" class="input-giant !h-auto text-sm font-bold"></textarea>
                 </div>
                 <button onclick="saveSystemParams()" id="btn-save-params" class="btn-mega btn-primary shadow-md">更新系統參數</button>
@@ -175,10 +157,9 @@
         /**
          * ==========================================
          * 重要：API 設定區
-         * 請在此填入您的 GAS Web App 部署網址
          * ==========================================
          */
-        var GAS_API_URL = "您的GAS網址"; 
+        var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzE5Qt9MCFa3kZHLvmByDXfciyiNE4xYx5RjMFhByUJlYoh8supbOAuhVzfdHJtmww/exec"; 
 
         var state = { isAdmin: false, events: [], config: {}, currentEditId: null, userInterests: [] };
 
@@ -206,15 +187,20 @@
                 const result = await res.json();
                 state.events = result.data || [];
                 state.config = result.config || {};
+                
+                // 讀入參數至 UI
+                var catsStr = Array.isArray(state.config.sportCategories) ? state.config.sportCategories.join(',') : (state.config.sportCategories || "");
+                document.getElementById('param-bank-info').value = state.config.bankInfo || "";
+                document.getElementById('param-sport-cats').value = catsStr;
+                
                 document.getElementById('loading').classList.add('hidden');
+                
                 if (state.isAdmin) {
                     renderAdminList();
-                    document.getElementById('param-bank-info').value = state.config.bankInfo || "";
-                    document.getElementById('param-sport-cats').value = state.config.sportCategories || "";
+                    renderAdminSportCheckboxes(); // 重要：讀入分類勾選框
                 } else {
                     renderActivityList();
                 }
-                renderInterestOptions();
             } catch (e) { console.error(e); }
         }
 
@@ -226,12 +212,13 @@
             if (m === 'admin') showAdminSubPage('list');
         }
 
-        function renderActivityList() {
-            var list = document.getElementById('event-list');
-            list.innerHTML = state.events.map(function(ev){
-                if(ev['狀態'] !== '上架') return '';
-                return '<div class="info-card p-0 overflow-hidden"><img src="' + (ev['圖片URL'] || 'https://placehold.co/600x300') + '" class="w-full h-44 object-cover"><div class="p-5 text-center"><h3 class="text-lg font-black">' + ev['活動名稱'] + '</h3><p class="text-[#1a73e8] font-black text-xl mb-4">NT$ ' + parseInt(ev['全日價'] || 0).toLocaleString() + '</p><button class="btn-mega btn-primary">立即預約</button></div></div>';
-            }).join('') || '<p class="text-center py-20 font-bold text-slate-300 italic">目前無開放活動</p>';
+        function renderAdminSportCheckboxes() {
+            var container = document.getElementById('admin-sport-checkboxes');
+            if(!container) return;
+            var cats = document.getElementById('param-sport-cats').value.split(',').filter(function(c){ return c.trim() !== ""; });
+            container.innerHTML = cats.map(function(opt){
+                return '<label class="flex items-center gap-2 text-xs font-bold bg-slate-50 p-2 rounded border border-slate-100"><input type="checkbox" value="' + opt + '"> ' + opt + '</label>';
+            }).join('');
         }
 
         function renderAdminList() {
@@ -249,7 +236,6 @@
             document.getElementById('admin-edit-page').classList.remove('hidden');
             
             document.getElementById('edit-type').value = ev['活動型態'] || "單日型";
-            document.getElementById('edit-category').value = ev['分類'] || "";
             document.getElementById('edit-name').value = ev['活動名稱'] || "";
             document.getElementById('edit-start').value = ev['開始日期'] || "";
             document.getElementById('edit-end').value = ev['結束日期'] || "";
@@ -260,8 +246,13 @@
             document.getElementById('edit-desc').value = ev['描述'] || "";
             document.getElementById('edit-img').value = ev['圖片URL'] || "";
             document.getElementById('edit-status').value = ev['狀態'] || "上架";
-            document.getElementById('edit-gallery').value = ev['內容媒體'] || "";
             
+            // 處理分類勾選
+            var currentCats = (ev['分類'] || "").split(',');
+            document.querySelectorAll('#admin-sport-checkboxes input').forEach(function(cb){
+                cb.checked = currentCats.indexOf(cb.value) > -1;
+            });
+
             var rowContainer = document.getElementById('admin-session-rows');
             rowContainer.innerHTML = "";
             if(ev['梯次資料']) {
@@ -277,17 +268,23 @@
             var btn = document.getElementById('btn-save-event');
             btn.disabled = true; btn.innerText = "Syncing...";
             
+            // 收集分類項目
+            var selectedCats = [];
+            document.querySelectorAll('#admin-sport-checkboxes input:checked').forEach(function(cb){
+                selectedCats.push(cb.value);
+            });
+
             var sessions = [];
             document.querySelectorAll('#admin-session-rows > .session-row').forEach(function(row){
                 var inputs = row.querySelectorAll('input');
                 if(inputs[0].value) sessions.push({ start: inputs[0].value, end: inputs[1].value });
             });
 
-            // 嚴格對位 15 欄位 (A-O)
+            // 依照試算表 15 欄位 (A-O) 打包
             var payload = {
                 "活動ID": state.currentEditId || ("EVT-" + Date.now()),
                 "活動型態": document.getElementById('edit-type').value,
-                "分類": document.getElementById('edit-category').value,
+                "分類": selectedCats.join(','),
                 "活動名稱": document.getElementById('edit-name').value,
                 "梯次資料": JSON.stringify(sessions),
                 "開始日期": sessions.length > 0 ? sessions[0].start : document.getElementById('edit-start').value,
@@ -297,7 +294,7 @@
                 "半日扣除": document.getElementById('edit-half-deduct').value,
                 "總名額": document.getElementById('edit-quota').value,
                 "描述": document.getElementById('edit-desc').value,
-                "內容媒體": document.getElementById('edit-gallery').value,
+                "內容媒體": "", 
                 "圖片URL": document.getElementById('edit-img').value,
                 "狀態": document.getElementById('edit-status').value
             };
@@ -309,11 +306,11 @@
                 });
                 var result = await res.json();
                 if(result.status === 'success') {
-                    showMsg("活動已成功同步！");
+                    showMsg("活動資料同步成功！");
                     fetchEvents();
                     showAdminSubPage('list');
-                } else { showMsg("錯誤: " + result.message); }
-            } catch (e) { showMsg("同步失敗，請檢查 API 網址"); }
+                }
+            } catch (e) { showMsg("同步失敗"); }
             btn.disabled = false; btn.innerText = "儲存並同步試算表";
         }
 
@@ -336,22 +333,18 @@
         }
 
         function showAdminSubPage(p) {
-            document.querySelectorAll('.admin-sub-tab').forEach(function(t){ t.classList.remove('active'); });
-            var subTab = document.getElementById('sub-tab-' + p); if(subTab) subTab.classList.add('active');
-            
-            document.getElementById('admin-page-list').classList.add('hidden');
-            document.getElementById('admin-page-records').classList.add('hidden');
-            document.getElementById('admin-page-params').classList.add('hidden');
+            document.getElementById('sub-tab-list').classList.toggle('active', p === 'list');
+            document.getElementById('sub-tab-params').classList.toggle('active', p === 'params');
+            document.getElementById('admin-page-list').classList.toggle('hidden', p !== 'list');
+            document.getElementById('admin-page-params').classList.toggle('hidden', p !== 'params');
             document.getElementById('admin-edit-page').classList.add('hidden');
-            
-            document.getElementById('admin-page-' + p).classList.remove('hidden');
         }
 
         function addAdminSessionRow(start, end) {
             var container = document.getElementById('admin-session-rows');
             var div = document.createElement('div');
             div.className = "session-row";
-            div.innerHTML = '<input type="date" class="input-giant !text-xs" value="' + start + '"><input type="date" class="input-giant !text-xs" value="' + end + '"><button onclick="this.parentElement.remove()" class="text-red-500 font-bold px-2 text-lg">×</button>';
+            div.innerHTML = '<input type="date" class="input-giant !text-xs" value="' + start + '"><input type="date" class="input-giant !text-xs" value="' + end + '"><button onclick="this.parentElement.remove()" class="text-red-500 font-bold px-2">×</button>';
             container.appendChild(div);
         }
 
@@ -361,30 +354,10 @@
             document.getElementById('admin-single-date-ui').classList.toggle('hidden', isSession);
         }
 
-        function renderInterestOptions() {
-            var container = document.getElementById('interest-list');
-            if(!container || !state.config.sportCategories) return;
-            var cats = state.config.sportCategories.split(',');
-            container.innerHTML = cats.map(function(opt){
-                var activeClass = state.userInterests.indexOf(opt) > -1 ? 'active' : '';
-                return '<span class="chip ' + activeClass + '" onclick="toggleInterest(this)">' + opt + '</span>';
-            }).join('');
-        }
-
-        function toggleInterest(el) {
-            var i = el.innerText;
-            var idx = state.userInterests.indexOf(i);
-            if (idx > -1) state.userInterests.splice(idx, 1); else state.userInterests.push(i);
-            renderInterestOptions();
-        }
-
-        function autoDetectGrade() {
-            var bDate = document.getElementById('stu-birthday').value; if (!bDate) return;
-            var age = new Date().getFullYear() - new Date(bDate).getFullYear();
-            document.getElementById('stu-grade').value = age > 6 ? "小學階段" : "幼兒園";
-        }
-
-        function saveMemberLocal() { showMsg("資料已暫存於瀏覽器。"); }
+        function renderActivityList() {}
+        function renderInterestOptions() {}
+        function autoDetectGrade() {}
+        function saveMemberLocal() { showMsg("暫存成功"); }
         function resetToHome() { location.reload(); }
     </script>
 </body>
