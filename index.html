@@ -4,20 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" href="data:,">
-    <title>運動島 SPORTS ISLAND - 註冊與成員管理</title>
+    <title>運動島 SPORTS ISLAND - 專業預約系統</title>
     <!-- LINE SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
         
-        body { 
-            font-family: 'Noto Sans TC', sans-serif; 
-            background-color: #f8fafc; 
-            color: #0f172a; 
-            font-size: 16px; 
-            scroll-behavior: smooth;
-        }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #0f172a; font-size: 16px; scroll-behavior: smooth; }
+        .app-content { width: 100%; margin: 0 auto; padding: 1rem; transition: all 0.3s ease; }
+        .mode-desktop { max-width: 1300px; }
+
+        /* 頂部導航區 */
+        .nav-tab { flex: 1; text-align: center; padding: 14px 0; font-weight: 900; font-size: 15px; color: rgba(255,255,255,0.6); border-bottom: 4px solid transparent; cursor: pointer; transition: 0.3s; }
+        .nav-tab.active { color: white !important; border-bottom-color: white !important; }
 
         .section-view { display: none; }
         .section-view.active { display: block; animation: fadeIn 0.4s ease; }
@@ -25,183 +25,198 @@
 
         .input-giant { width: 100%; border: 2px solid #e2e8f0; border-radius: 12px; padding: 14px; font-weight: 700; outline: none; transition: 0.3s; background: white; }
         .input-giant:focus { border-color: #1a73e8; box-shadow: 0 0 0 4px rgba(26,115,232,0.1); }
-        
         .tag-label { color: #1a73e8; font-weight: 900; margin-bottom: 6px; display: block; font-size: 13px; text-transform: uppercase; border-left: 4px solid #1a73e8; padding-left: 10px; }
         
-        .btn-primary { background: #1a73e8; color: white; padding: 16px; border-radius: 20px; font-weight: 900; width: 100%; box-shadow: 0 4px 12px rgba(26,115,232,0.2); }
+        .btn-primary { background: #1a73e8; color: white; padding: 16px; border-radius: 20px; font-weight: 900; width: 100%; box-shadow: 0 4px 12px rgba(26,115,232,0.2); transition: 0.2s; }
         .btn-primary:active { transform: scale(0.98); }
 
-        .card-choice { background: white; border: 2px solid #f1f5f9; padding: 32px; border-radius: 32px; text-align: left; transition: all 0.3s; cursor: pointer; }
-        .card-choice:hover { border-color: #1a73e8; transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .card-choice { background: white; border: 2px solid #f1f5f9; padding: 24px; border-radius: 28px; text-align: left; transition: all 0.3s; cursor: pointer; display: flex; align-items: center; gap: 20px; }
+        .card-choice:hover { border-color: #1a73e8; transform: translateY(-2px); }
 
+        .banner-container { width: 100%; border-radius: 24px; overflow: hidden; margin-bottom: 24px; background: #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
         #msg-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; background: #0f172a; color: white; padding: 12px 24px; border-radius: 99px; font-weight: 700; font-size: 14px; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        
+        /* 隱藏未註冊時的導航 */
+        .header-hidden { display: none !important; }
     </style>
 </head>
-<body class="p-4 md:p-10">
+<body class="bg-slate-50">
 
     <div id="msg-box"></div>
 
-    <!-- 0. 登入遮罩 (穩定修復：避免無限跳轉) -->
-    <div id="view-loading" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
-        <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        <p id="loading-status" class="mt-4 font-black text-slate-400 text-xs tracking-widest uppercase italic">LINE Authenticating...</p>
-        <!-- 預覽模式提醒：僅在 Web 顯示 -->
-        <button id="preview-mode-btn" onclick="RegistrationFlow.skipLogin()" class="mt-8 text-blue-600 font-bold text-xs underline hidden">開發預覽模式 (跳過 LINE 登入)</button>
-    </div>
+    <!-- 頂部功能區 (Header) -->
+    <header id="main-header" class="bg-[#1a73e8] text-white pt-6 pb-1 px-4 md:px-12 sticky top-0 z-50 shadow-md header-hidden">
+        <div class="max-w-[1280px] mx-auto flex flex-col md:flex-row md:justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-black italic tracking-tighter uppercase mb-4 md:mb-0 cursor-pointer" onclick="location.reload()">SPORTS ISLAND</h1>
+            <nav class="flex w-full md:w-auto md:min-w-[400px]">
+                <div onclick="switchMainTab('activity')" id="tab-activity" class="nav-tab active">活動專區</div>
+                <div onclick="switchMainTab('member')" id="tab-member" class="nav-tab">會員專區</div>
+                <div onclick="switchMainTab('admin')" id="tab-admin" class="nav-tab hidden">管理中心</div>
+            </nav>
+        </div>
+    </header>
 
-    <!-- 1. 角色選擇頁面 -->
-    <div id="view-role-choice" class="section-view max-w-md mx-auto pt-10">
-        <div class="text-center mb-12">
-            <h1 class="text-4xl font-black text-slate-900 mb-2 italic">SPORTS ISLAND</h1>
-            <p class="text-slate-400 font-bold">請選擇註冊身份</p>
-        </div>
-        <div class="space-y-4">
-            <div onclick="RegistrationFlow.selectRole('本人')" class="card-choice group">
-                <div class="text-4xl mb-4">🙋‍♂️</div>
-                <h3 class="text-xl font-black text-slate-800 group-hover:text-blue-600">我是學生本人</h3>
-                <p class="text-slate-400 text-sm mt-1">自行管理課程，快速預約各項運動。</p>
-            </div>
-            <div onclick="RegistrationFlow.selectRole('家長')" class="card-choice group">
-                <div class="text-4xl mb-4">👪</div>
-                <h3 class="text-xl font-black text-slate-800 group-hover:text-blue-600">我是家長</h3>
-                <p class="text-slate-400 text-sm mt-1">幫多個小孩報名，統一管理家庭成員。</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. 家長基本資訊填寫 -->
-    <div id="view-parent-form" class="section-view max-w-md mx-auto pt-10">
-        <h2 class="text-2xl font-black text-slate-800 mb-8 pl-4 border-l-4 border-blue-600">家長聯繫資訊</h2>
-        <div class="bg-white p-8 rounded-[40px] shadow-sm space-y-6">
-            <div><label class="tag-label">聯絡人姓名</label><input type="text" id="parent-name" class="input-giant"></div>
-            <div><label class="tag-label">聯絡電話</label><input type="tel" id="parent-phone" class="input-giant" placeholder="09xxxxxxxx"></div>
-            <button onclick="RegistrationFlow.submitParent()" class="btn-primary mt-4">確認並下一步 ➜</button>
-        </div>
-    </div>
-
-    <!-- 3. 學員詳細個資 (完整 16 欄位) -->
-    <div id="view-student-form" class="section-view max-w-2xl mx-auto">
-        <div class="flex items-center justify-between mb-8">
-            <button onclick="RegistrationFlow.backToRole()" class="text-slate-400 font-bold text-xs">⬅ 返回</button>
-            <h2 class="text-2xl font-black text-slate-800">填寫學員詳細個資</h2>
-        </div>
+    <main id="app-wrapper" class="app-content mode-narrow md:mode-desktop">
         
-        <div class="bg-white p-8 md:p-12 rounded-[48px] shadow-sm border border-slate-50">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div><label class="tag-label">學員姓名 (C)</label><input type="text" id="stu-name" class="input-giant"></div>
-                <div><label class="tag-label">性別 (D)</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
-                <div><label class="tag-label">生日 (E)</label><input type="date" id="stu-birthday" class="input-giant" onchange="RegistrationFlow.detectGrade()"></div>
-                <div><label class="tag-label">身分證字號 (F)</label><input type="text" id="stu-id" class="input-giant uppercase"></div>
-                
-                <div class="grid grid-cols-3 gap-2 col-span-full">
-                    <div><label class="tag-label !text-[10px]">身高 cm (H)</label><input type="number" id="stu-height" class="input-giant"></div>
-                    <div><label class="tag-label !text-[10px]">體重 kg (I)</label><input type="number" id="stu-weight" class="input-giant"></div>
-                    <div><label class="tag-label !text-[10px]">腳長 cm (J)</label><input type="number" id="stu-foot" class="input-giant"></div>
+        <!-- 0. 初始化載入遮罩 -->
+        <div id="view-loading" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center">
+            <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p id="loading-status" class="mt-4 font-black text-slate-400 text-xs tracking-widest uppercase italic">LINE Authenticating...</p>
+            <button id="preview-mode-btn" onclick="RegistrationFlow.skipLogin()" class="mt-8 text-blue-600 font-bold text-xs underline hidden">進入測試模式 (非 LINE 環境)</button>
+        </div>
+
+        <!-- 1. 註冊入口頁面 (未註冊時顯示) -->
+        <div id="view-registration-gate" class="section-view max-w-md mx-auto pt-4">
+            <div class="banner-container">
+                <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto object-cover" alt="Banner">
+            </div>
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-black text-slate-900 mb-1 italic tracking-tighter">WELCOME</h1>
+                <p class="text-slate-400 font-bold text-sm">請先選擇註冊身分以繼續</p>
+            </div>
+            <div class="space-y-4">
+                <div onclick="RegistrationFlow.selectRole('本人')" class="card-choice group">
+                    <div class="text-4xl bg-blue-50 w-16 h-16 flex items-center justify-center rounded-2xl">🙋‍♂️</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-black text-slate-800 group-hover:text-blue-600">個人使用</h3>
+                        <p class="text-slate-400 text-xs mt-1 font-bold">適合學生本人或一般成人。</p>
+                    </div>
                 </div>
-
-                <div><label class="tag-label">就讀學校 (K)</label><input type="text" id="stu-school" class="input-giant"></div>
-                <div><label class="tag-label">目前年級 (L)</label><input type="text" id="stu-grade" class="input-giant bg-slate-50" readonly></div>
-                
-                <div class="col-span-full"><label class="tag-label">健康狀況說明 (M)</label><textarea id="stu-health" rows="2" class="input-giant !h-auto"></textarea></div>
-                
-                <div><label class="tag-label">飲食習慣 (N)</label><select id="stu-diet" class="input-giant font-bold"><option value="葷食">葷食</option><option value="素食">素食</option></select></div>
-                <div><label class="tag-label">感興趣項目 (O)</label><input type="text" id="stu-interests" class="input-giant" placeholder="例如：籃球, 足球"></div>
+                <div onclick="RegistrationFlow.selectRole('家長')" class="card-choice group">
+                    <div class="text-4xl bg-orange-50 w-16 h-16 flex items-center justify-center rounded-2xl">👪</div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-black text-slate-800 group-hover:text-blue-600">我是家長</h3>
+                        <p class="text-slate-400 text-xs mt-1 font-bold">幫小孩報名並管理多個成員。</p>
+                    </div>
+                </div>
             </div>
-            
-            <button onclick="RegistrationFlow.submitStudent()" class="btn-primary mt-12 shadow-xl">完成填寫，儲存檔案 ➜</button>
         </div>
-    </div>
 
-    <!-- 4. 成員管理中心 (家庭成員清單) -->
-    <div id="view-family-list" class="section-view max-w-2xl mx-auto pt-10">
-        <div class="flex justify-between items-center mb-10">
-            <div>
-                <h2 class="text-3xl font-black text-slate-800">我的成員庫</h2>
-                <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Family Management</p>
+        <!-- 2. 家長聯繫表單 (家長路徑專屬) -->
+        <div id="view-parent-form" class="section-view max-w-md mx-auto pt-4">
+            <h2 class="text-2xl font-black text-slate-800 mb-8 pl-4 border-l-4 border-blue-600">家長聯繫資訊</h2>
+            <div class="bg-white p-8 rounded-[40px] shadow-sm space-y-6 border">
+                <div><label class="tag-label">聯絡人姓名</label><input type="text" id="parent-name" class="input-giant"></div>
+                <div><label class="tag-label">聯絡電話</label><input type="tel" id="parent-phone" class="input-giant" placeholder="09xxxxxxxx"></div>
+                <button onclick="RegistrationFlow.submitParent()" class="btn-primary mt-4">確認資訊，下一步 ➜</button>
+                <button onclick="RegistrationFlow.backToGate()" class="w-full text-slate-400 font-bold text-xs">返回身分選擇</button>
             </div>
-            <button onclick="RegistrationFlow.showStudentForm()" class="bg-[#1a73e8] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-lg">+ 新增學員</button>
         </div>
-        <div id="family-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- 動態渲染成員清單 -->
+
+        <!-- 3. 學員詳細個資表單 (16 欄位) -->
+        <div id="view-student-form" class="section-view max-w-2xl mx-auto">
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="RegistrationFlow.backToGate()" class="text-slate-400 font-bold text-xs uppercase">⬅ 返回身分選擇</button>
+                <h2 class="text-2xl font-black text-slate-800">建立成員檔案</h2>
+            </div>
+            <div class="bg-white p-8 md:p-12 rounded-[48px] shadow-sm border">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div><label class="tag-label">姓名</label><input type="text" id="stu-name" class="input-giant"></div>
+                    <div><label class="tag-label">性別</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
+                    <div><label class="tag-label">生日</label><input type="date" id="stu-birthday" class="input-giant" onchange="RegistrationFlow.detectGrade()"></div>
+                    <div><label class="tag-label">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase"></div>
+                    <div class="grid grid-cols-3 gap-2 col-span-full">
+                        <div><label class="tag-label !text-[10px]">身高 cm</label><input type="number" id="stu-height" class="input-giant"></div>
+                        <div><label class="tag-label !text-[10px]">體重 kg</label><input type="number" id="stu-weight" class="input-giant"></div>
+                        <div><label class="tag-label !text-[10px]">腳長 cm</label><input type="number" id="stu-foot" class="input-giant"></div>
+                    </div>
+                    <div><label class="tag-label">就讀學校</label><input type="text" id="stu-school" class="input-giant"></div>
+                    <div><label class="tag-label">目前年級</label><input type="text" id="stu-grade" class="input-giant bg-slate-50" readonly></div>
+                    <div class="col-span-full"><label class="tag-label">健康狀況說明</label><textarea id="stu-health" rows="2" class="input-giant !h-auto" placeholder="例如：蠶豆症、藥物過敏"></textarea></div>
+                    <div><label class="tag-label">飲食習慣</label><select id="stu-diet" class="input-giant font-bold"><option value="葷食">葷食</option><option value="素食">素食</option></select></div>
+                    <div><label class="tag-label">興趣項目</label><input type="text" id="stu-interests" class="input-giant" placeholder="例如：籃球, 足球"></div>
+                </div>
+                <button onclick="RegistrationFlow.submitStudent()" class="btn-primary mt-12">儲存檔案並進入庫 ➜</button>
+            </div>
         </div>
-    </div>
+
+        <!-- 4. 活動列表區 (主畫面之一) -->
+        <div id="view-activity" class="section-view">
+            <div class="banner-container">
+                <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto object-cover" alt="Banner">
+            </div>
+            <div id="event-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+                <!-- 活動卡片 -->
+            </div>
+        </div>
+
+        <!-- 5. 會員中心 / 我的成員庫 (主畫面之二) -->
+        <div id="view-member" class="section-view max-w-2xl mx-auto">
+            <div class="banner-container">
+                <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto object-cover" alt="Banner">
+            </div>
+            <div class="flex justify-between items-center mb-8">
+                <div><h2 class="text-2xl font-black text-slate-800">我的成員庫</h2><p class="text-slate-400 font-bold text-[10px] uppercase">Family Members</p></div>
+                <button onclick="RegistrationFlow.showStudentForm()" class="bg-[#1a73e8] text-white px-5 py-2.5 rounded-2xl font-black text-sm shadow-md">+ 新增學員</button>
+            </div>
+            <div id="family-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 成員卡片列表 -->
+            </div>
+        </div>
+
+        <!-- 6. 管理後台 (主畫面之三) -->
+        <div id="view-admin" class="section-view">
+            <!-- 管理後台內容區 (略，邏輯維持穩定) -->
+            <div id="admin-event-grid" class="space-y-4"></div>
+        </div>
+
+    </main>
 
     <script>
         const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
-        let state = { uid: "PREVIEW_USER", userType: "", members: [], lineProfile: null };
+        let state = { uid: "PREVIEW_USER", userType: "", members: [], lineProfile: null, isRegistered: false };
 
-        /**
-         * 註冊流程模組
-         */
         const RegistrationFlow = {
             async init() {
                 try {
                     await liff.init({ liffId: LIFF_ID });
-                    
-                    // 穩定修正：判斷是否在 LINE 內部環境
                     if (!liff.isInClient()) {
-                        document.getElementById('loading-status').innerText = "Developer Mode Active";
+                        document.getElementById('loading-status').innerText = "Web Dev Mode";
                         document.getElementById('preview-mode-btn').classList.remove('hidden');
-                        return; // 不在 LINE 內就不自動登入，防止跳轉
-                    }
-
-                    if (!liff.isLoggedIn()) {
-                        liff.login();
                         return;
                     }
-
-                    const profile = await liff.getProfile();
-                    state.uid = profile.userId;
-                    state.lineProfile = profile;
-                    this.checkUserRecord();
-
-                } catch (e) {
-                    console.error("LIFF Init Error:", e);
-                    document.getElementById('loading-status').innerText = "系統初始化失敗";
-                }
+                    if (!liff.isLoggedIn()) { liff.login(); return; }
+                    const p = await liff.getProfile();
+                    state.uid = p.userId; state.lineProfile = p;
+                    this.checkStatus();
+                } catch (e) { document.getElementById('loading-status').innerText = "LIFF 初始化失敗"; }
             },
-            skipLogin() {
-                document.getElementById('view-loading').style.display = 'none';
-                this.checkUserRecord();
-            },
-            async checkUserRecord() {
-                showMsg("正在核對會員紀錄...");
+            skipLogin() { document.getElementById('view-loading').style.display = 'none'; this.checkStatus(); },
+            async checkStatus() {
+                showMsg("核對會員資料...");
                 const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
                 const r = await res.json();
-                
                 document.getElementById('view-loading').style.display = 'none';
                 if (r.status === 'registered') {
-                    state.userType = r.data.type;
-                    this.loadDashboard();
+                    state.isRegistered = true; state.userType = r.data.type;
+                    this.unlockHeader();
+                    switchMainTab('activity'); // 註冊過的人預設進活動頁
                 } else {
-                    document.getElementById('view-role-choice').classList.add('active');
+                    this.hideAll();
+                    document.getElementById('view-registration-gate').classList.add('active');
                     if(state.lineProfile) document.getElementById('parent-name').value = state.lineProfile.displayName;
                 }
+            },
+            unlockHeader() {
+                document.getElementById('main-header').classList.remove('header-hidden');
             },
             selectRole(role) {
                 state.userType = role;
                 this.hideAll();
-                if (role === '本人') {
-                    this.showStudentForm();
-                } else {
-                    document.getElementById('view-parent-form').classList.add('active');
-                }
+                if (role === '本人') { this.showStudentForm(); } 
+                else { document.getElementById('view-parent-form').classList.add('active'); }
             },
             showStudentForm() {
                 this.hideAll();
                 document.getElementById('view-student-form').classList.add('active');
             },
             async submitParent() {
-                const name = document.getElementById('parent-name').value;
-                const phone = document.getElementById('parent-phone').value;
-                if(!name || !phone) return showMsg("請填寫聯繫資訊");
-                
-                showMsg("正在建立主帳號...");
-                await fetch(PROXY_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name, phone, type: '家長' } })
-                });
+                const n = document.getElementById('parent-name').value;
+                const p = document.getElementById('parent-phone').value;
+                if(!n || !p) return showMsg("請完整填寫");
+                await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name: n, phone: p, type: '家長' } }) });
                 this.showStudentForm();
             },
             async submitStudent() {
@@ -220,49 +235,18 @@
                     diet: document.getElementById('stu-diet').value,
                     interests: document.getElementById('stu-interests').value
                 };
-
-                if(!payload.name || !payload.idNumber) return showMsg("姓名與身分證號為必填");
-
-                showMsg("正在同步雲端檔案...");
-                
-                // 本人路徑：同時建立 User 主帳號
+                if(!payload.name || !payload.idNumber) return showMsg("姓名與身分證號必填");
+                showMsg("儲存成員資料...");
                 if (state.userType === '本人') {
-                    await fetch(PROXY_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name: payload.name, phone: '本人自用', type: '本人' } })
-                    });
+                    await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name: payload.name, phone: '個人使用', type: '本人' } }) });
                 }
-
-                const res = await fetch(PROXY_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'addStudent', payload })
-                });
-                const r = await res.json();
-                if(r.status === 'success') {
-                    showMsg("🎉 成員已成功加入庫中！");
-                    this.loadDashboard();
+                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'addStudent', payload }) });
+                if((await res.json()).status === 'success') {
+                    showMsg("🎉 註冊成功，解鎖選課功能！");
+                    state.isRegistered = true;
+                    this.unlockHeader();
+                    switchMainTab('member'); // 返回成員清單
                 }
-            },
-            async loadDashboard() {
-                this.hideAll();
-                document.getElementById('view-family-list').classList.add('active');
-                
-                const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
-                const r = await res.json();
-                state.members = r.data || [];
-                
-                const grid = document.getElementById('family-grid');
-                grid.innerHTML = state.members.map(m => `
-                    <div class="bg-white p-6 rounded-[32px] border-2 border-slate-50 shadow-sm flex items-center gap-4 relative overflow-hidden">
-                        <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black text-2xl italic">
-                            ${m.姓名.charAt(0)}
-                        </div>
-                        <div>
-                            <h4 class="font-black text-slate-800 text-lg">${m.姓名}</h4>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${m.年級} | ${m.生日}</p>
-                        </div>
-                    </div>
-                `).join('');
             },
             detectGrade() {
                 const b = document.getElementById('stu-birthday').value; if(!b) return;
@@ -270,16 +254,46 @@
                 document.getElementById('stu-grade').value = age > 6 ? `小學 (${age-6}年級)` : "幼兒園";
             },
             hideAll() { document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active')); },
-            backToRole() { this.hideAll(); document.getElementById('view-role-choice').classList.add('active'); }
+            backToGate() { this.hideAll(); document.getElementById('view-registration-gate').classList.add('active'); }
         };
 
-        window.onload = () => RegistrationFlow.init();
-
-        function showMsg(t) { 
-            const b = document.getElementById('msg-box'); 
-            b.innerText = t; b.style.display='block'; 
-            setTimeout(()=>b.style.display='none', 4000); 
+        function switchMainTab(m) {
+            if(!state.isRegistered) return; // 未註冊禁入功能區
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + m)?.classList.add('active');
+            document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + m)?.classList.add('active');
+            if (m === 'member') loadFamilyMembers();
+            if (m === 'activity') loadActivities();
         }
+
+        async function loadFamilyMembers() {
+            const grid = document.getElementById('family-grid');
+            grid.innerHTML = '<p class="p-10 text-slate-300 italic">Syncing Members...</p>';
+            const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
+            const r = await res.json();
+            state.members = r.data || [];
+            grid.innerHTML = state.members.map(m => `
+                <div class="bg-white p-6 rounded-[32px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
+                    <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black text-2xl italic">${m.姓名.charAt(0)}</div>
+                    <div class="flex-1"><h4 class="font-black text-slate-800 text-lg">${m.姓名}</h4><p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${m.年級} | ${m.生日}</p></div>
+                </div>
+            `).join('');
+        }
+
+        async function loadActivities() {
+            const list = document.getElementById('event-list');
+            list.innerHTML = '<p class="p-10 text-slate-300 italic">Loading Courses...</p>';
+            const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
+            const r = await res.json();
+            state.events = r.data || [];
+            list.innerHTML = state.events.filter(ev => ev['狀態'] === '上架').map(ev => `
+                <div class="bg-white rounded-3xl overflow-hidden border shadow-sm"><div class="card-img-container"><img src="${ev['圖片URL'] || 'https://placehold.co/600x400'}" class="img-proportional"></div><div class="p-6"><h3 class="font-black text-lg">${ev['活動名稱']}</h3><p class="text-xl font-black text-slate-900 mt-4">NT$ ${parseInt(ev['全日價']||0).toLocaleString()}</p></div></div>
+            `).join('');
+        }
+
+        window.onload = () => RegistrationFlow.init();
+        function showMsg(t) { const b = document.getElementById('msg-box'); b.innerText = t; b.style.display='block'; setTimeout(()=>b.style.display='none', 4000); }
     </script>
 </body>
 </html>
