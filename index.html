@@ -22,9 +22,13 @@
         .section-view.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .input-giant { width: 100%; border: 1px solid #dddfe2; border-radius: 8px; padding: 12px; font-weight: 700; outline: none; background: #f5f6f7; }
-        .btn-primary { background: #1877f2; color: white; padding: 14px; border-radius: 8px; font-weight: 900; width: 100%; text-align: center; cursor: pointer; border: none; }
+        .input-giant { width: 100%; border: 1px solid #dddfe2; border-radius: 8px; padding: 12px; font-weight: 700; outline: none; background: #f5f6f7; font-size: 14px; }
+        .btn-primary { background: #1877f2; color: white; padding: 14px; border-radius: 8px; font-weight: 900; width: 100%; text-align: center; cursor: pointer; border: none; display: block; }
         .btn-secondary { background: white; color: #606770; border: 1px solid #dddfe2; padding: 8px 16px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor: pointer; }
+
+        /* 管理中心子標籤 */
+        .admin-sub-tab { padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: 13px; color: #606770; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .admin-sub-tab.active { background: #1877f2; color: white; }
 
         /* 日曆系統樣式 */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
@@ -42,6 +46,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .event-card-img { height: 160px; width: 100%; object-fit: cover; }
+        .tag-label { color: #606770; font-weight: 900; margin-bottom: 6px; display: block; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -74,7 +79,7 @@
         <nav class="main-container flex">
             <div onclick="switchMainTab('activity')" id="tab-activity" class="nav-tab active">活動專區</div>
             <div onclick="switchMainTab('member')" id="tab-member" class="nav-tab">會員中心</div>
-            <div onclick="switchMainTab('admin')" id="tab-admin" class="nav-tab hidden">管理</div>
+            <div onclick="switchMainTab('admin')" id="tab-admin" class="nav-tab hidden">管理中心</div>
         </nav>
     </header>
 
@@ -127,14 +132,61 @@
             <div class="content-card max-w-2xl mx-auto">
                 <h2 class="text-xl font-black mb-8 border-b pb-4 text-[#1877f2]">學員個資詳情</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="col-span-full"><label class="block text-xs font-black text-gray-400 mb-1">真實姓名</label><input type="text" id="stu-name" class="input-giant"></div>
-                    <div><label class="block text-xs font-black text-gray-400 mb-1">生日</label><input type="date" id="stu-birthday" class="input-giant" onchange="RegistrationFlow.detectGrade()"></div>
-                    <div><label class="block text-xs font-black text-gray-400 mb-1">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase"></div>
-                    <div><label class="block text-xs font-black text-gray-400 mb-1">目前年級</label><input type="text" id="stu-grade" class="input-giant bg-gray-100" readonly></div>
-                    <div><label class="block text-xs font-black text-gray-400 mb-1">性別</label><select id="stu-gender" class="input-giant"><option value="男">男</option><option value="女">女</option></select></div>
+                    <div class="col-span-full"><label class="tag-label">真實姓名</label><input type="text" id="stu-name" class="input-giant"></div>
+                    <div><label class="tag-label">生日</label><input type="date" id="stu-birthday" class="input-giant" onchange="RegistrationFlow.detectGrade()"></div>
+                    <div><label class="tag-label">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase"></div>
+                    <div><label class="tag-label">目前年級</label><input type="text" id="stu-grade" class="input-giant bg-gray-100" readonly></div>
+                    <div><label class="tag-label">性別</label><select id="stu-gender" class="input-giant"><option value="男">男</option><option value="女">女</option></select></div>
                 </div>
                 <button onclick="RegistrationFlow.submitStudent()" class="btn-primary mt-12 w-full">儲存並同步 ➜</button>
                 <button onclick="switchMainTab('member')" class="w-full mt-4 text-gray-400 font-bold text-xs">取消返回</button>
+            </div>
+        </div>
+
+        <!-- [6. 管理中心視圖] -->
+        <div id="view-admin" class="section-view">
+            <div class="flex gap-2 mb-8 bg-white p-2 rounded-xl shadow-sm overflow-x-auto no-scrollbar">
+                <button onclick="AdminService.switchModule('events')" id="adm-m-events" class="admin-sub-tab active">活動管理</button>
+                <button onclick="AdminService.switchModule('crm')" id="adm-m-crm" class="admin-sub-tab">CRM 會員名單</button>
+                <button onclick="AdminService.switchModule('accounting')" id="adm-m-accounting" class="admin-sub-tab">對帳審核</button>
+                <button onclick="AdminService.switchModule('config')" id="adm-m-config" class="admin-sub-tab">系統參數</button>
+            </div>
+
+            <!-- 子模組容器 -->
+            <div id="adm-view-events">
+                <div class="flex justify-between items-center mb-6"><h3 class="font-black italic">Inventory</h3><button onclick="AdminService.openEventEditor(null)" class="btn-secondary">+ 新增活動</button></div>
+                <div id="admin-event-grid" class="space-y-3"></div>
+            </div>
+            <div id="adm-view-crm" class="hidden"><div id="admin-crm-list" class="space-y-3"></div></div>
+            <div id="adm-view-accounting" class="hidden"><div id="admin-accounting-list" class="space-y-3"></div></div>
+            <div id="adm-view-config" class="hidden">
+                <div class="content-card space-y-6">
+                    <div><label class="tag-label">匯款帳號資訊</label><textarea id="cfg-bank" rows="3" class="input-giant"></textarea></div>
+                    <div><label class="tag-label">分類標籤 (逗號隔開)</label><input type="text" id="cfg-cats" class="input-giant"></div>
+                    <button onclick="AdminService.saveConfig()" class="btn-primary">儲存參數 ➜</button>
+                </div>
+            </div>
+
+            <!-- 活動編輯彈窗 -->
+            <div id="event-editor-modal" class="fixed inset-0 bg-white z-[5000] hidden overflow-y-auto p-6">
+                <div class="max-w-4xl mx-auto bg-white p-10 rounded-[32px] shadow-2xl border">
+                    <h2 class="text-2xl font-black mb-8 italic border-b pb-4">Activity Editor</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="col-span-full"><label class="tag-label">活動名稱</label><input type="text" id="ed-name" class="input-giant"></div>
+                        <div><label class="tag-label">分類</label><input type="text" id="ed-cat" class="input-giant"></div>
+                        <div><label class="tag-label">活動型態</label><select id="ed-type" class="input-giant font-bold"><option value="單日型">單日型</option><option value="梯次型">梯次型</option></select></div>
+                        <div><label class="tag-label">開始日期</label><input type="date" id="ed-start" class="input-giant"></div>
+                        <div><label class="tag-label">結束日期</label><input type="date" id="ed-end" class="input-giant"></div>
+                        <div><label class="tag-label">全日價格</label><input type="number" id="ed-price" class="input-giant"></div>
+                        <div><label class="tag-label">半日價格</label><input type="number" id="ed-hprice" class="input-giant"></div>
+                        <div><label class="tag-label text-[#1877f2]">全日請假扣額</label><input type="number" id="ed-deduct" class="input-giant"></div>
+                        <div><label class="tag-label text-[#1877f2]">半日請假扣額</label><input type="number" id="ed-hdeduct" class="input-giant"></div>
+                        <div class="col-span-full"><label class="tag-label">圖片網址</label><input type="text" id="ed-img" class="input-giant"></div>
+                        <div class="col-span-full"><label class="tag-label">介紹描述</label><textarea id="ed-desc" rows="5" class="input-giant"></textarea></div>
+                    </div>
+                    <button onclick="AdminService.saveEvent()" class="btn-primary mt-12">確認同步更新雲端 ➜</button>
+                    <button onclick="document.getElementById('event-editor-modal').classList.add('hidden')" class="w-full mt-4 text-gray-400 font-bold uppercase text-center text-xs">返回列表</button>
+                </div>
             </div>
         </div>
 
@@ -154,6 +206,7 @@
                     if (!liff.isLoggedIn()) { 
                         if (!liff.isInClient()) {
                             document.getElementById('view-loading').style.display = 'none';
+                            this.checkAdminParam();
                             switchMainTab('activity'); return;
                         }
                         liff.login(); return; 
@@ -163,9 +216,15 @@
                     document.getElementById('line-name-display').innerText = p.displayName;
                     document.getElementById('line-logo-display').src = p.pictureUrl || "";
                     
+                    this.checkAdminParam();
                     document.getElementById('view-loading').style.display = 'none';
                     switchMainTab('activity');
                 } catch (e) { console.error(e); }
+            },
+            checkAdminParam() {
+                if (new URLSearchParams(window.location.search).get('action') === 'admin') {
+                    document.getElementById('tab-admin').classList.remove('hidden');
+                }
             },
             showStudentForm(stuId = null) {
                 state.currentEditStuId = stuId;
@@ -324,7 +383,7 @@
                             </div>
                         </div>
                     </div>
-                    <label class="block text-xs font-black text-gray-400 mb-1">匯款帳號後五碼</label>
+                    <label class="tag-label">匯款帳號後五碼</label>
                     <input type="text" id="wiz-bank5" class="input-giant mb-8" maxlength="5" placeholder="店家核帳用">
                     <button onclick="BookingWizard.finalSubmit()" class="btn-primary shadow-2xl">確認預約並送出 ➜</button>`;
             },
@@ -348,6 +407,120 @@
                     showMsg("🎉 預約成功！");
                     setTimeout(() => switchMainTab('member'), 1000);
                 }
+            }
+        };
+
+        const AdminService = {
+            switchModule(m) {
+                ['events', 'crm', 'accounting', 'config'].forEach(i => {
+                    document.getElementById(`adm-m-${i}`).classList.toggle('active', i === m);
+                    document.getElementById(`adm-view-${i}`).classList.toggle('hidden', i !== m);
+                });
+                if (m === 'crm') this.loadCRM();
+                if (m === 'accounting') this.loadAccounting();
+                if (m === 'config') this.loadConfigUI();
+            },
+            async loadCRM() {
+                const res = await fetch(`${PROXY_URL}?action=adminGetAllStudents`);
+                const r = await res.json();
+                document.getElementById('admin-crm-list').innerHTML = r.data.map(s => `
+                    <div class="content-card flex items-center gap-4 !py-3 hover:bg-gray-50">
+                        <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-black text-xs">${s.姓名.charAt(0)}</div>
+                        <div class="flex-1 min-w-0">
+                            <h4>${s.姓名} <span class="text-[9px] text-gray-400 font-bold ml-1">${s.身分證字號}</span></h4>
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">${s.學校 || '未填'} | ${s.年級 || '未填'}</p>
+                        </div>
+                        <button onclick="RegistrationFlow.showStudentForm('${s.學員ID}')" class="text-blue-600 font-black text-[10px]">編輯</button>
+                    </div>`).join('');
+            },
+            async loadAccounting() {
+                const res = await fetch(`${PROXY_URL}?action=adminGetAllRegs`);
+                const r = await res.json();
+                document.getElementById('admin-accounting-list').innerHTML = r.data.reverse().map(reg => {
+                    const ok = reg.對帳狀態 === "報名成功";
+                    return `
+                    <div class="content-card flex justify-between items-center !py-3">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-[9px] font-black text-[#1877f2] uppercase mb-1">${reg.活動名稱}</p>
+                            <h4 class="font-black text-sm truncate">${reg.學員姓名} <span class="text-xs text-orange-500 font-bold ml-1">五碼: ${reg.匯款後五碼 || '?'}</span></h4>
+                            <p class="text-[11px] font-black text-gray-900">NT$ ${parseInt(reg.應付金額).toLocaleString()}</p>
+                        </div>
+                        <div class="text-right">
+                            ${!ok ? `<button onclick="AdminService.verify('${reg.報名ID}')" class="bg-orange-50 text-orange-600 px-3 py-1.5 rounded-md font-black text-[10px] border border-orange-100">對帳</button>` : `<span class="text-green-500 font-black text-[10px]">✓ 已對帳</span>`}
+                        </div>
+                    </div>`;
+                }).join('');
+            },
+            async verify(regId) {
+                showMsg("核對中...");
+                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'adminVerifyPayment', payload: { regId } }) });
+                if ((await res.json()).status === 'success') {
+                    showMsg("✅ 對帳完成");
+                    this.loadAccounting();
+                }
+            },
+            loadConfigUI() {
+                document.getElementById('cfg-bank').value = state.config.bankInfo || "";
+                document.getElementById('cfg-cats').value = state.config.sportCategories || "";
+            },
+            async saveConfig() {
+                const bankInfo = document.getElementById('cfg-bank').value;
+                const sportCategories = document.getElementById('cfg-cats').value;
+                await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateConfig', payload: { bankInfo, sportCategories } }) });
+                showMsg("✅ 參數已更新");
+            },
+            openEventEditor(id) {
+                state.currentEditId = id;
+                const ev = state.events.find(e => String(e['活動ID']) === String(id)) || {};
+                document.getElementById('event-editor-modal').classList.remove('hidden');
+                const set = (i, v) => document.getElementById(i).value = v || "";
+                set('ed-name', ev['活動名稱']);
+                set('ed-cat', ev['分類']);
+                set('ed-type', ev['活動型態']);
+                set('ed-start', ev['開始日期']);
+                set('ed-end', ev['結束日期']);
+                set('ed-price', ev['全日價']);
+                set('ed-hprice', ev['半日價']);
+                set('ed-deduct', ev['全日扣除']);
+                set('ed-hdeduct', ev['半日扣除']);
+                set('ed-img', ev['圖片URL']);
+                set('ed-desc', ev['描述']);
+            },
+            async saveEvent() {
+                const get = (i) => document.getElementById(i).value;
+                const payload = {
+                    "活動ID": state.currentEditId || ("EVT-" + Date.now()),
+                    "活動型態": get('ed-type'),
+                    "分類": get('ed-cat'),
+                    "活動名稱": get('ed-name'),
+                    "開始日期": get('ed-start'),
+                    "結束日期": get('ed-end'),
+                    "全日價": get('ed-price'),
+                    "半日價": get('ed-hprice'),
+                    "全日扣除": get('ed-deduct'),
+                    "半日扣除": get('ed-hdeduct'),
+                    "圖片URL": get('ed-img'),
+                    "描述": get('ed-desc'),
+                    "狀態": "上架"
+                };
+                showMsg("正在更新活動庫...");
+                await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateEvent', payload }) });
+                showMsg("✅ 活動更新成功");
+                document.getElementById('event-editor-modal').classList.add('hidden');
+                this.loadAdminEvents();
+            },
+            async loadAdminEvents() {
+                const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
+                const r = await res.json();
+                state.events = r.data || [];
+                document.getElementById('admin-event-grid').innerHTML = state.events.map(ev => `
+                    <div class="content-card flex justify-between items-center !py-3">
+                        <div>
+                            <h4 class="font-black text-sm">${ev['活動名稱']}</h4>
+                            <p class="text-[9px] text-gray-400 font-black uppercase">${ev['分類']} | ID: ${ev['活動ID']}</p>
+                        </div>
+                        <button onclick="AdminService.openEventEditor('${ev['活動ID']}')" class="text-blue-600 font-black text-[10px]">編輯規格</button>
+                    </div>`).join('');
             }
         };
 
@@ -414,7 +587,7 @@
                 }
                 container.innerHTML = state.members.map(m => `
                     <div class="content-card flex items-center gap-4 !py-3">
-                        <div class="w-10 h-10 bg-[#e7f3ff] text-[#1877f2] rounded-full flex items-center justify-center font-black italic">${(m.姓名 || "?").charAt(0)}</div>
+                        <div class="w-10 h-10 bg-[#e7f3ff] text-[#1877f2] rounded-full flex items-center justify-center font-black italic text-lg">${(m.姓名 || "?").charAt(0)}</div>
                         <div class="flex-1">
                             <h4 class="font-black text-sm">${m.姓名}</h4>
                             <p class="text-[10px] text-gray-400 font-bold">${m.年級 || ''} | ${m.生日 || ''}</p>
@@ -446,6 +619,7 @@
             switchView(m);
             if (m === 'member') { loadFamilyMembers(); loadHistoryRecords(); }
             if (m === 'activity') loadCourses();
+            if (m === 'admin') AdminService.switchModule('events');
         }
 
         function switchView(v) {
