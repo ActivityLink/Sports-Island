@@ -8,15 +8,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; color: #1c1e21; font-size: 15px; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; color: #1c1e21; font-size: 15px; scroll-behavior: smooth; }
         .main-container { max-width: 960px; margin: 0 auto; padding: 0 12px; }
         .content-card { background: white; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 12px; }
         
-        /* 導航標籤 */
         .nav-tab { flex: 1; text-align: center; padding: 12px 0; font-weight: 900; font-size: 13px; color: rgba(255,255,255,0.7); border-bottom: 3px solid transparent; cursor: pointer; }
         .nav-tab.active { color: white !important; border-bottom-color: white !important; }
         
-        /* 分類標籤樣式 */
         .tag-pill { padding: 6px 14px; border-radius: 99px; background: white; border: 1px solid #dddfe2; font-size: 12px; font-weight: 900; cursor: pointer; white-space: nowrap; color: #606770; transition: 0.2s; }
         .tag-pill.active { background: #e7f3ff; color: #1877f2; border-color: #1877f2; }
 
@@ -26,19 +24,44 @@
         
         .input-giant { width: 100%; border: 1px solid #dddfe2; border-radius: 8px; padding: 12px; font-weight: 700; outline: none; background: #f5f6f7; }
         .btn-primary { background: #1877f2; color: white; padding: 14px; border-radius: 8px; font-weight: 900; width: 100%; text-align: center; cursor: pointer; border: none; }
+        .btn-secondary { background: white; color: #606770; border: 1px solid #dddfe2; padding: 8px 16px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor: pointer; }
+
+        /* 日曆系統樣式 */
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .cal-day { aspect-ratio: 1; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; cursor: pointer; border: 1px solid #eee; }
+        .status-attend { background: #e7f3ff; color: #1877f2; border-color: #1877f2; }
+        .status-full-leave { background: #f0f2f5; color: #90949c; text-decoration: line-through; }
+        .status-am-leave { background: #fffbeb; color: #92400e; }
+        .status-pm-leave { background: #f0fdf4; color: #166534; }
+
         #msg-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10001; background: #1c1e21; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; display: none; }
-        
-        /* 課程卡片圖片 */
-        .event-card-img { height: 160px; width: 100%; object-fit: cover; }
-        
-        /* 隱藏滾動條 */
+        #leave-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; display: none; align-items: flex-end; backdrop-filter: blur(4px); }
+        .modal-body { background: white; width: 100%; border-radius: 24px 24px 0 0; padding: 24px; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .event-card-img { height: 160px; width: 100%; object-fit: cover; }
     </style>
 </head>
 <body>
 
     <div id="msg-box"></div>
+
+    <!-- 出席設定彈窗 -->
+    <div id="leave-modal" onclick="this.style.display='none'">
+        <div class="modal-body" onclick="event.stopPropagation()">
+            <h3 class="text-xl font-black mb-1 italic uppercase">Attendance Status</h3>
+            <div id="target-date-display" class="mb-6 text-sm text-[#1877f2] font-black text-center"></div>
+            <div class="space-y-3">
+                <button onclick="BookingWizard.setLeaveStatus('attend')" class="w-full p-5 rounded-xl bg-[#e7f3ff] text-[#1877f2] font-black text-left flex justify-between">全日出席 <span>✓</span></button>
+                <button onclick="BookingWizard.setLeaveStatus('am')" class="w-full p-5 rounded-xl bg-orange-50 text-orange-600 font-black text-left flex justify-between">上午請假 <span>△</span></button>
+                <button onclick="BookingWizard.setLeaveStatus('pm')" class="w-full p-5 rounded-xl bg-green-50 text-green-600 font-black text-left flex justify-between">下午請假 <span>▽</span></button>
+                <button onclick="BookingWizard.setLeaveStatus('full')" class="w-full p-5 rounded-xl bg-gray-100 text-gray-400 font-black text-left flex justify-between">全日不出席 <span>✕</span></button>
+            </div>
+            <button onclick="document.getElementById('leave-modal').style.display='none'" class="w-full mt-6 py-2 font-black text-gray-400 text-xs text-center">關閉選單</button>
+        </div>
+    </div>
 
     <header id="main-header" class="bg-[#1877f2] text-white pt-3 sticky top-0 z-50 shadow-md">
         <div class="main-container flex justify-between items-center pb-2">
@@ -64,18 +87,25 @@
         
         <!-- [1. 活動專區] -->
         <div id="view-activity" class="section-view active">
-            <!-- 搜尋與分類標籤區 (補回) -->
             <div class="flex flex-col gap-4 mb-6">
                 <input type="text" id="search-input" oninput="loadCourses()" placeholder="🔍 搜尋活動名稱..." class="input-giant !bg-white border-none shadow-sm">
-                <div id="category-tags" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                    <!-- 分類標籤會在這裡動態生成 -->
-                </div>
+                <div id="category-tags" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
             </div>
-
             <div id="event-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- [2. 會員中心] -->
+        <!-- [2. 活動詳情] -->
+        <div id="view-activity-detail" class="section-view">
+            <button onclick="switchMainTab('activity')" class="mb-4 text-gray-500 font-black text-xs flex items-center gap-1 group">⬅ 返回活動列表</button>
+            <div id="detail-content-area" class="content-card !p-0 overflow-hidden"></div>
+        </div>
+
+        <!-- [3. 預約精靈] -->
+        <div id="view-booking-wizard" class="section-view max-w-xl mx-auto">
+            <div id="wizard-content" class="content-card min-h-[500px]"></div>
+        </div>
+
+        <!-- [4. 會員中心] -->
         <div id="view-member" class="section-view">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-7">
@@ -92,7 +122,7 @@
             </div>
         </div>
 
-        <!-- [3. 個資編輯] -->
+        <!-- [5. 個資編輯] -->
         <div id="view-student-form" class="section-view">
             <div class="content-card max-w-2xl mx-auto">
                 <h2 class="text-xl font-black mb-8 border-b pb-4 text-[#1877f2]">學員個資詳情</h2>
@@ -114,6 +144,8 @@
         const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
         let state = { uid: "DEBUG_USER", members: [], events: [], config: {}, selectedCategory: '全部' };
+        let bookingData = { event: null, student: null, attendanceMap: {}, currentWeekIdx: 0 };
+        let activeDateKey = null;
 
         const RegistrationFlow = {
             async init() {
@@ -174,29 +206,150 @@
             }
         };
 
-        async function loadFamilyMembers() {
-            const container = document.getElementById('family-grid');
-            container.innerHTML = `<p class="text-xs text-gray-400 animate-pulse">正在從雲端同步成員...</p>`;
-            try {
+        const BookingWizard = {
+            async start(eid) {
+                const ev = state.events.find(e => String(e['活動ID']) === String(eid));
+                if(!ev) return;
+                bookingData = { event: ev, student: null, type: '全日', session: '單日', amount: Number(ev['全日價']), attendanceMap: {}, currentWeekIdx: 0 };
+                
+                showMsg("讀取成員清單...");
                 const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
-                const r = await res.json();
-                state.members = r.data || [];
-                if (state.members.length === 0) {
-                    container.innerHTML = `<div class="p-10 border-2 border-dashed rounded-xl text-center"><p class="text-gray-400 text-xs">目前還沒有成員資料</p></div>`;
+                state.members = (await res.json()).data || [];
+                
+                if(!state.members.length) {
+                    showMsg("請先新增學員個資");
+                    RegistrationFlow.showStudentForm();
                     return;
                 }
-                container.innerHTML = state.members.map(m => `
-                    <div class="content-card flex items-center gap-4 !py-3 hover:bg-gray-50 transition-all">
-                        <div class="w-10 h-10 bg-[#e7f3ff] text-[#1877f2] rounded-full flex items-center justify-center font-black italic text-lg">${(m.姓名 || "?").charAt(0)}</div>
-                        <div class="flex-1">
-                            <h4 class="font-black text-sm">${m.姓名}</h4>
-                            <p class="text-[10px] text-gray-400 font-bold">${m.年級 || '未設定'} | ${m.生日 || ''}</p>
+                this.goToStep(1);
+            },
+            goToStep(step) {
+                switchView('booking-wizard');
+                const el = document.getElementById('wizard-content');
+                if (step === 1) this.renderStep1(el);
+                if (step === 2) this.renderStep2(el);
+                if (step === 3) this.renderStep3(el);
+                if (step === 4) this.renderStep4(el);
+            },
+            renderStep1(el) {
+                el.innerHTML = `<h2 class="text-lg font-black mb-6 border-b pb-2 text-[#1877f2]">1. 選擇報名成員</h2><div class="space-y-2">
+                    ${state.members.map(m => `
+                    <div onclick="BookingWizard.selectMember('${m.學員ID}')" class="p-4 border border-gray-100 rounded-lg cursor-pointer flex justify-between items-center hover:bg-gray-50">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 bg-[#e7f3ff] text-[#1877f2] rounded-full flex items-center justify-center font-black italic">${m.姓名.charAt(0)}</div>
+                            <p class="font-black text-sm">${m.姓名}</p>
                         </div>
-                        <button onclick="RegistrationFlow.showStudentForm('${m.學員ID}')" class="text-gray-400 font-black text-[10px] border px-2 py-1 rounded">編輯</button>
+                        <div class="text-[#1877f2] font-black text-xs">選擇 ➜</div>
+                    </div>`).join('')}</div>`;
+            },
+            selectMember(sid) {
+                bookingData.student = state.members.find(m => String(m.學員ID) === String(sid));
+                this.goToStep(2);
+            },
+            renderStep2(el) {
+                const ev = bookingData.event;
+                el.innerHTML = `<h2 class="text-lg font-black mb-8 border-b pb-2 text-[#1877f2]">2. 方案選擇</h2>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div onclick="BookingWizard.selectType('全日', ${ev['全日價']})" class="p-6 border border-gray-100 rounded-xl cursor-pointer hover:border-[#1877f2] text-center active:scale-95">
+                            <p class="font-bold text-gray-400 text-sm">全日方案</p>
+                            <p class="text-2xl font-black text-[#1877f2] mt-2">NT$ ${parseInt(ev['全日價']).toLocaleString()}</p>
+                        </div>
+                        <div onclick="BookingWizard.selectType('半日', ${ev['半日價']})" class="p-6 border border-gray-100 rounded-xl cursor-pointer hover:border-[#1877f2] text-center active:scale-95">
+                            <p class="font-bold text-gray-400 text-sm">半日方案</p>
+                            <p class="text-2xl font-black text-[#1877f2] mt-2">NT$ ${parseInt(ev['半日價']).toLocaleString()}</p>
+                        </div>
+                    </div>`;
+            },
+            selectType(t, p) {
+                bookingData.type = t;
+                bookingData.amount = Number(p);
+                this.goToStep(3);
+            },
+            renderStep3(el) {
+                const ev = bookingData.event;
+                const sd = new Date(ev['開始日期']), ed = new Date(ev['結束日期'] || ev['開始日期']);
+                const ad = this.generateDateList(sd, ed);
+                
+                if (Object.keys(bookingData.attendanceMap).length === 0) ad.forEach(d => bookingData.attendanceMap[d] = 'attend');
+                
+                const w = []; for (let i = 0; i < ad.length; i += 7) w.push(ad.slice(i, i + 7));
+                const cwd = w[bookingData.currentWeekIdx] || [];
+                
+                let ch = `<div class="cal-grid mb-8">`;
+                ["日","一","二","三","四","五","六"].forEach(x => ch += `<div class="text-center text-[10px] font-black text-gray-300 uppercase">${x}</div>`);
+                for(let i=0; i<(new Date(cwd[0])).getDay(); i++) ch += `<div></div>`;
+                cwd.forEach(d => {
+                    const st = bookingData.attendanceMap[d], dn = d.split('-')[2];
+                    let cs = 'status-attend';
+                    if (st === 'full') cs = 'status-full-leave';
+                    if (st === 'am') cs = 'status-am-leave';
+                    if (st === 'pm') cs = 'status-pm-leave';
+                    ch += `<div onclick="BookingWizard.openLeaveSelector('${d}')" class="cal-day ${cs}">${dn}</div>`;
+                });
+                ch += `</div>`;
+                
+                el.innerHTML = `<h2 class="text-xl font-black mb-2 text-[#1877f2]">3. 確認出席日</h2><p class="text-[11px] text-gray-500 font-bold mb-6">點擊不出席的日期進行修改</p>${ch}
+                    <button onclick="BookingWizard.goToStep(4)" class="btn-primary mt-4">確認日期，下一步 ➜</button>`;
+            },
+            openLeaveSelector(d) {
+                activeDateKey = d;
+                document.getElementById('target-date-display').innerText = d;
+                document.getElementById('leave-modal').style.display = 'flex';
+            },
+            setLeaveStatus(st) {
+                bookingData.attendanceMap[activeDateKey] = st;
+                document.getElementById('leave-modal').style.display = 'none';
+                this.renderStep3(document.getElementById('wizard-content'));
+            },
+            generateDateList(s, e) {
+                const l = []; let c = new Date(s);
+                while(c <= e) { l.push(c.toISOString().split('T')[0]); c.setDate(c.getDate()+1); }
+                return l;
+            },
+            renderStep4(el) {
+                const ev = bookingData.event, fd = Number(ev['全日扣除'] || 0), hd = Number(ev['半日扣除'] || 0);
+                let fl=0, hl=0;
+                Object.values(bookingData.attendanceMap).forEach(v => { if (v === 'full') fl++; else if (v === 'am' || v === 'pm') hl++; });
+                const td = (fl * fd) + (hl * hd), fa = Math.max(0, Number(bookingData.amount) - td);
+                bookingData.finalAmount = fa;
+
+                el.innerHTML = `<h2 class="text-xl font-black mb-8 border-b pb-4 text-center">4. 資訊總覽</h2>
+                    <div class="bg-gray-900 text-white p-8 rounded-2xl mb-8 shadow-xl">
+                        <div class="space-y-4">
+                            <div class="flex justify-between text-sm opacity-60"><span>方案總額</span><span>NT$ ${parseInt(bookingData.amount).toLocaleString()}</span></div>
+                            <div class="flex justify-between text-sm text-orange-400"><span>請假扣除</span><span>- NT$ ${parseInt(td).toLocaleString()}</span></div>
+                            <div class="pt-6 border-t border-white/20 flex justify-between items-end">
+                                <div><p class="text-[10px] opacity-60">應付總額</p><p class="text-4xl font-black italic">NT$ ${parseInt(fa).toLocaleString()}</p></div>
+                                <div class="text-right text-[10px] opacity-60"><p>${bookingData.student.姓名}</p><p>${bookingData.type}</p></div>
+                            </div>
+                        </div>
                     </div>
-                `).join('');
-            } catch (err) { container.innerHTML = `<p class="text-red-500 text-xs">讀取失敗</p>`; }
-        }
+                    <label class="block text-xs font-black text-gray-400 mb-1">匯款帳號後五碼</label>
+                    <input type="text" id="wiz-bank5" class="input-giant mb-8" maxlength="5" placeholder="店家核帳用">
+                    <button onclick="BookingWizard.finalSubmit()" class="btn-primary shadow-2xl">確認預約並送出 ➜</button>`;
+            },
+            async finalSubmit() {
+                const b5 = document.getElementById('wiz-bank5').value;
+                if(!b5 || b5.length < 5) return showMsg("請填寫正確五碼");
+                showMsg("送出預約中...");
+                const ds = Object.entries(bookingData.attendanceMap).map(([d, s]) => `${d}:${s}`).join('|');
+                const payload = { 
+                    parentUid: state.uid,
+                    student: bookingData.student, 
+                    eventId: bookingData.event['活動ID'], 
+                    eventName: bookingData.event['活動名稱'], 
+                    type: bookingData.type, 
+                    amount: bookingData.finalAmount, 
+                    bankLast5: b5, 
+                    selectedDates: ds 
+                };
+                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
+                if ((await res.json()).status === 'success') {
+                    showMsg("🎉 預約成功！");
+                    setTimeout(() => switchMainTab('member'), 1000);
+                }
+            }
+        };
 
         async function loadCourses() {
             const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
@@ -204,16 +357,12 @@
             state.events = r.data || [];
             state.config = r.config || {};
 
-            // 1. 渲染分類標籤 (補回)
             const tagsEl = document.getElementById('category-tags');
             const cats = ['全部', ...(state.config.sportCategories || "").split(',')];
             tagsEl.innerHTML = cats.map(c => `
-                <div onclick="filterCat('${c.trim()}')" class="tag-pill ${state.selectedCategory === c.trim() ? 'active' : ''}">
-                    ${c.trim()}
-                </div>
+                <div onclick="filterCat('${c.trim()}')" class="tag-pill ${state.selectedCategory === c.trim() ? 'active' : ''}">${c.trim()}</div>
             `).join('');
 
-            // 2. 過濾邏輯 (補回)
             const searchVal = document.getElementById('search-input').value.toLowerCase();
             const filtered = state.events.filter(ev => {
                 const matchCat = state.selectedCategory === '全部' || ev['分類'] === state.selectedCategory;
@@ -221,7 +370,6 @@
                 return ev['狀態'] === '上架' && matchCat && matchSearch;
             });
 
-            // 3. 渲染列表
             document.getElementById('event-list').innerHTML = filtered.map(ev => `
                 <div class="content-card !p-0 overflow-hidden group hover:shadow-md transition-all">
                     <img src="${ev['圖片URL'] || 'https://placehold.co/600x400'}" class="event-card-img">
@@ -229,12 +377,24 @@
                         <p class="text-[10px] font-black text-[#1877f2] uppercase mb-1">${ev['分類']}</p>
                         <h3 class="font-bold text-sm mb-4 truncate">${ev['活動名稱']}</h3>
                         <div class="flex gap-2">
-                             <button class="btn-primary !py-2 !text-xs !bg-gray-100 !text-gray-600">詳情</button>
-                             <button class="btn-primary !py-2 !text-xs">預約</button>
+                             <button onclick="showDetail('${ev['活動ID']}')" class="btn-primary !py-2 !text-xs !bg-gray-100 !text-gray-600">詳情</button>
+                             <button onclick="BookingWizard.start('${ev['活動ID']}')" class="btn-primary !py-2 !text-xs">預約</button>
                         </div>
                     </div>
                 </div>
             `).join('');
+        }
+
+        function showDetail(id) {
+            const ev = state.events.find(e => String(e['活動ID']) === String(id)); if(!ev) return;
+            switchView('activity-detail');
+            document.getElementById('detail-content-area').innerHTML = `
+                <img src="${ev['圖片URL']}" class="w-full h-auto max-h-[350px] object-cover">
+                <div class="p-8">
+                    <h2 class="text-2xl font-black mb-6 italic uppercase tracking-tighter">${ev['活動名稱']}</h2>
+                    <div class="text-gray-700 text-lg leading-relaxed mb-12 whitespace-pre-wrap">${ev['描述'] || '內容編輯中...'}</div>
+                    <button onclick="BookingWizard.start('${ev['活動ID']}')" class="btn-primary shadow-xl">立即報名 ➜</button>
+                </div>`;
         }
 
         function filterCat(c) {
@@ -242,11 +402,49 @@
             loadCourses();
         }
 
+        async function loadFamilyMembers() {
+            const container = document.getElementById('family-grid');
+            container.innerHTML = `<p class="text-xs text-gray-400 animate-pulse">正在同步...</p>`;
+            try {
+                const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
+                state.members = (await res.json()).data || [];
+                if (state.members.length === 0) {
+                    container.innerHTML = `<div class="p-10 border-2 border-dashed rounded-xl text-center"><p class="text-gray-400 text-xs">目前沒有成員</p></div>`;
+                    return;
+                }
+                container.innerHTML = state.members.map(m => `
+                    <div class="content-card flex items-center gap-4 !py-3">
+                        <div class="w-10 h-10 bg-[#e7f3ff] text-[#1877f2] rounded-full flex items-center justify-center font-black italic">${(m.姓名 || "?").charAt(0)}</div>
+                        <div class="flex-1">
+                            <h4 class="font-black text-sm">${m.姓名}</h4>
+                            <p class="text-[10px] text-gray-400 font-bold">${m.年級 || ''} | ${m.生日 || ''}</p>
+                        </div>
+                        <button onclick="RegistrationFlow.showStudentForm('${m.學員ID}')" class="text-gray-400 font-black text-[10px] border px-2 py-1 rounded">編輯</button>
+                    </div>`).join('');
+            } catch (err) { container.innerHTML = `<p class="text-red-500 text-xs">讀取失敗</p>`; }
+        }
+
+        async function loadHistoryRecords() {
+            const container = document.getElementById('history-container');
+            const res = await fetch(`${PROXY_URL}?action=getHistory&uid=${state.uid}`);
+            const r = await res.json();
+            container.innerHTML = (r.data || []).map(h => {
+                const ok = h.對帳狀態 === "報名成功";
+                return `<div class="content-card border-l-4 ${ok ? 'border-green-500':'border-[#1877f2]'}">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-black text-sm">${h.活動名稱}</h4>
+                        <span class="text-[9px] font-bold px-2 py-1 rounded ${ok ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}">${ok ? '成功':'待核'}</span>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-2">${h.學員姓名} | NT$ ${parseInt(h.應付金額).toLocaleString()}</p>
+                </div>`;
+            }).join('');
+        }
+
         function switchMainTab(m) {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + m)?.classList.add('active');
             switchView(m);
-            if (m === 'member') loadFamilyMembers();
+            if (m === 'member') { loadFamilyMembers(); loadHistoryRecords(); }
             if (m === 'activity') loadCourses();
         }
 
