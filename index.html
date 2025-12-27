@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="icon" href="data:,">
-    <title>運動島 SPORTS ISLAND - 穩定優化版</title>
+    <title>運動島 SPORTS ISLAND</title>
     <!-- LINE SDK & Libraries -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,254 +12,195 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&display=swap');
         
-        /* 1. 核心穩定設定：防止跳動與閃爍 */
         :root {
             --bg-color: #f0f2f5;
             --primary-blue: #1877f2;
+            --header-height: 76px;
         }
 
-        html, body { 
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            /* 預設隱藏滾動條，初始化後再打開 */
-            overflow: hidden; 
-            -webkit-tap-highlight-color: transparent;
-        }
+        /* 穩定基礎設定 */
+        html { background-color: var(--bg-color); }
         
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
+            background-color: var(--bg-color);
             color: #1c1e21; 
-            font-size: 17px; /* 放大字體 */
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* 初始化期間禁止滾動防止跳動 */
+            font-size: 17px; 
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
         
-        /* 主容器：使用 dvh 單位適應行動裝置工具列 */
+        /* 佈局鎖定 */
+        header {
+            height: var(--header-height);
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
         .main-container { 
             max-width: 1080px; 
             margin: 0 auto; 
             padding: 0 16px; 
-            min-height: 100dvh;
+            min-height: calc(100dvh - var(--header-height));
         }
         
         .content-card { 
             background: white; 
             border-radius: 16px; 
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08); 
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06); 
             padding: 28px; 
             margin-bottom: 24px; 
         }
 
-        /* 導覽列穩定化 */
         .nav-tab { 
-            flex: 1; 
-            text-align: center; 
-            padding: 18px 0; 
-            font-size: 16px; 
-            color: rgba(255,255,255,0.7); 
-            border-bottom: 3px solid transparent; 
-            cursor: pointer; 
-            transition: all 0.2s ease;
+            flex: 1; text-align: center; padding: 14px 0; font-size: 16px; 
+            color: rgba(255,255,255,0.7); border-bottom: 3px solid transparent; 
+            cursor: pointer; transition: all 0.2s;
         }
-        .nav-tab.active { 
-            color: white !important; 
-            border-bottom-color: white !important; 
-        }
+        .nav-tab.active { color: white !important; border-bottom-color: white !important; }
 
-        /* 介面準備狀態：隱藏但佔位，減少 Reflow */
-        #main-header, #main-content { 
-            visibility: hidden;
-            opacity: 0;
-        }
+        /* 視圖切換：純透明度，無位移 */
+        #main-content { visibility: hidden; opacity: 0; transition: opacity 0.5s ease; }
+        .section-view { display: none; opacity: 0; }
+        .section-view.active { display: block; animation: fadeInPure 0.5s forwards; }
+        @keyframes fadeInPure { from { opacity: 0; } to { opacity: 1; } }
 
-        /* 視圖切換：純透明度過渡 */
-        .section-view { 
-            display: none; 
-            opacity: 0; 
-        }
-        .section-view.active { 
-            display: block; 
-            animation: fadeInPure 0.4s forwards; 
-        }
-        @keyframes fadeInPure { 
-            from { opacity: 0; } 
-            to { opacity: 1; } 
-        }
-        
-        /* 角色按鈕優化：大空間，舒適字體 */
-        .role-option { 
-            border: 1px solid #dddfe2; 
-            padding: 24px; 
-            border-radius: 16px; 
-            cursor: pointer; 
-            transition: 0.2s; 
-            text-align: center; 
-            background: white; 
-            font-size: 16px;
-        }
-        .role-option.selected { 
-            border-color: var(--primary-blue); 
-            background: #e7f3ff; 
-            color: var(--primary-blue); 
-            box-shadow: 0 0 0 1px var(--primary-blue);
-        }
+        /* 元素樣式優化 (不加粗) */
+        .role-option { border: 1px solid #dddfe2; padding: 22px; border-radius: 16px; background: white; text-align: center; cursor: pointer; }
+        .role-option.selected { border-color: var(--primary-blue); background: #e7f3ff; color: var(--primary-blue); }
+        .input-giant { width: 100%; border: 1px solid #dddfe2; border-radius: 12px; padding: 16px; background: #f5f6f7; font-size: 17px; }
+        .btn-primary { background: var(--primary-blue); color: white; padding: 18px; border-radius: 14px; width: 100%; text-align: center; font-size: 17px; cursor: pointer; border: none; }
+        .btn-secondary { background: white; color: #606770; border: 1px solid #dddfe2; padding: 12px 24px; border-radius: 12px; font-size: 15px; cursor: pointer; }
 
-        .input-giant { 
-            width: 100%; 
-            border: 1px solid #dddfe2; 
-            border-radius: 12px; 
-            padding: 16px; 
-            outline: none; 
-            background: #f5f6f7; 
-            font-size: 17px; 
-            transition: all 0.2s;
-        }
-        .input-giant:focus { 
-            border-color: var(--primary-blue); 
-            background: white; 
-            box-shadow: 0 0 0 3px rgba(24,119,242,0.1);
-        }
-        
-        .btn-primary { 
-            background: var(--primary-blue); 
-            color: white; 
-            padding: 20px; 
-            border-radius: 14px; 
-            width: 100%; 
-            text-align: center; 
-            cursor: pointer; 
-            border: none; 
-            display: block; 
-            font-size: 18px; 
-            transition: opacity 0.2s;
-        }
-        .btn-primary:active { opacity: 0.8; }
-
-        /* 全螢幕載入畫面：穩定背景色 */
+        /* 載入畫面 */
         #view-loading {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-color);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            position: fixed; inset: 0; background: var(--bg-color); z-index: 10000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 0.5s ease, visibility 0.5s ease;
         }
 
         #msg-box { 
-            position: fixed; 
-            top: 24px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            z-index: 10001; 
-            background: rgba(0,0,0,0.85); 
-            color: white; 
-            padding: 16px 36px; 
-            border-radius: 12px; 
-            font-size: 16px; 
-            display: none; 
-            backdrop-filter: blur(8px);
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 10001; 
+            background: rgba(0,0,0,0.85); color: white; padding: 16px 36px; border-radius: 12px; 
+            font-size: 16px; display: none; backdrop-filter: blur(8px);
         }
+        
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* 日曆小樣式 */
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .cal-day { aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; border: 1px solid #eee; }
+        .status-attend { background: #e7f3ff; color: #1877f2; border-color: #1877f2; }
     </style>
 </head>
 <body>
 
     <div id="msg-box"></div>
 
-    <!-- 載入中畫面 -->
     <div id="view-loading">
-        <div class="w-12 h-12 border-[3px] border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
-        <p id="loading-status" class="mt-8 text-gray-400 text-sm tracking-[0.2em] uppercase">Sport Island Syncing</p>
+        <div class="w-10 h-10 border-[3px] border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-6 text-gray-400 text-xs tracking-[0.3em] uppercase">Sport Island Syncing</p>
     </div>
 
-    <!-- 頂部導覽 -->
-    <header id="main-header" class="bg-[#1877f2] text-white pt-5 pb-1 sticky top-0 z-50 shadow-sm">
-        <div class="main-container flex justify-between items-center">
-            <div class="flex items-center gap-5">
-                <h1 class="text-2xl cursor-pointer tracking-tight" onclick="location.reload()">SPORTS ISLAND</h1>
-                <div class="profile-chip flex items-center gap-3 bg-white/10 p-1 px-4 rounded-full">
-                    <div class="avatar-frame w-8 h-8 rounded-full overflow-hidden bg-white shadow-inner">
+    <header id="main-header" class="bg-[#1877f2] text-white sticky top-0 z-50 shadow-sm flex items-end pb-1">
+        <div class="main-container w-full flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <h1 class="text-xl cursor-pointer tracking-tighter" onclick="location.reload()">SPORTS ISLAND</h1>
+                <div class="profile-chip flex items-center gap-2 bg-white/10 p-1 px-3 rounded-full">
+                    <div class="w-7 h-7 rounded-full overflow-hidden bg-white shadow-inner">
                         <img id="line-logo-display" src="" class="w-full h-full object-cover">
                     </div>
-                    <span id="line-name-display" class="text-sm truncate max-w-[90px]">...</span>
+                    <span id="line-name-display" class="text-sm truncate max-w-[70px]">...</span>
                 </div>
             </div>
             <nav id="top-nav" class="flex gap-4">
-                <div onclick="switchMainTab('activity')" id="tab-activity" class="nav-tab active">活動列表</div>
-                <div onclick="switchMainTab('member')" id="tab-member" class="nav-tab">會員中心</div>
-                <div onclick="switchMainTab('admin')" id="tab-admin" class="nav-tab hidden">管理後台</div>
+                <div onclick="switchMainTab('activity')" id="tab-activity" class="nav-tab active">活動</div>
+                <div onclick="switchMainTab('member')" id="tab-member" class="nav-tab">會員</div>
+                <div onclick="switchMainTab('admin')" id="tab-admin" class="nav-tab hidden">後台</div>
             </nav>
         </div>
     </header>
 
-    <main id="main-content" class="main-container py-10">
+    <main id="main-content" class="main-container py-8">
         
-        <!-- [0. 註冊視圖] -->
+        <!-- [註冊視圖] -->
         <div id="view-register" class="section-view max-w-xl mx-auto">
             <div class="content-card">
-                <h2 class="text-2xl mb-4 text-center">歡迎來到運動島</h2>
-                <p class="text-gray-500 text-center mb-12">請選擇您的使用者身份以完成註冊</p>
-                
-                <div class="space-y-8">
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-3 ml-1">顯示名稱</label>
-                        <input type="text" id="reg-name" class="input-giant" placeholder="個人姓名或單位名稱">
+                <h2 class="text-2xl mb-4 text-center">帳號初始化</h2>
+                <p class="text-gray-500 text-center mb-10 text-sm">請選擇您的身份以進入系統</p>
+                <div class="space-y-6">
+                    <input type="text" id="reg-name" class="input-giant" placeholder="顯示名稱">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="role-option" onclick="selectRole(this, '一般成員')">一般成員</div>
+                        <div class="role-option" onclick="selectRole(this, '教練')">教練</div>
+                        <div class="role-option" onclick="selectRole(this, '學校')">學校單位</div>
+                        <div class="role-option" onclick="selectRole(this, '機關單位')">機關單位</div>
+                        <div class="role-option col-span-2" onclick="selectRole(this, '管理員')">系統管理員</div>
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-3 ml-1">帳號角色</label>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="role-option" onclick="selectRole(this, '一般成員')">一般成員</div>
-                            <div class="role-option" onclick="selectRole(this, '教練')">教練</div>
-                            <div class="role-option" onclick="selectRole(this, '學校')">學校單位</div>
-                            <div class="role-option" onclick="selectRole(this, '機關單位')">機關單位</div>
-                            <div class="role-option col-span-2" onclick="selectRole(this, '管理員')">系統管理員</div>
-                        </div>
-                    </div>
-                    <button onclick="RegistrationFlow.completeUserRegistration()" class="btn-primary mt-12 shadow-lg">完成註冊並登入</button>
+                    <button onclick="RegistrationFlow.completeUserRegistration()" class="btn-primary mt-6">開啟我的運動島 ➜</button>
                 </div>
             </div>
         </div>
 
-        <!-- [1. 活動列表視圖] -->
-        <div id="view-activity" class="section-view">
-            <div class="rounded-3xl overflow-hidden mb-12 shadow-sm">
+        <!-- [活動列表] -->
+        <div id="view-activity" class="section-view active">
+            <div class="rounded-3xl overflow-hidden mb-10 shadow-sm">
                 <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto max-h-[300px] object-cover">
             </div>
-            <div class="flex flex-col gap-6 mb-12">
-                <input type="text" id="search-input" oninput="loadCourses()" placeholder="🔍 搜尋感興趣的活動名稱..." class="input-giant !bg-white border-none shadow-sm">
-                <div id="category-tags" class="flex gap-4 overflow-x-auto no-scrollbar pb-2"></div>
+            <div class="flex flex-col gap-6 mb-10">
+                <input type="text" id="search-input" oninput="loadCourses()" placeholder="🔍 搜尋活動名稱..." class="input-giant !bg-white border-none shadow-sm">
+                <div id="category-tags" class="flex gap-3 overflow-x-auto no-scrollbar pb-1"></div>
             </div>
-            <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10"></div>
+            <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
         </div>
 
-        <!-- [5. 會員中心視圖] -->
+        <!-- [活動詳情] -->
+        <div id="view-activity-detail" class="section-view">
+            <button onclick="switchMainTab('activity')" class="mb-6 text-gray-500 text-sm flex items-center gap-2">⬅ 返回列表</button>
+            <div id="detail-content-area" class="content-card !p-0 overflow-hidden"></div>
+        </div>
+
+        <!-- [會員中心] -->
         <div id="view-member" class="section-view">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 <div class="lg:col-span-7">
-                    <h2 class="text-2xl mb-10">成員維護</h2>
-                    <div id="family-grid" class="space-y-6"></div>
-                    <button onclick="RegistrationFlow.showStudentForm()" class="btn-primary mt-10">＋ 新增學員成員</button>
+                    <div class="flex justify-between items-center mb-8"><h2 class="text-2xl">成員列表</h2><button onclick="RegistrationFlow.showStudentForm()" class="btn-secondary">+ 新增成員</button></div>
+                    <div id="family-grid" class="space-y-4"></div>
                 </div>
                 <div class="lg:col-span-5">
-                    <h2 class="text-2xl mb-10">報名歷史</h2>
-                    <div id="history-container" class="space-y-6"></div>
+                    <h2 class="text-2xl mb-8">報名紀錄</h2>
+                    <div id="history-container" class="space-y-4"></div>
                 </div>
             </div>
         </div>
 
-        <!-- [6. 管理後台視圖] -->
+        <!-- [個資編輯] -->
+        <div id="view-student-form" class="section-view max-w-2xl mx-auto">
+            <div class="content-card">
+                <h2 class="text-2xl mb-8 text-[#1877f2]">維護成員資料</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="col-span-full"><label class="block text-sm text-gray-400 mb-2">真實姓名</label><input type="text" id="stu-name" class="input-giant"></div>
+                    <div><label class="block text-sm text-gray-400 mb-2">生日</label><input type="date" id="stu-birthday" class="input-giant"></div>
+                    <div><label class="block text-sm text-gray-400 mb-2">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase"></div>
+                </div>
+                <button onclick="RegistrationFlow.submitStudent()" class="btn-primary mt-10">儲存資料 ➜</button>
+                <button onclick="switchMainTab('member')" class="w-full mt-4 text-gray-400 text-sm">取消返回</button>
+            </div>
+        </div>
+
+        <!-- [管理後台] -->
         <div id="view-admin" class="section-view">
-            <div class="flex gap-4 mb-12 bg-white p-3 rounded-2xl shadow-sm overflow-x-auto no-scrollbar">
-                <button onclick="AdminService.switchModule('dashboard')" class="px-8 py-3 rounded-xl text-base hover:bg-gray-50 transition-all">營運總覽</button>
-                <button onclick="AdminService.switchModule('events')" class="px-8 py-3 rounded-xl text-base hover:bg-gray-50 transition-all">活動庫管理</button>
+            <div class="flex gap-4 mb-10 overflow-x-auto no-scrollbar">
+                <button onclick="AdminService.switchModule('dashboard')" class="bg-white px-8 py-3 rounded-xl shadow-sm text-base">營運總覽</button>
+                <button onclick="AdminService.switchModule('events')" class="bg-white px-8 py-3 rounded-xl shadow-sm text-base">活動管理</button>
+                <button onclick="AdminService.switchModule('crm')" class="bg-white px-8 py-3 rounded-xl shadow-sm text-base">會員名單</button>
             </div>
-            <div id="adm-content" class="min-h-[400px]">
-                <p class="text-center py-20 text-gray-400">管理模組載入中...</p>
-            </div>
+            <div id="adm-content" class="min-h-[400px]"></div>
         </div>
 
     </main>
@@ -267,7 +208,7 @@
     <script>
         const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
-        let state = { uid: "DEBUG_USER", name: "", role: "", isRegistered: false, currentView: "" };
+        let state = { uid: "DEBUG_USER", name: "", role: "", isRegistered: false, members: [], events: [], currentView: "" };
         let selectedRoleName = "一般成員";
 
         const RegistrationFlow = {
@@ -280,67 +221,53 @@
                     document.getElementById('line-name-display').innerText = p.displayName;
                     document.getElementById('line-logo-display').src = p.pictureUrl || "";
                     await this.checkStatus();
-                } catch (e) { 
-                    console.error("LIFF Error", e);
-                    this.showApp('activity');
-                }
+                } catch (e) { this.showApp('activity'); }
             },
             async checkStatus() {
-                try {
-                    const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
-                    const r = await res.json();
-                    
-                    if (r.status === 'registered') {
-                        state.isRegistered = true;
-                        state.role = r.data.type;
-                        if (state.role === '管理員') document.getElementById('tab-admin').classList.remove('hidden');
-                        this.showApp('activity');
-                    } else {
-                        this.showApp('register');
-                        document.getElementById('reg-name').value = document.getElementById('line-name-display').innerText;
-                    }
-                } catch (err) {
+                const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
+                const r = await res.json();
+                if (r.status === 'registered') {
+                    state.isRegistered = true;
+                    state.role = r.data.type;
+                    if (state.role === '管理員') document.getElementById('tab-admin').classList.remove('hidden');
                     this.showApp('activity');
+                } else {
+                    this.showApp('register');
+                    document.getElementById('reg-name').value = document.getElementById('line-name-display').innerText;
                 }
             },
-            showApp(targetView = 'activity') {
-                // 1. 先執行佈局渲染
-                const header = document.getElementById('main-header');
-                const content = document.getElementById('main-content');
-                
-                header.style.visibility = 'visible';
-                header.style.opacity = '1';
-                content.style.visibility = 'visible';
-                content.style.opacity = '1';
-                
+            showApp(targetView) {
                 switchView(targetView);
-                
-                // 2. 佈局完成後，淡出 Loading 畫面
-                const loading = document.getElementById('view-loading');
-                loading.style.opacity = '0';
-                
+                document.getElementById('main-header').style.visibility = 'visible';
+                document.getElementById('main-header').style.opacity = '1';
+                document.getElementById('main-content').style.visibility = 'visible';
+                document.getElementById('main-content').style.opacity = '1';
                 setTimeout(() => {
-                    loading.style.visibility = 'hidden';
-                    // 3. 最後解鎖滾動條，避免載入時畫面跳動
-                    document.documentElement.style.overflow = 'auto';
-                    document.body.style.overflow = 'auto';
-                }, 500);
+                    document.getElementById('view-loading').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('view-loading').style.visibility = 'hidden';
+                        document.body.style.overflow = 'auto';
+                    }, 500);
+                }, 200);
+            },
+            showStudentForm() { switchView('student-form'); },
+            async submitStudent() {
+                const p = { 
+                    parentUid: state.uid, 
+                    name: document.getElementById('stu-name').value, 
+                    birthday: document.getElementById('stu-birthday').value,
+                    idNumber: document.getElementById('stu-id').value
+                };
+                showMsg("儲存中...");
+                await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'addStudent', payload: p }) });
+                showMsg("✅ 儲存成功");
+                switchMainTab('member');
             },
             async completeUserRegistration() {
                 const name = document.getElementById('reg-name').value;
-                if (!name) return showMsg("請輸入正確姓名");
-                showMsg("建立帳號中...");
-                const res = await fetch(PROXY_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ 
-                        action: 'registerUser', 
-                        payload: { uid: state.uid, name: name, type: selectedRoleName } 
-                    }) 
-                });
-                if ((await res.json()).status === 'success') {
-                    showMsg("🎉 註冊成功");
-                    location.reload();
-                }
+                if (!name) return showMsg("請輸入顯示名稱");
+                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name, type: selectedRoleName } }) });
+                if ((await res.json()).status === 'success') location.reload();
             }
         };
 
@@ -351,56 +278,82 @@
         }
 
         function switchMainTab(m) {
-            if (state.currentView === m) return;
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + m)?.classList.add('active');
             switchView(m);
             if (m === 'activity') loadCourses();
+            if (m === 'member') { loadFamilyMembers(); loadHistoryRecords(); }
+            if (m === 'admin') AdminService.switchModule('dashboard');
         }
 
         function switchView(v) {
             if (state.currentView === v) return;
-            const views = document.querySelectorAll('.section-view');
-            views.forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
             const target = document.getElementById('view-' + v);
             if (target) {
                 target.classList.add('active');
                 state.currentView = v;
-                // 僅在初始化完成且不是第一次顯示時執行滾動，徹底防止閃爍
-                if (document.getElementById('view-loading').style.visibility === 'hidden') {
-                    window.scrollTo(0, 0);
-                }
+                if (document.body.style.overflow === 'auto') window.scrollTo(0, 0);
             }
         }
 
         async function loadCourses() {
-            try {
-                const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
-                const r = await res.json();
-                const list = document.getElementById('event-list');
-                if (!list) return;
-                list.innerHTML = (r.data || []).map(ev => `
-                    <div class="content-card !p-0 overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300">
-                        <img src="${ev['圖片URL']}" class="h-56 w-full object-cover">
-                        <div class="p-8">
-                            <p class="text-xs text-[#1877f2] uppercase mb-2 tracking-widest">${ev['分類']}</p>
-                            <h3 class="text-xl mb-6 truncate leading-snug">${ev['活動名稱']}</h3>
-                            <button class="btn-primary !py-3 !text-base shadow-sm">詳情與報名</button>
-                        </div>
-                    </div>`).join('');
-            } catch (e) {}
+            const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
+            const r = await res.json();
+            state.events = r.data || [];
+            document.getElementById('event-list').innerHTML = state.events.map(ev => `
+                <div class="content-card !p-0 overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300">
+                    <img src="${ev['圖片URL']}" class="h-56 w-full object-cover">
+                    <div class="p-8">
+                        <p class="text-xs text-[#1877f2] uppercase mb-2 tracking-widest">${ev['分類']}</p>
+                        <h3 class="text-xl mb-6 truncate">${ev['活動名稱']}</h3>
+                        <button onclick="showDetail('${ev['活動ID']}')" class="btn-primary !py-3 !text-sm">查看詳情</button>
+                    </div>
+                </div>`).join('');
+        }
+
+        function showDetail(id) {
+            const ev = state.events.find(e => String(e['活動ID']) === String(id));
+            if(!ev) return;
+            switchView('activity-detail');
+            document.getElementById('detail-content-area').innerHTML = `
+                <img src="${ev['圖片URL']}" class="w-full h-auto max-h-[400px] object-cover">
+                <div class="p-10">
+                    <h2 class="text-2xl mb-8 tracking-tight">${ev['活動名稱']}</h2>
+                    <div class="text-gray-700 text-lg leading-loose mb-12 whitespace-pre-wrap">${ev['描述'] || '資料準備中...'}</div>
+                    <button class="btn-primary shadow-xl">立即報名參加 ➜</button>
+                </div>`;
+        }
+
+        async function loadFamilyMembers() {
+            const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
+            state.members = (await res.json()).data || [];
+            document.getElementById('family-grid').innerHTML = state.members.map(m => `
+                <div class="content-card flex items-center gap-5 !py-4">
+                    <div class="w-12 h-12 bg-[#e7f3ff] text-[#1877f2] rounded-full flex items-center justify-center text-xl italic">${m.姓名.charAt(0)}</div>
+                    <div class="flex-1"><h4 class="text-base">${m.姓名}</h4><p class="text-sm text-gray-400">${m.生日}</p></div>
+                </div>`).join('');
+        }
+
+        async function loadHistoryRecords() {
+            const res = await fetch(`${PROXY_URL}?action=getHistory&uid=${state.uid}`);
+            const r = await res.json();
+            document.getElementById('history-container').innerHTML = (r.data || []).map(h => `
+                <div class="content-card !py-6 border-l-4 border-[#1877f2]">
+                    <h4 class="text-base truncate">${h.活動名稱}</h4>
+                    <p class="text-sm text-gray-400 mt-2">學員：${h.學員姓名}</p>
+                </div>`).join('');
         }
 
         const AdminService = {
             switchModule(m) {
-                document.getElementById('adm-content').innerHTML = `<p class="text-center py-20 text-gray-400">營運模組 ${m} 載入中...</p>`;
+                document.getElementById('adm-content').innerHTML = `<p class="text-center py-20 text-gray-400">${m} 模組開發中...</p>`;
             }
         };
 
         window.onload = () => RegistrationFlow.init();
         function showMsg(t) { 
-            const b = document.getElementById('msg-box'); 
-            b.innerText = t; b.style.display='block'; 
+            const b = document.getElementById('msg-box'); b.innerText = t; b.style.display='block'; 
             setTimeout(()=>b.style.display='none', 3000); 
         }
     </script>
