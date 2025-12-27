@@ -58,13 +58,15 @@
         .btn-primary { background: #1877f2; color: white; padding: 18px; border-radius: 12px; width: 100%; text-align: center; cursor: pointer; border: none; display: block; font-size: 17px; }
         .btn-secondary { background: white; color: #606770; border: 1px solid #dddfe2; padding: 12px 24px; border-radius: 10px; font-size: 15px; cursor: pointer; }
 
-        /* 管理中心專屬 */
-        .admin-sub-tab { padding: 14px 28px; border-radius: 12px; font-size: 15px; color: #606770; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-        .admin-sub-tab.active { background: #1877f2; color: white; }
+        /* 管理中心專屬子導航 */
+        .admin-sub-tab { padding: 14px 28px; border-radius: 12px; font-size: 15px; color: #606770; cursor: pointer; transition: 0.2s; white-space: nowrap; border: 1px solid transparent; }
+        .admin-sub-tab:hover { background: #f8f9fa; }
+        .admin-sub-tab.active { background: #1877f2; color: white; border-color: #1877f2; }
 
         /* 統計卡片 */
-        .stat-card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
-        .stat-val { font-size: 28px; color: #1877f2; line-height: 1.2; margin-top: 4px; }
+        .stat-card { background: white; padding: 24px; border-radius: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .stat-val { font-size: 28px; color: #1877f2; line-height: 1.2; margin-top: 4px; letter-spacing: -0.5px; }
         .stat-label { font-size: 14px; color: #606770; }
 
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
@@ -118,6 +120,7 @@
         </div>
     </header>
 
+    <!-- 系統級載入畫面 -->
     <div id="view-loading" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center">
         <div class="w-14 h-14 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
         <p id="loading-status" class="mt-8 text-gray-400 text-base tracking-widest">系統資料同步中...</p>
@@ -200,35 +203,39 @@
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                     <div class="stat-card">
                         <p class="stat-label">累積營收 (NT$)</p>
-                        <p id="stat-revenue" class="stat-val">0</p>
+                        <p id="stat-revenue" class="stat-val">讀取中...</p>
                     </div>
                     <div class="stat-card">
                         <p class="stat-label">累積報名 (人次)</p>
-                        <p id="stat-regs" class="stat-val">0</p>
+                        <p id="stat-regs" class="stat-val">讀取中...</p>
                     </div>
                     <div class="stat-card">
                         <p class="stat-label">會員總數 (位)</p>
-                        <p id="stat-members" class="stat-val">0</p>
+                        <p id="stat-members" class="stat-val">讀取中...</p>
                     </div>
                     <div class="stat-card">
                         <p class="stat-label">在架活動 (檔)</p>
-                        <p id="stat-events" class="stat-val">0</p>
+                        <p id="stat-events" class="stat-val">讀取中...</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
                     <div class="lg:col-span-8 content-card">
                         <h3 class="text-lg mb-6">營收趨勢統計 (月)</h3>
-                        <div class="h-[300px] w-full"><canvas id="salesChart"></canvas></div>
+                        <div id="salesChart-container" class="h-[300px] w-full flex items-center justify-center">
+                            <canvas id="salesChart"></canvas>
+                        </div>
                     </div>
                     <div class="lg:col-span-4 content-card">
                         <h3 class="text-lg mb-6">熱門分類佔比</h3>
-                        <div class="h-[300px] w-full"><canvas id="pieChart"></canvas></div>
+                        <div id="pieChart-container" class="h-[300px] w-full flex items-center justify-center">
+                            <canvas id="pieChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 其他模組 (清單與原本邏輯) -->
+            <!-- 其他模組容器 -->
             <div id="adm-view-events" class="hidden">
                 <div class="flex justify-between items-center mb-8"><h3 class="text-xl">活動項目庫</h3><button onclick="AdminService.openEventEditor(null)" class="btn-secondary">+ 建立新活動</button></div>
                 <div id="admin-event-grid" class="space-y-6"></div>
@@ -293,7 +300,10 @@
                     document.getElementById('line-name-display').innerText = p.displayName;
                     document.getElementById('line-logo-display').src = p.pictureUrl || "https://placehold.co/100x100?text=島";
                     this.checkStatus();
-                } catch (e) { document.getElementById('loading-status').innerText = "連線異常"; }
+                } catch (e) { 
+                    document.getElementById('view-loading').style.display = 'none';
+                    showMsg("連線失敗，請檢查網路");
+                }
             },
             async checkStatus() {
                 const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
@@ -307,7 +317,7 @@
             },
             showStudentForm(stuId = null) {
                 state.currentEditStuId = stuId; switchView('student-form');
-                if (!stuId) ['stu-name','stu-id','stu-birthday','stu-height','stu-weight','stu-foot','stu-school','stu-grade','stu-health','stu-interests'].forEach(id=>document.getElementById(id).value="");
+                if (!stuId) ['stu-name','stu-id','stu-birthday','stu-height','stu-weight','stu-foot','stu-school','stu-grade','stu-health'].forEach(id=>document.getElementById(id).value="");
                 else {
                     const s = state.members.find(m => String(m.學員ID) === String(stuId));
                     if(s) { 
@@ -325,11 +335,10 @@
                     idNumber: document.getElementById('stu-id').value, height: document.getElementById('stu-height').value, 
                     weight: document.getElementById('stu-weight').value, footSize: document.getElementById('stu-foot').value, 
                     school: document.getElementById('stu-school').value, grade: document.getElementById('stu-grade').value, 
-                    health: document.getElementById('stu-health').value, interests: document.getElementById('stu-interests').value, 
-                    gender: document.getElementById('stu-gender').value, diet: document.getElementById('stu-diet').value 
+                    health: document.getElementById('stu-health').value, gender: document.getElementById('stu-gender').value, diet: document.getElementById('stu-diet').value 
                 };
                 await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'addStudent', payload }) });
-                showMsg("✅ 資料已存檔"); location.reload();
+                showMsg("✅ 資料已同步"); location.reload();
             },
             detectGrade() {
                 const b = document.getElementById('stu-birthday').value; if(!b) return;
@@ -342,10 +351,10 @@
             async start(eid) {
                 const ev = state.events.find(e => String(e['活動ID']) === String(eid)); if(!ev) return;
                 bookingData = { event: ev, student: null, type: '全日', session: '單日', amount: Number(ev['全日價']), attendanceMap: {}, currentWeekIdx: 0 };
-                showMsg("正在讀取成員名單...");
+                showMsg("讀取成員名單...");
                 const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
                 state.members = (await res.json()).data || [];
-                if(!state.members.length) { showMsg("請先錄入成員個資。"); RegistrationFlow.showStudentForm(); return; }
+                if(!state.members.length) { showMsg("請先完成成員資料錄入。"); RegistrationFlow.showStudentForm(); return; }
                 this.goToStep(1);
             },
             goToStep(step) {
@@ -356,7 +365,7 @@
                 if (step === 4) this.renderStep4(el);
             },
             renderStep1(el) {
-                el.innerHTML = `<h2 class="text-xl mb-8 border-b pb-4 text-[#1877f2]">1. 選擇報名成員</h2><div class="space-y-4">${state.members.map(m => `
+                el.innerHTML = `<h2 class="text-xl mb-8 border-b pb-4 text-[#1877f2]">1. 選擇報名成員</h2><div class="grid grid-cols-1 gap-4">${state.members.map(m => `
                     <div onclick="BookingWizard.selectMember('${m.學員ID}')" class="p-6 border border-gray-100 rounded-2xl cursor-pointer flex justify-between items-center hover:bg-gray-50 transition-all">
                         <div class="flex items-center gap-5"><div class="w-12 h-12 bg-[#e7f3ff] text-[#1877f2] rounded-full flex items-center justify-center text-lg">${m.姓名.charAt(0)}</div><p class="text-lg">${m.姓名}</p></div>
                         <div class="text-[#1877f2]">選擇 ➜</div>
@@ -365,8 +374,8 @@
             selectMember(sid) { bookingData.student = state.members.find(m => String(m.學員ID) === String(sid)); this.goToStep(2); },
             renderStep2(el) {
                 const ev = bookingData.event;
-                let ss = ''; if (ev['梯次資料'] && ev['梯次資料'] !== '[]') { const d = JSON.parse(ev['梯次資料']); ss = `<label class="tag-label">選擇梯次</label><select id="wiz-session" class="input-giant mb-10">${d.map(s => `<option value="${s.s} ~ ${s.e}">${s.s} 至 ${s.e}</option>`).join('')}</select>`; }
-                el.innerHTML = `<h2 class="text-xl mb-10 border-b pb-4 text-[#1877f2]">2. 選擇方案與時段</h2>${ss}<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
+                let ss = ''; if (ev['梯次資料'] && ev['梯次資料'] !== '[]') { const d = JSON.parse(ev['梯次資料']); ss = `<label class="tag-label">選擇活動梯次</label><select id="wiz-session" class="input-giant mb-10">${d.map(s => `<option value="${s.s} ~ ${s.e}">${s.s} 至 ${s.e}</option>`).join('')}</select>`; }
+                el.innerHTML = `<h2 class="text-xl mb-10 border-b pb-4 text-[#1877f2]">2. 選擇報名方案</h2>${ss}<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div onclick="BookingWizard.selectType('全日', ${ev['全日價']})" class="p-10 border border-gray-100 rounded-[24px] cursor-pointer hover:border-[#1877f2] text-center active:scale-95 transition-all"><p class="text-gray-400 text-base">全日方案</p><p class="text-3xl text-[#1877f2] mt-6">NT$ ${parseInt(ev['全日價']).toLocaleString()}</p></div>
                         <div onclick="BookingWizard.selectType('半日', ${ev['半日價']})" class="p-10 border border-gray-100 rounded-[24px] cursor-pointer hover:border-[#1877f2] text-center active:scale-95 transition-all"><p class="text-gray-400 text-base">半日方案</p><p class="text-3xl text-[#1877f2] mt-6">NT$ ${parseInt(ev['半日價']).toLocaleString()}</p></div>
                     </div>`;
@@ -391,7 +400,7 @@
                     ch += `<div onclick="BookingWizard.openLeaveSelector('${d}')" class="cal-day ${cs}">${dn}</div>`;
                 });
                 ch += `</div>`;
-                el.innerHTML = `<h2 class="text-xl mb-6 text-[#1877f2]">3. 點擊日期設定出席</h2><p class="text-base text-gray-400 mb-10">預設為全日出席，如有請假請點擊該日期進行修改。</p>${wt}${ch}<button onclick="BookingWizard.goToStep(4)" class="btn-primary mt-8 shadow-md">下一步：確認金額 ➜</button>`;
+                el.innerHTML = `<h2 class="text-xl mb-6 text-[#1877f2]">3. 出席狀態設定</h2><p class="text-base text-gray-400 mb-10">預設為出席，點擊特定日期可進行請假設定。</p>${wt}${ch}<button onclick="BookingWizard.goToStep(4)" class="btn-primary mt-8 shadow-md">下一步：應付金額 ➜</button>`;
             },
             switchWeek(idx) { bookingData.currentWeekIdx = idx; this.renderStep3(document.getElementById('wizard-content')); },
             openLeaveSelector(d) { activeDateKey = d; document.getElementById('target-date-display').innerText = d; document.getElementById('leave-modal').style.display = 'flex'; },
@@ -402,23 +411,25 @@
                 let fl=0, hl=0; Object.values(bookingData.attendanceMap).forEach(v => { if (v === 'full') fl++; else if (v === 'am' || v === 'pm') hl++; });
                 const td = (fl * fd) + (hl * hd), fa = Math.max(0, Number(bookingData.amount) - td);
                 bookingData.finalCalculatedAmount = fa; 
-                el.innerHTML = `<h2 class="text-xl mb-12 border-b pb-6 text-center">4. 確認金額與完成報名</h2><div class="bg-gray-900 text-white p-12 rounded-[32px] mb-12 shadow-xl"><div class="space-y-8"><div class="flex justify-between items-center text-lg opacity-60"><span>方案原價</span><span>NT$ ${parseInt(bookingData.amount).toLocaleString()}</span></div><div class="flex justify-between items-center text-lg text-orange-400"><span>請假扣除額</span><span>- NT$ ${parseInt(td).toLocaleString()}</span></div><div class="pt-10 border-t border-white/20 flex justify-between items-end"><div><p class="text-sm opacity-50 mb-2">應付總金額</p><p class="text-5xl italic">NT$ ${parseInt(fa).toLocaleString()}</p></div><div class="text-right text-base opacity-60"><p>${bookingData.student.姓名}</p><p>${bookingData.type}</p></div></div></div></div><label class="tag-label">匯款帳號後五碼 (核帳用)</label><input type="text" id="wiz-bank5" class="input-giant mb-12" maxlength="5" placeholder="請輸入您匯款後的末五碼"><button id="btn-final-submit" onclick="BookingWizard.finalSubmit()" class="btn-primary shadow-2xl italic">確認並送出申請 ➜</button>`;
+                el.innerHTML = `<h2 class="text-xl mb-12 border-b pb-6 text-center">4. 費用確認與結帳</h2><div class="bg-gray-900 text-white p-12 rounded-[32px] mb-12 shadow-xl"><div class="space-y-8"><div class="flex justify-between items-center text-lg opacity-60"><span>方案基礎金額</span><span>NT$ ${parseInt(bookingData.amount).toLocaleString()}</span></div><div class="flex justify-between items-center text-lg text-orange-400"><span>請假抵扣金額</span><span>- NT$ ${parseInt(td).toLocaleString()}</span></div><div class="pt-10 border-t border-white/20 flex justify-between items-end"><div><p class="text-sm opacity-50 mb-2">應付總計</p><p class="text-5xl italic">NT$ ${parseInt(fa).toLocaleString()}</p></div><div class="text-right text-base opacity-60"><p>${bookingData.student.姓名}</p><p>${bookingData.type}</p></div></div></div></div><label class="tag-label">匯款帳號後五碼</label><input type="text" id="wiz-bank5" class="input-giant mb-12" maxlength="5" placeholder="請輸入以便人工對帳"><button id="btn-final-submit" onclick="BookingWizard.finalSubmit()" class="btn-primary shadow-2xl italic">完成報名送出 ➜</button>`;
             },
             async finalSubmit() {
-                const b5 = document.getElementById('wiz-bank5').value; if(!b5 || b5.length < 5) return showMsg("請輸入正確的五碼");
-                document.getElementById('btn-final-submit').disabled = true; showMsg("系統同步中...");
+                const b5 = document.getElementById('wiz-bank5').value; if(!b5 || b5.length < 5) return showMsg("請輸入匯款後五碼");
+                document.getElementById('btn-final-submit').disabled = true; showMsg("報名同步中...");
                 const ds = Object.entries(bookingData.attendanceMap).map(([d, s]) => `${d}:${s}`).join('|');
                 const payload = { student: bookingData.student, eventId: bookingData.event['活動ID'], eventName: bookingData.event['活動名稱'], type: bookingData.type, session: bookingData.session, amount: bookingData.finalCalculatedAmount, bankLast5: b5, selectedDates: ds };
                 const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
-                if ((await res.json()).status === 'success') { showMsg("🎉 報名已受理！"); setTimeout(()=>switchMainTab('member'), 1000); } else { document.getElementById('btn-final-submit').disabled = false; }
+                if ((await res.json()).status === 'success') { showMsg("🎉 報名申請已完成！"); setTimeout(()=>switchMainTab('member'), 1000); } else { document.getElementById('btn-final-submit').disabled = false; }
             }
         };
 
         const AdminService = {
             switchModule(m) {
                 ['dashboard', 'events', 'crm', 'accounting', 'config'].forEach(i => { 
-                    document.getElementById(`adm-m-${i}`).classList.toggle('active', i === m); 
-                    document.getElementById(`adm-view-${i}`).classList.toggle('hidden', i !== m); 
+                    const btn = document.getElementById(`adm-m-${i}`);
+                    const view = document.getElementById(`adm-view-${i}`);
+                    if(btn) btn.classList.toggle('active', i === m); 
+                    if(view) view.classList.toggle('hidden', i !== m); 
                 });
                 if (m === 'dashboard') this.loadDashboard();
                 if (m === 'events') loadAdminEvents();
@@ -427,46 +438,58 @@
                 if (m === 'config') this.loadConfigUI();
             },
             async loadDashboard() {
-                // 1. 抓取所有必要數據
-                const [evtRes, regRes, stuRes] = await Promise.all([
-                    fetch(`${PROXY_URL}?action=getEvents`),
-                    fetch(`${PROXY_URL}?action=adminGetAllRegs`),
-                    fetch(`${PROXY_URL}?action=adminGetAllStudents`)
-                ]);
-                const evts = (await evtRes.json()).data || [];
-                const regs = (await regRes.json()).data || [];
-                const stus = (await stuRes.json()).data || [];
+                try {
+                    // 1. 抓取數據並顯示載入中
+                    document.getElementById('stat-revenue').innerText = '...';
+                    document.getElementById('stat-regs').innerText = '...';
+                    document.getElementById('stat-members').innerText = '...';
+                    document.getElementById('stat-events').innerText = '...';
 
-                // 2. 計算基礎指標
-                let totalRev = 0;
-                regs.forEach(r => { if(r.對帳狀態 === "報名成功") totalRev += Number(r.應付金額); });
-                document.getElementById('stat-revenue').innerText = totalRev.toLocaleString();
-                document.getElementById('stat-regs').innerText = regs.length;
-                document.getElementById('stat-members').innerText = stus.length;
-                document.getElementById('stat-events').innerText = evts.filter(e => e.狀態 === '上架').length;
+                    const [evtRes, regRes, stuRes] = await Promise.all([
+                        fetch(`${PROXY_URL}?action=getEvents`),
+                        fetch(`${PROXY_URL}?action=adminGetAllRegs`),
+                        fetch(`${PROXY_URL}?action=adminGetAllStudents`)
+                    ]);
+                    
+                    const evts = (await evtRes.json()).data || [];
+                    const regs = (await regRes.json()).data || [];
+                    const stus = (await stuRes.json()).data || [];
 
-                // 3. 處理圖表數據 (營收趨勢)
-                const monthData = {};
-                regs.forEach(r => {
-                    if (r.對帳狀態 !== "報名成功") return;
-                    const date = new Date(r.報名時間);
-                    const key = `${date.getFullYear()}/${date.getMonth() + 1}`;
-                    monthData[key] = (monthData[key] || 0) + Number(r.應付金額);
-                });
-                const months = Object.keys(monthData).sort();
-                const revenues = months.map(m => monthData[m]);
+                    // 2. 更新關鍵數據
+                    let totalRev = 0;
+                    regs.forEach(r => { if(r.對帳狀態 === "報名成功") totalRev += Number(r.應付金額); });
+                    document.getElementById('stat-revenue').innerText = totalRev.toLocaleString();
+                    document.getElementById('stat-regs').innerText = regs.length;
+                    document.getElementById('stat-members').innerText = stus.length;
+                    document.getElementById('stat-events').innerText = evts.filter(e => e.狀態 === '上架').length;
 
-                // 4. 處理分類佔比
-                const catData = {};
-                regs.forEach(r => {
-                    const evt = evts.find(e => e.活動名稱 === r.活動名稱);
-                    const cat = evt ? evt.分類 : "未分類";
-                    catData[cat] = (catData[cat] || 0) + 1;
-                });
+                    // 3. 趨勢數據處理
+                    const monthData = {};
+                    regs.forEach(r => {
+                        if (r.對帳狀態 !== "報名成功") return;
+                        const date = new Date(r.報名時間);
+                        const key = `${date.getFullYear()}/${date.getMonth() + 1}`;
+                        monthData[key] = (monthData[key] || 0) + Number(r.應付金額);
+                    });
+                    const months = Object.keys(monthData).sort();
+                    const revenues = months.map(m => monthData[m]);
 
-                this.renderCharts(months, revenues, Object.keys(catData), Object.values(catData));
+                    // 4. 熱門佔比
+                    const catData = {};
+                    regs.forEach(r => {
+                        const evt = evts.find(e => e.活動名稱 === r.活動名稱);
+                        const cat = evt ? evt.分類 : "未分類";
+                        catData[cat] = (catData[cat] || 0) + 1;
+                    });
+
+                    this.renderCharts(months, revenues, Object.keys(catData), Object.values(catData));
+                } catch (e) {
+                    console.error("Dashboard Error:", e);
+                    showMsg("儀表板數據載入失敗");
+                }
             },
             renderCharts(labels, revs, catLabels, catCounts) {
+                // 清理舊圖表防止重疊
                 if (mainCharts.sales) mainCharts.sales.destroy();
                 if (mainCharts.pie) mainCharts.pie.destroy();
 
@@ -475,7 +498,7 @@
                     type: 'line',
                     data: {
                         labels: labels.length ? labels : ['尚未有數據'],
-                        datasets: [{ label: '月營收', data: revs, borderColor: '#1877f2', backgroundColor: 'rgba(24,119,242,0.1)', fill: true, tension: 0.4 }]
+                        datasets: [{ label: '月營收 (NT$)', data: revs, borderColor: '#1877f2', backgroundColor: 'rgba(24,119,242,0.1)', fill: true, tension: 0.4 }]
                     },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
@@ -484,8 +507,8 @@
                 mainCharts.pie = new Chart(ctxPie, {
                     type: 'doughnut',
                     data: {
-                        labels: catLabels,
-                        datasets: [{ data: catCounts, backgroundColor: ['#1877f2', '#ff9f43', '#10ac84', '#ee5253', '#5f27cd'] }]
+                        labels: catLabels.length ? catLabels : ['無分類'],
+                        datasets: [{ data: catCounts.length ? catCounts : [1], backgroundColor: ['#1877f2', '#ff9f43', '#10ac84', '#ee5253', '#5f27cd'] }]
                     },
                     options: { responsive: true, maintainAspectRatio: false }
                 });
@@ -500,15 +523,15 @@
                 const r = await res.json();
                 document.getElementById('admin-accounting-list').innerHTML = r.data.reverse().map(reg => {
                     const ok = reg.對帳狀態 === "報名成功";
-                    return `<div class="content-card flex justify-between items-center !py-5"><div class="min-w-0 flex-1"><p class="text-sm text-[#1877f2] mb-1">${reg.活動名稱}</p><h4 class="text-lg truncate">${reg.學員姓名} <span class="text-base text-orange-500 ml-3">末五碼: ${reg.匯款後五碼 || '--'}</span></h4><p class="text-base">NT$ ${parseInt(reg.應付金額).toLocaleString()}</p></div><div class="text-right">${!ok ? `<button onclick="AdminService.verify('${reg.報名ID}')" class="bg-orange-50 text-orange-600 px-6 py-3 rounded-xl text-base border border-orange-100">對帳確認</button>` : `<span class="text-green-500 text-base">✓ 已入帳</span>`}</div></div>`;
+                    return `<div class="content-card flex justify-between items-center !py-5"><div class="min-w-0 flex-1"><p class="text-sm text-[#1877f2] mb-1">${reg.活動名稱}</p><h4 class="text-lg truncate">${reg.學員姓名} <span class="text-base text-orange-500 ml-3">末五碼: ${reg.匯款後五碼 || '--'}</span></h4><p class="text-base">NT$ ${parseInt(reg.應付金額).toLocaleString()}</p></div><div class="text-right">${!ok ? `<button onclick="AdminService.verify('${reg.報名ID}')" class="bg-orange-50 text-orange-600 px-6 py-3 rounded-xl text-base border border-orange-100">核帳</button>` : `<span class="text-green-500 text-base">✓ 已入帳</span>`}</div></div>`;
                 }).join('');
             },
             async verify(regId) {
                 const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'adminVerifyPayment', payload: { regId } }) });
-                if ((await res.json()).status === 'success') { showMsg("✅ 已完成入帳對帳"); this.loadAccounting(); }
+                if ((await res.json()).status === 'success') { showMsg("✅ 對帳確認成功"); this.loadAccounting(); }
             },
             loadConfigUI() { document.getElementById('cfg-bank').value = state.config.bankInfo || ""; document.getElementById('cfg-cats').value = state.config.sportCategories || ""; },
-            async saveConfig() { const bankInfo = document.getElementById('cfg-bank').value; const sportCategories = document.getElementById('cfg-cats').value; await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateConfig', payload: { bankInfo, sportCategories } }) }); showMsg("✅ 設定已儲存"); },
+            async saveConfig() { const bankInfo = document.getElementById('cfg-bank').value; const sportCategories = document.getElementById('cfg-cats').value; await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateConfig', payload: { bankInfo, sportCategories } }) }); showMsg("✅ 系統參數已更新"); },
             openEventEditor(id) { 
                 state.currentEditId = id; 
                 const ev = state.events.find(e => String(e['活動ID']) === String(id)) || {}; 
@@ -520,7 +543,7 @@
                 const get = (i) => document.getElementById(i).value;
                 const payload = { "活動ID": state.currentEditId || ("EVT-" + Date.now()), "活動型態": get('ed-type'), "分類": get('ed-cat'), "活動名稱": get('ed-name'), "開始日期": get('ed-start'), "結束日期": get('ed-end'), "全日價": get('ed-price'), "半日價": get('ed-hprice'), "全日扣除": get('ed-deduct'), "半日扣除": get('ed-hdeduct'), "圖片URL": get('ed-img'), "描述": get('ed-desc'), "狀態": "上架" };
                 await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateEvent', payload }) });
-                showMsg("✅ 更新成功"); document.getElementById('event-editor-modal').classList.add('hidden'); loadAdminEvents();
+                showMsg("✅ 活動規格已儲存"); document.getElementById('event-editor-modal').classList.add('hidden'); loadAdminEvents();
             }
         };
 
@@ -545,13 +568,14 @@
             const filtered = state.events.filter(ev => {
                 const matchCat = state.selectedCategory === '全部' || ev['分類'] === state.selectedCategory;
                 const matchSearch = ev['活動名稱'].toLowerCase().includes(searchVal);
-                return ev['狀態'] === '上架' && matchCat && matchSearch;
+                const isPub = ev['狀態'] === '上架';
+                return isPub && matchCat && matchSearch;
             });
 
             document.getElementById('event-list').innerHTML = filtered.map(ev => `
                 <div class="content-card !p-0 overflow-hidden flex flex-col hover:shadow-md transition-all">
                     <img src="${ev['圖片URL'] || 'https://placehold.co/600x400'}" class="event-card-img">
-                    <div class="p-8 flex-1 flex flex-col"><p class="text-sm text-[#1877f2] uppercase mb-3">${ev['分類']}</p><h3 class="card-title truncate text-xl">${ev['活動名稱']}</h3><div class="mt-8 flex flex-col gap-4"><button onclick="showDetail('${ev['活動ID']}')" class="btn-secondary !w-full">詳情內容</button><button onclick="BookingWizard.start('${ev['活動ID']}')" class="btn-primary !py-4 !text-base !w-full shadow-md">立即報名</button></div></div>
+                    <div class="p-8 flex-1 flex flex-col"><p class="text-sm text-[#1877f2] uppercase mb-3">${ev['分類']}</p><h3 class="card-title truncate text-xl">${ev['活動名稱']}</h3><div class="mt-8 flex flex-col gap-4"><button onclick="showDetail('${ev['活動ID']}')" class="btn-secondary !w-full">內容詳情</button><button onclick="BookingWizard.start('${ev['活動ID']}')" class="btn-primary !py-4 !text-base !w-full shadow-md">預約報名</button></div></div>
                 </div>`).join('');
         }
 
@@ -562,7 +586,7 @@
             switchView('activity-detail');
             document.getElementById('detail-content-area').innerHTML = `<img src="${ev['圖片URL']}" class="w-full h-auto max-h-[450px] object-cover"><div class="p-12">
                 <h2 class="text-3xl mb-10 tracking-tight">${ev['活動名稱']}</h2>
-                <div class="text-gray-700 text-xl leading-relaxed mb-16 whitespace-pre-wrap">${ev['描述'] || '資料準備中...'}</div>
+                <div class="text-gray-700 text-xl leading-relaxed mb-16 whitespace-pre-wrap">${ev['描述'] || '內容編輯中...'}</div>
                 <button onclick="BookingWizard.start('${ev['活動ID']}')" class="btn-primary shadow-2xl text-xl italic py-6">Register Now ➜</button>
             </div>`;
         }
@@ -578,19 +602,19 @@
             const r = await res.json();
             document.getElementById('history-container').innerHTML = (r.data || []).map(h => {
                 const ok = h.對帳狀態 === "報名成功";
-                return `<div class="history-card !py-8"><span class="status-badge ${ok ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}">${ok?'已入帳':'待對帳'}</span><h4 class="text-lg truncate pr-24">${h.活動名稱}</h4><div class="flex justify-between items-end mt-8"><div><p class="text-base text-gray-400">學員：${h.學員姓名}</p></div><p class="text-[#1877f2] text-2xl italic">NT$ ${parseInt(h.應付金額).toLocaleString()}</p></div></div>`;
+                return `<div class="history-card !py-8"><span class="status-badge ${ok ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}">${ok?'已完成':'對帳中'}</span><h4 class="text-lg truncate pr-24">${h.活動名稱}</h4><div class="flex justify-between items-end mt-8"><div><p class="text-base text-gray-400">學員：${h.學員姓名}</p></div><p class="text-[#1877f2] text-2xl italic">NT$ ${parseInt(h.應付金額).toLocaleString()}</p></div></div>`;
             }).join('');
         }
 
         async function loadAdminEvents() {
-            document.getElementById('admin-event-grid').innerHTML = '<p class="text-center py-16 text-gray-400">活動資料讀取中...</p>';
+            document.getElementById('admin-event-grid').innerHTML = '<p class="text-center py-16 text-gray-400">數據讀取中...</p>';
             const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
             const r = await res.json(); state.events = r.data || [];
             if(state.events.length === 0) {
-                document.getElementById('admin-event-grid').innerHTML = '<p class="text-center py-16 text-gray-400">目前暫無活動紀錄</p>';
+                document.getElementById('admin-event-grid').innerHTML = '<p class="text-center py-16 text-gray-400">無活動資料</p>';
                 return;
             }
-            document.getElementById('admin-event-grid').innerHTML = state.events.map(ev => `<div class="content-card flex justify-between items-center !py-6"><div><h4 class="text-lg">${ev['活動名稱']}</h4><p class="text-sm text-gray-400 uppercase">${ev['分類']} | 編號: ${ev['活動ID']}</p></div><button onclick="AdminService.openEventEditor('${ev['活動ID']}')" class="text-blue-600 text-base">規格編輯</button></div>`).join('');
+            document.getElementById('admin-event-grid').innerHTML = state.events.map(ev => `<div class="content-card flex justify-between items-center !py-6"><div><h4 class="text-lg">${ev['活動名稱']}</h4><p class="text-sm text-gray-400 uppercase">${ev['分類']} | ID: ${ev['活動ID']}</p></div><button onclick="AdminService.openEventEditor('${ev['活動ID']}')" class="text-blue-600 text-base">規格編輯</button></div>`).join('');
         }
 
         function switchView(v) { document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active')); document.getElementById('view-' + v)?.classList.add('active'); window.scrollTo(0,0); }
