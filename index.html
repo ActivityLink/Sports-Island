@@ -37,6 +37,8 @@
         
         #msg-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; background: #0f172a; color: white; padding: 12px 24px; border-radius: 99px; font-weight: 700; font-size: 14px; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         
+        .history-card { background: white; border: 1px solid #f1f5f9; padding: 16px; border-radius: 20px; margin-bottom: 12px; border-left: 6px solid #1a73e8; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+
         /* 隱藏未註冊時的導航 */
         .header-hidden { display: none !important; }
     </style>
@@ -66,49 +68,48 @@
             <button id="preview-mode-btn" onclick="RegistrationFlow.skipLogin()" class="mt-8 text-blue-600 font-bold text-xs underline hidden">進入測試模式 (非 LINE 環境)</button>
         </div>
 
-        <!-- 1. 註冊入口頁面 (未註冊時顯示) -->
+        <!-- 1. 註冊入口頁面 -->
         <div id="view-registration-gate" class="section-view max-w-md mx-auto pt-4">
             <div class="banner-container">
                 <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto object-cover" alt="Banner">
             </div>
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-black text-slate-900 mb-1 italic tracking-tighter">WELCOME</h1>
-                <p class="text-slate-400 font-bold text-sm">請先選擇註冊身分以繼續</p>
+                <h1 class="text-3xl font-black text-slate-900 mb-1 italic tracking-tighter uppercase">SPORTS ISLAND</h1>
+                <p class="text-slate-400 font-bold text-sm">請選擇您的使用方式</p>
             </div>
             <div class="space-y-4">
                 <div onclick="RegistrationFlow.selectRole('本人')" class="card-choice group">
                     <div class="text-4xl bg-blue-50 w-16 h-16 flex items-center justify-center rounded-2xl">🙋‍♂️</div>
                     <div class="flex-1">
-                        <h3 class="text-xl font-black text-slate-800 group-hover:text-blue-600">個人使用</h3>
-                        <p class="text-slate-400 text-xs mt-1 font-bold">適合學生本人或一般成人。</p>
+                        <h3 class="text-xl font-black text-slate-800 group-hover:text-blue-600 transition-colors">個人使用</h3>
+                        <p class="text-slate-400 text-xs mt-1 font-bold">已有手機，想自己選課與預約。</p>
                     </div>
                 </div>
                 <div onclick="RegistrationFlow.selectRole('家長')" class="card-choice group">
                     <div class="text-4xl bg-orange-50 w-16 h-16 flex items-center justify-center rounded-2xl">👪</div>
                     <div class="flex-1">
-                        <h3 class="text-xl font-black text-slate-800 group-hover:text-blue-600">我是家長</h3>
-                        <p class="text-slate-400 text-xs mt-1 font-bold">幫小孩報名並管理多個成員。</p>
+                        <h3 class="text-xl font-black text-slate-800 group-hover:text-blue-600 transition-colors">我是家長</h3>
+                        <p class="text-slate-400 text-xs mt-1 font-bold">幫多個孩子報名並管理家庭成員。</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. 家長聯繫表單 (家長路徑專屬) -->
+        <!-- 2. 家長聯繫表單 -->
         <div id="view-parent-form" class="section-view max-w-md mx-auto pt-4">
-            <h2 class="text-2xl font-black text-slate-800 mb-8 pl-4 border-l-4 border-blue-600">家長聯繫資訊</h2>
+            <h2 class="text-2xl font-black text-slate-800 mb-8 pl-4 border-l-4 border-blue-600 italic">Parent Contact</h2>
             <div class="bg-white p-8 rounded-[40px] shadow-sm space-y-6 border">
-                <div><label class="tag-label">聯絡人姓名</label><input type="text" id="parent-name" class="input-giant"></div>
+                <div><label class="tag-label">家長/聯絡人姓名</label><input type="text" id="parent-name" class="input-giant"></div>
                 <div><label class="tag-label">聯絡電話</label><input type="tel" id="parent-phone" class="input-giant" placeholder="09xxxxxxxx"></div>
-                <button onclick="RegistrationFlow.submitParent()" class="btn-primary mt-4">確認資訊，下一步 ➜</button>
-                <button onclick="RegistrationFlow.backToGate()" class="w-full text-slate-400 font-bold text-xs">返回身分選擇</button>
+                <button onclick="RegistrationFlow.submitParent()" class="btn-primary mt-4 uppercase italic">Next Step ➜</button>
             </div>
         </div>
 
         <!-- 3. 學員詳細個資表單 (16 欄位) -->
         <div id="view-student-form" class="section-view max-w-2xl mx-auto">
             <div class="flex items-center justify-between mb-6">
-                <button onclick="RegistrationFlow.backToGate()" class="text-slate-400 font-bold text-xs uppercase">⬅ 返回身分選擇</button>
-                <h2 class="text-2xl font-black text-slate-800">建立成員檔案</h2>
+                <button onclick="RegistrationFlow.backToGate()" class="text-slate-400 font-bold text-xs uppercase italic">⬅ Back</button>
+                <h2 class="text-2xl font-black text-slate-800 italic">Create Member Profile</h2>
             </div>
             <div class="bg-white p-8 md:p-12 rounded-[48px] shadow-sm border">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -123,41 +124,57 @@
                     </div>
                     <div><label class="tag-label">就讀學校</label><input type="text" id="stu-school" class="input-giant"></div>
                     <div><label class="tag-label">目前年級</label><input type="text" id="stu-grade" class="input-giant bg-slate-50" readonly></div>
-                    <div class="col-span-full"><label class="tag-label">健康狀況說明</label><textarea id="stu-health" rows="2" class="input-giant !h-auto" placeholder="例如：蠶豆症、藥物過敏"></textarea></div>
+                    <div class="col-span-full"><label class="tag-label">健康狀況說明</label><textarea id="stu-health" rows="2" class="input-giant !h-auto" placeholder="蠶豆症、藥物過敏、受傷史等"></textarea></div>
                     <div><label class="tag-label">飲食習慣</label><select id="stu-diet" class="input-giant font-bold"><option value="葷食">葷食</option><option value="素食">素食</option></select></div>
-                    <div><label class="tag-label">興趣項目</label><input type="text" id="stu-interests" class="input-giant" placeholder="例如：籃球, 足球"></div>
+                    <div><label class="tag-label">興趣項目</label><input type="text" id="stu-interests" class="input-giant" placeholder="例如：籃球, 足球, 程式"></div>
                 </div>
-                <button onclick="RegistrationFlow.submitStudent()" class="btn-primary mt-12">儲存檔案並進入庫 ➜</button>
+                <button onclick="RegistrationFlow.submitStudent()" class="btn-primary mt-12 uppercase italic tracking-widest">Save & Finish ➜</button>
             </div>
         </div>
 
-        <!-- 4. 活動列表區 (主畫面之一) -->
+        <!-- 4. 活動列表頁 -->
         <div id="view-activity" class="section-view">
             <div class="banner-container">
                 <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto object-cover" alt="Banner">
             </div>
             <div id="event-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
-                <!-- 活動卡片 -->
+                <!-- 由 JS 動態注入 -->
             </div>
         </div>
 
-        <!-- 5. 會員中心 / 我的成員庫 (主畫面之二) -->
-        <div id="view-member" class="section-view max-w-2xl mx-auto">
+        <!-- 5. 會員中心 (成員庫 + 課程紀錄) -->
+        <div id="view-member" class="section-view max-w-4xl mx-auto">
             <div class="banner-container">
                 <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto object-cover" alt="Banner">
             </div>
-            <div class="flex justify-between items-center mb-8">
-                <div><h2 class="text-2xl font-black text-slate-800">我的成員庫</h2><p class="text-slate-400 font-bold text-[10px] uppercase">Family Members</p></div>
-                <button onclick="RegistrationFlow.showStudentForm()" class="bg-[#1a73e8] text-white px-5 py-2.5 rounded-2xl font-black text-sm shadow-md">+ 新增學員</button>
-            </div>
-            <div id="family-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- 成員卡片列表 -->
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- 左側：成員庫 -->
+                <div class="lg:col-span-7">
+                    <div class="flex justify-between items-center mb-6">
+                        <div><h2 class="text-2xl font-black text-slate-800">我的成員庫</h2><p class="text-slate-400 font-bold text-[10px] uppercase">Family Members</p></div>
+                        <button onclick="RegistrationFlow.showStudentForm()" class="bg-[#1a73e8] text-white px-5 py-2 rounded-xl font-black text-xs shadow-md">+ 新增成員</button>
+                    </div>
+                    <div id="family-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- 成員列表 -->
+                    </div>
+                </div>
+                
+                <!-- 右側：課程/報名紀錄 (恢復此功能) -->
+                <div class="lg:col-span-5">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-black text-slate-800">課程紀錄</h2>
+                        <p class="text-slate-400 font-bold text-[10px] uppercase">Registration History</p>
+                    </div>
+                    <div id="history-container" class="space-y-3">
+                        <!-- 紀錄列表 -->
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- 6. 管理後台 (主畫面之三) -->
+        <!-- 6. 管理後台 (暫略，邏輯穩定) -->
         <div id="view-admin" class="section-view">
-            <!-- 管理後台內容區 (略，邏輯維持穩定) -->
             <div id="admin-event-grid" class="space-y-4"></div>
         </div>
 
@@ -172,36 +189,46 @@
             async init() {
                 try {
                     await liff.init({ liffId: LIFF_ID });
-                    if (!liff.isInClient()) {
-                        document.getElementById('loading-status').innerText = "Web Dev Mode";
+                    
+                    // 環境偵測：防止 PC 預覽無限跳轉
+                    if (!liff.isInClient() && !liff.isLoggedIn()) {
+                        document.getElementById('loading-status').innerText = "Web Developer Environment";
                         document.getElementById('preview-mode-btn').classList.remove('hidden');
                         return;
                     }
-                    if (!liff.isLoggedIn()) { liff.login(); return; }
+
+                    // 正式 LINE 環境自動登入
+                    if (!liff.isLoggedIn()) {
+                        liff.login();
+                        return;
+                    }
+
                     const p = await liff.getProfile();
                     state.uid = p.userId; state.lineProfile = p;
                     this.checkStatus();
-                } catch (e) { document.getElementById('loading-status').innerText = "LIFF 初始化失敗"; }
+                } catch (e) {
+                    console.error(e);
+                    document.getElementById('loading-status').innerText = "LIFF 初期化錯誤";
+                }
             },
             skipLogin() { document.getElementById('view-loading').style.display = 'none'; this.checkStatus(); },
             async checkStatus() {
-                showMsg("核對會員資料...");
+                showMsg("核對資料庫...");
                 const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
                 const r = await res.json();
                 document.getElementById('view-loading').style.display = 'none';
+                
                 if (r.status === 'registered') {
                     state.isRegistered = true; state.userType = r.data.type;
                     this.unlockHeader();
-                    switchMainTab('activity'); // 註冊過的人預設進活動頁
+                    switchMainTab('member'); // 註冊過的人直接進會員中心看紀錄
                 } else {
                     this.hideAll();
                     document.getElementById('view-registration-gate').classList.add('active');
                     if(state.lineProfile) document.getElementById('parent-name').value = state.lineProfile.displayName;
                 }
             },
-            unlockHeader() {
-                document.getElementById('main-header').classList.remove('header-hidden');
-            },
+            unlockHeader() { document.getElementById('main-header').classList.remove('header-hidden'); },
             selectRole(role) {
                 state.userType = role;
                 this.hideAll();
@@ -211,11 +238,15 @@
             showStudentForm() {
                 this.hideAll();
                 document.getElementById('view-student-form').classList.add('active');
+                // 清空快取表單
+                ['stu-name', 'stu-birthday', 'stu-id', 'stu-height', 'stu-weight', 'stu-foot', 'stu-school', 'stu-grade', 'stu-health'].forEach(id => {
+                    const el = document.getElementById(id); if(el) el.value = "";
+                });
             },
             async submitParent() {
                 const n = document.getElementById('parent-name').value;
                 const p = document.getElementById('parent-phone').value;
-                if(!n || !p) return showMsg("請完整填寫");
+                if(!n || !p) return showMsg("請填寫聯繫資訊");
                 await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name: n, phone: p, type: '家長' } }) });
                 this.showStudentForm();
             },
@@ -236,16 +267,17 @@
                     interests: document.getElementById('stu-interests').value
                 };
                 if(!payload.name || !payload.idNumber) return showMsg("姓名與身分證號必填");
-                showMsg("儲存成員資料...");
-                if (state.userType === '本人') {
-                    await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name: payload.name, phone: '個人使用', type: '本人' } }) });
+                showMsg("儲存成員檔案...");
+                if (state.userType === '本人' && !state.isRegistered) {
+                    await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name: payload.name, phone: '個人', type: '本人' } }) });
                 }
                 const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'addStudent', payload }) });
-                if((await res.json()).status === 'success') {
-                    showMsg("🎉 註冊成功，解鎖選課功能！");
+                const r = await res.json();
+                if(r.status === 'success') {
+                    showMsg("🎉 資料已儲存並返回列表");
                     state.isRegistered = true;
                     this.unlockHeader();
-                    switchMainTab('member'); // 返回成員清單
+                    switchMainTab('member');
                 }
             },
             detectGrade() {
@@ -257,38 +289,62 @@
             backToGate() { this.hideAll(); document.getElementById('view-registration-gate').classList.add('active'); }
         };
 
-        function switchMainTab(m) {
-            if(!state.isRegistered) return; // 未註冊禁入功能區
+        async function switchMainTab(m) {
+            if(!state.isRegistered) return;
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + m)?.classList.add('active');
             document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
             document.getElementById('view-' + m)?.classList.add('active');
-            if (m === 'member') loadFamilyMembers();
-            if (m === 'activity') loadActivities();
+            
+            if (m === 'member') {
+                loadFamilyMembers();
+                loadHistoryRecords();
+            }
+            if (m === 'activity') loadCourses();
         }
 
         async function loadFamilyMembers() {
             const grid = document.getElementById('family-grid');
-            grid.innerHTML = '<p class="p-10 text-slate-300 italic">Syncing Members...</p>';
+            grid.innerHTML = '<p class="p-6 text-slate-300 italic">Syncing...</p>';
             const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
             const r = await res.json();
             state.members = r.data || [];
             grid.innerHTML = state.members.map(m => `
-                <div class="bg-white p-6 rounded-[32px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
-                    <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black text-2xl italic">${m.姓名.charAt(0)}</div>
-                    <div class="flex-1"><h4 class="font-black text-slate-800 text-lg">${m.姓名}</h4><p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${m.年級} | ${m.生日}</p></div>
+                <div class="bg-white p-5 rounded-[28px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black text-xl italic">${m.姓名.charAt(0)}</div>
+                    <div><h4 class="font-black text-slate-800 text-base">${m.姓名}</h4><p class="text-[10px] text-slate-400 font-bold">${m.年級}</p></div>
                 </div>
             `).join('');
         }
 
-        async function loadActivities() {
+        async function loadHistoryRecords() {
+            const container = document.getElementById('history-container');
+            container.innerHTML = '<p class="p-6 text-slate-300 italic">Fetching...</p>';
+            const res = await fetch(`${PROXY_URL}?action=getHistory&uid=${state.uid}`);
+            const r = await res.json();
+            if (r.data?.length > 0) {
+                container.innerHTML = r.data.map(h => `
+                    <div class="history-card">
+                        <h4 class="font-black text-slate-800 text-sm truncate">${h.eventName}</h4>
+                        <div class="flex justify-between items-end mt-2">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">${h.報名時間}</p>
+                            <p class="text-blue-600 font-black text-sm italic">NT$ ${parseInt(h.應付金額||0).toLocaleString()}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="text-center py-10 text-slate-300 font-bold italic uppercase text-xs">No Records Yet</p>';
+            }
+        }
+
+        async function loadCourses() {
             const list = document.getElementById('event-list');
-            list.innerHTML = '<p class="p-10 text-slate-300 italic">Loading Courses...</p>';
+            list.innerHTML = '<p class="p-10 text-slate-300 italic text-center">Loading Courses...</p>';
             const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
             const r = await res.json();
             state.events = r.data || [];
             list.innerHTML = state.events.filter(ev => ev['狀態'] === '上架').map(ev => `
-                <div class="bg-white rounded-3xl overflow-hidden border shadow-sm"><div class="card-img-container"><img src="${ev['圖片URL'] || 'https://placehold.co/600x400'}" class="img-proportional"></div><div class="p-6"><h3 class="font-black text-lg">${ev['活動名稱']}</h3><p class="text-xl font-black text-slate-900 mt-4">NT$ ${parseInt(ev['全日價']||0).toLocaleString()}</p></div></div>
+                <div class="bg-white rounded-3xl overflow-hidden border shadow-sm"><div class="card-img-container"><img src="${ev['圖片URL'] || 'https://placehold.co/600x400'}" class="img-proportional"></div><div class="p-6"><h3 class="font-black text-lg">${ev['活動名稱']}</h3><p class="text-xl font-black text-slate-900 mt-4 italic">NT$ ${parseInt(ev['全日價']||0).toLocaleString()}</p></div></div>
             `).join('');
         }
 
