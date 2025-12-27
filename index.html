@@ -1,251 +1,185 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="icon" href="data:,">
-    <title>運動島 SPORTS ISLAND - 專業預約管理系統</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #0f172a; font-size: 16px; scroll-behavior: smooth; }
-        .app-content { width: 100%; margin: 0 auto; padding: 1rem; }
-        .mode-desktop { max-width: 1300px; }
-        .nav-tab { flex: 1; text-align: center; padding: 14px 0; font-weight: 900; font-size: 14px; color: rgba(255,255,255,0.6); border-bottom: 4px solid transparent; cursor: pointer; transition: 0.3s; }
-        .nav-tab.active { color: white !important; border-bottom-color: white !important; }
-        .chip { display: inline-block; padding: 8px 16px; border-radius: 99px; border: 2px solid #e2e8f0; font-weight: 700; font-size: 13px; margin: 4px; cursor: pointer; background: white; }
-        .chip.active { background-color: #1a73e8; color: white; border-color: #1a73e8; }
-        .btn-mega { font-weight: 900; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: none; cursor: pointer; font-size: 14px; padding: 12px; }
-        .btn-primary { background-color: #1a73e8; color: white; }
-        .btn-secondary { background-color: #ffffff; color: #1a73e8; border: 2.2px solid #1a73e8; }
-        .btn-danger { background-color: #fee2e2; color: #dc2626; }
-        .img-proportional { width: 100%; height: 100%; object-fit: contain; background-color: #f1f5f9; }
-        .card-img-container { height: 16rem; overflow: hidden; position: relative; background-color: #f1f5f9; }
-        .section-view { display: none; }
-        .section-view.active { display: block; animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .tag-label { color: #1a73e8; font-weight: 900; margin-bottom: 8px; display: block; font-size: 14px; border-left: 4px solid #1a73e8; padding-left: 10px; }
-        .input-giant { width: 100%; border: none; border-bottom: 2px solid #e2e8f0; outline: none; padding: 10px 0; font-weight: 700; font-size: 16px; background: transparent; }
-        #msg-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 85%; max-width: 400px; display: none; }
-        .session-row { display: flex; gap: 8px; align-items: center; background: #f8fafc; padding: 10px; border-radius: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
-    </style>
-</head>
-<body class="bg-slate-50">
+/**
+ * 運動島 SPORTS ISLAND - 後端核心
+ * 檔案位置：Google Apps Script 編輯器 (通常名為 Code.gs)
+ * 欄位規則：Events (19 欄位) / Students (16 欄位)
+ */
 
-    <div id="msg-box" class="bg-slate-900 text-white p-4 rounded-xl shadow-2xl text-center font-bold text-sm"></div>
+const SS_ID = "1Q2pyb7ljtWg3n_R8KSeyHrFLt6Ra4nXUmqhTZhUWZJg";
+const SS = SpreadsheetApp.openById(SS_ID);
 
-    <header class="bg-[#1a73e8] text-white pt-6 pb-1 px-4 md:px-12 sticky top-0 z-50 shadow-md">
-        <div class="max-w-[1280px] mx-auto flex flex-col md:flex-row md:justify-between items-center">
-            <h1 class="text-xl md:text-2xl font-black italic tracking-tighter uppercase mb-4 md:mb-0 cursor-pointer" onclick="location.reload()">SPORTS ISLAND</h1>
-            <nav class="flex w-full md:w-auto md:min-w-[400px]">
-                <div onclick="switchMainTab('activity')" id="tab-activity" class="nav-tab active">活動專區</div>
-                <div onclick="switchMainTab('member')" id="tab-member" class="nav-tab">會員專區</div>
-                <div onclick="switchMainTab('admin')" id="tab-admin" class="nav-tab hidden">管理中心</div>
-            </nav>
-        </div>
-    </header>
+/**
+ * 處理 GET 請求：讀取資料
+ */
+function doGet(e) {
+  const action = e.parameter.action;
+  const uid = e.parameter.uid;
+  
+  try {
+    if (action === 'getEvents') {
+      return createJsonResponse({
+        status: 'success',
+        data: getSheetData("Events"),
+        config: getSystemConfig()
+      });
+    }
+    if (action === 'getProfile') {
+      return createJsonResponse({ status: 'success', data: getProfileByUid(uid) });
+    }
+    if (action === 'getHistory') {
+      return createJsonResponse({ status: 'success', data: getHistoryByUid(uid) });
+    }
+    return createJsonResponse({ status: 'online', message: 'Ready' });
+  } catch (err) {
+    return createJsonResponse({ status: 'error', message: err.toString() });
+  }
+}
 
-    <main id="app-wrapper" class="app-content mode-narrow md:mode-desktop">
-        <div id="loading" class="py-40 text-center">
-            <div class="inline-block w-8 h-8 border-4 border-[#1a73e8] border-t-transparent rounded-full animate-spin"></div>
-            <p id="loading-text" class="mt-4 font-black text-slate-400 text-xs tracking-widest uppercase">Syncing Cloud Data...</p>
-        </div>
+/**
+ * 處理 POST 請求：寫入資料
+ */
+function doPost(e) {
+  let postData;
+  try { postData = JSON.parse(e.postData.contents); } 
+  catch (err) { return createJsonResponse({ status: 'error', message: 'JSON 解析失敗' }); }
 
-        <!-- 活動專區 -->
-        <div id="view-activity" class="section-view">
-            <div id="client-cat-filter" class="flex overflow-x-auto pb-4 no-scrollbar gap-1 mb-4"></div>
-            <div id="event-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-        </div>
+  const action = postData.action;
+  const payload = postData.payload;
 
-        <!-- 管理中心 -->
-        <div id="view-admin" class="section-view">
-            <div class="flex bg-white rounded-lg mb-8 shadow-sm border p-1">
-                <div onclick="showAdminSubPage('list')" id="sub-tab-list" class="flex-1 text-center py-2 cursor-pointer rounded font-black text-xs transition-all">活動庫</div>
-                <div onclick="showAdminSubPage('params')" id="sub-tab-params" class="flex-1 text-center py-2 cursor-pointer rounded font-black text-xs transition-all">設定</div>
-            </div>
-            
-            <div id="admin-page-list">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-black text-xs uppercase italic tracking-wider">Inventory</h3>
-                    <button onclick="openEditor(null)" class="bg-[#1a73e8] text-white px-4 py-2 rounded-xl text-xs font-black shadow-md">+ 新增課程</button>
-                </div>
-                <div id="admin-event-grid" class="space-y-4"></div>
-            </div>
+  try {
+    if (action === 'updateEvent') return createJsonResponse(updateEventLogic(payload));
+    if (action === 'submitRegistration') return createJsonResponse(submitRegistrationLogic(payload));
+    if (action === 'updateConfig') return createJsonResponse(updateConfigLogic(payload));
+    return createJsonResponse({ status: 'error', message: '未知操作' });
+  } catch (err) {
+    return createJsonResponse({ status: 'error', message: err.toString() });
+  }
+}
 
-            <!-- 活動編輯器 (鎖定 19 欄位與 ID 防錯) -->
-            <div id="admin-edit-page" class="hidden">
-                <div class="bg-white rounded-[40px] shadow-2xl p-10 border border-slate-100 max-w-4xl mx-auto">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div><label class="tag-label">活動型態 (B)</label><select id="edit-type" class="input-giant font-bold" onchange="toggleSessionUI()"><option value="單日型">單日型</option><option value="梯次型">梯次型</option></select></div>
-                        <div><label class="tag-label">顯示狀態 (O)</label><select id="edit-status" class="input-giant font-bold"><option value="上架">上架</option><option value="隱藏">隱藏</option></select></div>
-                        <div class="col-span-full"><label class="tag-label">名稱 (D)</label><input type="text" id="edit-name" class="input-giant"></div>
-                        <div><label class="tag-label">分類 (C)</label><select id="edit-category" class="input-giant font-bold"></select></div>
-                        <div id="date-simple-ui" class="grid grid-cols-2 gap-4">
-                            <div><label class="tag-label">開始 (F)</label><input type="date" id="edit-start" class="input-giant"></div>
-                            <div><label class="tag-label">結束 (G)</label><input type="date" id="edit-end" class="input-giant"></div>
-                        </div>
-                        <div id="session-manager-ui" class="hidden col-span-full bg-slate-50 p-6 rounded-3xl border-2 border-dashed border-slate-200">
-                            <div id="session-list-container"></div><button onclick="addSessionRow('', '')" class="bg-slate-900 text-white px-4 py-1.5 rounded-full text-[10px] mt-4">+ 新增日期 (E)</button>
-                        </div>
+/**
+ * 更新活動 - 嚴格物理對齊 A-S 欄 (19 欄)
+ */
+function updateEventLogic(ev) {
+  const sheet = SS.getSheetByName("Events");
+  const targetId = String(ev.活動ID);
+  const data = sheet.getDataRange().getValues();
+  let rowIndex = -1;
 
-                        <div><label class="tag-label">全日原價 (H)</label><input type="number" id="edit-price" class="input-giant"></div>
-                        <div><label class="tag-label">半日原價 (P)</label><input type="number" id="edit-half-price" class="input-giant"></div>
-                        
-                        <div class="col-span-full grid grid-cols-3 gap-4 bg-orange-50 p-4 rounded-2xl">
-                            <div><label class="tag-label text-orange-700 font-black italic">全日早鳥 (Q)</label><input type="number" id="edit-early-price" class="input-giant border-orange-200"></div>
-                            <div><label class="tag-label text-orange-700 font-black italic">半日早鳥 (S)</label><input type="number" id="edit-half-early-price" class="input-giant border-orange-200"></div>
-                            <div><label class="tag-label text-orange-700 font-black italic">早鳥截止 (R)</label><input type="date" id="edit-early-deadline" class="input-giant border-orange-200"></div>
-                        </div>
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === targetId) { rowIndex = i + 1; break; }
+  }
 
-                        <div class="grid grid-cols-2 gap-4 bg-blue-50 p-4 rounded-2xl col-span-full">
-                            <div><label class="tag-label text-blue-700">全日扣除 (I)</label><input type="number" id="edit-full-deduct" class="input-giant" value="0"></div>
-                            <div><label class="tag-label text-blue-700">半日扣除 (J)</label><input type="number" id="edit-half-deduct" class="input-giant" value="0"></div>
-                        </div>
-                        
-                        <div><label class="tag-label">總名額 (K)</label><input type="number" id="edit-quota" class="input-giant"></div>
-                        <div class="col-span-full"><label class="tag-label">封面圖片網址 (N)</label><input type="text" id="edit-img" class="input-giant"></div>
-                        <div class="col-span-full"><label class="tag-label">內容媒體網址 (M)</label><input type="text" id="edit-media" class="input-giant"></div>
-                        <div class="col-span-full"><label class="tag-label">詳細大綱介紹 (L)</label><textarea id="edit-desc" rows="6" class="input-giant !h-auto !text-base font-normal"></textarea></div>
-                    </div>
-                    <button onclick="saveEventToSheet()" id="btn-save-event" class="btn-mega btn-primary mt-12 w-full h-16 shadow-xl italic uppercase tracking-widest">Update Cloud Database ➜</button>
-                    <button onclick="showAdminSubPage('list')" class="btn-mega btn-secondary mt-4 font-black">取消</button>
-                </div>
-            </div>
-        </div>
-    </main>
+  // 100% 根據您提供的物理順序對齊
+  const rowData = [
+    targetId,            // A: 活動ID
+    ev.活動型態,         // B: 活動型態
+    ev.分類,             // C: 分類
+    ev.活動名稱,         // D: 活動名稱
+    ev.梯次資料 || "[]", // E: 梯次資料
+    ev.開始日期,         // F: 開始日期
+    ev.結束日期,         // G: 結束日期
+    ev.全日價,           // H: 全日價 (例如: 7500)
+    ev.全日扣除 || 0,    // I: 全日扣除
+    ev.半日扣除 || 0,    // J: 半日扣除
+    ev.總名額,           // K: 總名額
+    ev.描述,             // L: 描述
+    ev.內容媒體 || "",   // M: 內容媒體
+    ev.圖片URL,          // N: 圖片URL
+    ev.狀態,             // O: 狀態
+    ev.半日價 || 0,      // P: 半日價
+    ev.全日早鳥價 || 0,  // Q: 全日早鳥價 (例如: 4980) -> 對應試算表標題必須是「全日早鳥價」
+    ev.早鳥截止日期,     // R: 早鳥截止日期
+    ev.半日早鳥價 || 0   // S: 半日早鳥價
+  ];
 
-    <script>
-        const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
-        let state = { events: [], config: {}, currentFilter: "全部", userUid: "", profile: null, isProcessing: false, searchQuery: "", currentEditId: null };
+  if (rowIndex > 0) {
+    sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
+  } else {
+    sheet.appendRow(rowData);
+  }
+  
+  SpreadsheetApp.flush(); // 強制同步
+  return { status: 'success' };
+}
 
-        // 核心 UI 渲染
-        function renderClientCatFilter() {
-            const container = document.getElementById('client-cat-filter'); if (!container) return;
-            const cats = ["全部", ...(state.config.sportCategories || "").split(',').map(s => s.trim()).filter(s => s !== "")];
-            container.innerHTML = cats.map(c => `<div class="chip ${state.currentFilter === c ? 'active' : ''}" onclick="filterActivities('${c}')">${c}</div>`).join('');
-        }
+/**
+ * 提交報名與同步學員個資 - 16 欄位
+ */
+function submitRegistrationLogic(payload) {
+  const stu = payload.student;
+  const idNum = String(stu.idNumber);
+  const stuSheet = SS.getSheetByName("Students");
+  const stuData = stuSheet.getDataRange().getValues();
+  let stuRowIndex = -1;
 
-        function renderActivityList() {
-            const list = document.getElementById('event-list'); if (!list) return;
-            const now = new Date().toISOString().split('T')[0];
-            const filtered = state.events.filter(ev => ev['狀態'] === '上架' && (state.currentFilter === "全部" || ev['分類'] === state.currentFilter));
-            list.innerHTML = filtered.map(ev => {
-                const isEarly = ev['早鳥截止日期'] && now <= ev['早鳥截止日期'];
-                const displayPrice = (isEarly && parseFloat(ev['全日早鳥價']) > 0) ? ev['全日早鳥價'] : ev['全日價'];
-                return `<div class="bg-white rounded-3xl overflow-hidden border shadow-sm"><div class="card-img-container"><img src="${ev['圖片URL'] || 'https://placehold.co/600x400'}" class="img-proportional"></div><div class="p-6"><h3 class="font-black text-lg">${ev['活動名稱']}</h3><p class="text-xs text-slate-400 my-2">${ev['開始日期']} ~ ${ev['結束日期']}</p><p class="text-xl font-black text-slate-900 mt-4">NT$ ${parseInt(displayPrice||0).toLocaleString()}</p></div></div>`;
-            }).join('');
-        }
+  for (let i = 1; i < stuData.length; i++) {
+    if (String(stuData[i][5]) === idNum) { stuRowIndex = i + 1; break; }
+  }
 
-        function renderAdminList() {
-            const grid = document.getElementById('admin-event-grid'); if (!grid) return;
-            grid.innerHTML = state.events.map(ev => `
-                <div class="bg-white p-4 rounded-2xl border shadow-sm flex items-center gap-4">
-                    <img src="${ev['圖片URL'] || 'https://placehold.co/100x100'}" class="w-16 h-16 object-contain rounded">
-                    <div class="flex-1 min-w-0"><h4 class="font-black text-sm truncate">${ev['活動名稱']}</h4><p class="text-[10px] text-slate-400 font-bold">${ev['狀態']}</p></div>
-                    <div class="flex gap-1.5"><button onclick="openEditor('${ev['活動ID']}')" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-[10px] font-black">編輯</button><button onclick="duplicateEvent('${ev['活動ID']}')" class="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-[10px] font-black">複製</button></div>
-                </div>`).join('');
-        }
+  const stuRow = [
+    stu.id, stu.parentUid, stu.name, stu.gender, stu.birthday, 
+    idNum, stu.identity, stu.height, stu.weight, stu.footSize, 
+    stu.school, stu.grade, stu.health, "N/A", "N/A", new Date()
+  ];
 
-        // 初始化與抓取
-        window.onload = function() {
-            const p = new URLSearchParams(window.location.search);
-            if (p.get('action') === 'admin') { const t = document.getElementById('tab-admin'); if(t) t.classList.remove('hidden'); switchMainTab('admin'); } else { switchMainTab('activity'); }
-            fetchData();
-        };
+  if (stuRowIndex > 0) stuSheet.getRange(stuRowIndex, 1, 1, stuRow.length).setValues([stuRow]);
+  else stuSheet.appendRow(stuRow);
 
-        async function fetchData() {
-            try {
-                const res = await fetch(PROXY_URL + "?action=getEvents&_t=" + Date.now());
-                const result = await res.json();
-                if (result.status === 'success') {
-                    state.events = result.data || [];
-                    state.config = result.config || {};
-                    renderClientCatFilter(); renderActivityList();
-                    if (document.getElementById('view-admin').classList.contains('active')) renderAdminList();
-                }
-            } catch (e) { console.error(e); }
-            finally { document.getElementById('loading').classList.add('hidden'); }
-        }
+  if (payload.eventId && payload.eventId !== "SYNC") {
+    const regSheet = SS.getSheetByName("Registrations") || SS.insertSheet("Registrations");
+    regSheet.appendRow([
+      "REG-"+Date.now(), idNum, stu.name, payload.eventId, payload.eventName || "課程",
+      payload.type, payload.session, payload.amount, new Date(), "未核帳"
+    ]);
+  }
 
-        // 編輯與存檔 (核心修正位)
-        function openEditor(id) {
-            state.currentEditId = id; const ev = state.events.find(e => String(e['活動ID']) === String(id)) || {};
-            document.getElementById('admin-page-list').classList.add('hidden');
-            document.getElementById('admin-edit-page').classList.remove('hidden');
-            renderAdminCategorySelect();
-            
-            const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-            setVal('edit-type', ev['活動型態'] || "單日型");
-            setVal('edit-status', ev['狀態'] || "上架");
-            setVal('edit-category', ev['分類'] || "");
-            setVal('edit-name', ev['活動名稱'] || "");
-            setVal('edit-start', ev['開始日期'] || "");
-            setVal('edit-end', ev['結束日期'] || "");
-            setVal('edit-price', ev['全日價'] || 0);
-            setVal('edit-half-price', ev['半日價'] || 0);
-            setVal('edit-full-deduct', ev['全日扣除'] || 0);
-            setVal('edit-half-deduct', ev['半日扣除'] || 0);
-            setVal('edit-early-price', ev['全日早鳥價'] || 0);
-            setVal('edit-half-early-price', ev['半日早鳥價'] || 0);
-            setVal('edit-early-deadline', ev['早鳥截止日期'] || "");
-            setVal('edit-quota', ev['總名額'] || 0);
-            setVal('edit-desc', ev['描述'] || "");
-            setVal('edit-img', ev['圖片URL'] || "");
-            setVal('edit-media', ev['內容媒體'] || "");
-            
-            const container = document.getElementById('session-list-container'); container.innerHTML = "";
-            if (ev['梯次資料'] && ev['梯次資料'] !== "[]") { try { JSON.parse(ev['梯次資料']).forEach(s => addSessionRow(s.s, s.e)); } catch(e) {} }
-            toggleSessionUI();
-        }
+  SpreadsheetApp.flush();
+  return { status: 'success' };
+}
 
-        async function saveEventToSheet() {
-            if (state.isProcessing) return; state.isProcessing = true;
-            const sessions = []; document.querySelectorAll('.session-row').forEach(row => { const ins = row.querySelectorAll('input'); if (ins[0].value) sessions.push({ s: ins[0].value, e: ins[1].value }); });
-            
-            const getV = (id) => document.getElementById(id)?.value || "";
-            const payload = { 
-                "活動ID": state.currentEditId || ("EVT-" + Date.now()), 
-                "活動型態": getV('edit-type'), 
-                "分類": getV('edit-category'), 
-                "活動名稱": getV('edit-name'), 
-                "梯次資料": JSON.stringify(sessions),
-                "開始日期": getV('edit-start'), 
-                "結束日期": getV('edit-end'), 
-                "全日價": getV('edit-price'), 
-                "全日扣除": getV('edit-full-deduct'),
-                "半日扣除": getV('edit-half-deduct'),
-                "總名額": getV('edit-quota'), 
-                "描述": getV('edit-desc'), 
-                "內容媒體": getV('edit-media'),
-                "圖片URL": getV('edit-img'), 
-                "狀態": getV('edit-status'), 
-                "半日價": getV('edit-half-price'), 
-                "全日早鳥價": getV('edit-early-price'), 
-                "早鳥截止日期": getV('edit-early-deadline'),
-                "半日早鳥價": getV('edit-half-early-price')
-            };
-            const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateEvent', payload: payload }) });
-            if((await res.json()).status === 'success') { showMsg("✅ 已成功存入 19 欄位庫！"); fetchData(); showAdminSubPage('list'); }
-            state.isProcessing = false;
-        }
+// 輔助函式
+function getSheetData(name) {
+  const sheet = SS.getSheetByName(name);
+  if (!sheet) return [];
+  const values = sheet.getDataRange().getValues();
+  if (values.length <= 1) return [];
+  const headers = values[0];
+  return values.slice(1).map(row => {
+    let obj = {};
+    headers.forEach((h, i) => {
+      let val = row[i];
+      if (val instanceof Date) val = Utilities.formatDate(val, "GMT+8", "yyyy-MM-dd");
+      obj[h] = val;
+    });
+    return obj;
+  });
+}
 
-        function switchMainTab(m) {
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + m)?.classList.add('active');
-            document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-' + m)?.classList.add('active');
-            if (m === 'admin') showAdminSubPage('list');
-        }
-        function showAdminSubPage(p) {
-            document.getElementById('admin-page-list').classList.toggle('hidden', p !== 'list'); 
-            document.getElementById('admin-edit-page').classList.add('hidden');
-            if(p === 'list') renderAdminList();
-        }
-        function addSessionRow(s, e) { const row = document.createElement('div'); row.className = "session-row"; row.innerHTML = `<div class="flex-1"><input type="date" value="${s}" class="w-full bg-transparent outline-none text-sm font-bold"></div><div>~</div><div class="flex-1"><input type="date" value="${e}" class="w-full bg-transparent outline-none text-sm font-bold"></div><button onclick="this.parentElement.remove()" class="text-red-400 px-2 font-black">×</button>`; document.getElementById('session-list-container').appendChild(row); }
-        function toggleSessionUI() { const t = document.getElementById('edit-type').value; document.getElementById('date-simple-ui').classList.toggle('hidden', t === '梯次型'); document.getElementById('session-manager-ui').classList.toggle('hidden', t !== '梯次型'); }
-        function renderAdminCategorySelect() { const s = document.getElementById('edit-category'); if (!s) return; const cats = (state.config.sportCategories || "籃球,足球").split(',').map(c => c.trim()).filter(c => c !== ""); s.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join(''); }
-        function showMsg(t) { const b = document.getElementById('msg-box'); if(b) { b.innerText = t; b.style.display='block'; setTimeout(()=>b.style.display='none', 4000); } }
-        function duplicateEvent(id) { const ev = state.events.find(e => String(e['活動ID']) === String(id)); if (!ev) return; state.currentEditId = null; openEditor(null); document.getElementById('edit-name').value = ev['活動名稱'] + " (複製)"; }
-    </script>
-</body>
-</html>
+function getProfileByUid(uid) { return getSheetData("Students").find(s => String(s.身分證字號) === String(uid)) || null; }
+function getHistoryByUid(uid) {
+  const sheet = SS.getSheetByName("Registrations"); if (!sheet) return [];
+  const values = sheet.getDataRange().getValues();
+  return values.slice(1).filter(row => String(row[1]) === String(uid)).map(row => ({
+    eventName: row[4], 應付金額: row[7], 報名時間: Utilities.formatDate(new Date(row[8]), "GMT+8", "yyyy-MM-dd HH:mm")
+  }));
+}
+function getSystemConfig() {
+  const sheet = SS.getSheetByName("SystemConfig"); const config = { bankInfo: "", sportCategories: "" };
+  if (!sheet) return config;
+  sheet.getDataRange().getValues().slice(1).forEach(r => { 
+    if(String(r[0]).trim()==="bankInfo") config.bankInfo=r[1]; 
+    if(String(r[0]).trim()==="sportCategories") config.sportCategories=r[1]; 
+  });
+  return config;
+}
+function updateConfigLogic(p) {
+  const sheet = SS.getSheetByName("SystemConfig") || SS.insertSheet("SystemConfig");
+  const up = (k, v) => {
+    let d = sheet.getDataRange().getValues(); let f = false;
+    for (let i = 1; i < d.length; i++) { if (String(d[i][0]).trim() === k) { sheet.getRange(i+1, 2).setValue(v); f = true; break; } }
+    if (!f) sheet.appendRow([k, v, new Date()]);
+  };
+  up("bankInfo", p.bankInfo); up("sportCategories", p.sportCategories);
+  SpreadsheetApp.flush();
+  return { status: 'success' };
+}
+function createJsonResponse(data) { return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON); }
