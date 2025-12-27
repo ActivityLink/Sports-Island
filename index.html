@@ -26,10 +26,12 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
         
         /* 通用元件 */
-        .input-giant { width: 100%; border: 2px solid #e2e8f0; border-radius: 12px; padding: 14px; font-weight: 700; outline: none; background: white; }
+        .input-giant { width: 100%; border: 2px solid #e2e8f0; border-radius: 12px; padding: 14px; font-weight: 700; outline: none; background: white; transition: 0.3s; }
         .input-giant:focus { border-color: #1a73e8; box-shadow: 0 0 0 4px rgba(26,115,232,0.1); }
         .tag-label { color: #1a73e8; font-weight: 900; margin-bottom: 6px; display: block; font-size: 13px; text-transform: uppercase; border-left: 4px solid #1a73e8; padding-left: 10px; }
-        .btn-primary { background: #1a73e8; color: white; padding: 16px; border-radius: 20px; font-weight: 900; width: 100%; box-shadow: 0 4px 12px rgba(26,115,232,0.2); transition: 0.2s; text-align: center; cursor: pointer; display: block; }
+        
+        /* 按鈕設計 */
+        .btn-primary { background: #1a73e8; color: white; padding: 16px; border-radius: 20px; font-weight: 900; width: 100%; box-shadow: 0 4px 12px rgba(26,115,232,0.2); transition: 0.2s; text-align: center; cursor: pointer; border: none; display: block; }
         .btn-primary:active { transform: scale(0.98); }
         .btn-secondary { background: white; color: #1a73e8; border: 2px solid #1a73e8; padding: 10px 16px; border-radius: 12px; font-weight: 900; font-size: 14px; text-align: center; cursor: pointer; }
         .btn-danger { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 10px 16px; border-radius: 12px; font-weight: 900; font-size: 14px; cursor: pointer; }
@@ -38,29 +40,34 @@
         /* 日曆系統 */
         .step-pill { width: 26px; height: 26px; border-radius: 50%; background: #e2e8f0; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
         .step-pill.active { background: #1a73e8; color: white; }
-        .week-chip { padding: 8px 16px; border-radius: 99px; background: white; border: 2px solid #e2e8f0; font-size: 12px; font-weight: 900; cursor: pointer; white-space: nowrap; transition: 0.2s; }
-        .week-chip.active { background: #1a73e8; color: white; border-color: #1a73e8; }
+        .week-chip { padding: 8px 16px; border-radius: 99px; background: white; border: 2px solid #e2e8f0; font-size: 12px; font-weight: 900; cursor: pointer; white-space: nowrap; transition: 0.2s; color: #64748b; }
+        .week-chip.active { background: #1a73e8; color: white; border-color: #1a73e8; box-shadow: 0 4px 10px rgba(26, 115, 232, 0.2); }
+        
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .cal-day { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; cursor: pointer; position: relative; border: 2px solid transparent; }
+        .cal-day { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; cursor: pointer; position: relative; border: 2px solid transparent; transition: 0.2s; }
         .cal-day-muted { opacity: 0.1; pointer-events: none; }
+        
         .status-attend { background: #eff6ff; color: #1e40af; border-color: #dbeafe; }
         .status-full-leave { background: #f1f5f9; color: #94a3b8; text-decoration: line-through; border-color: #e2e8f0; }
         .status-am-leave { background: #fffbeb; color: #92400e; border-color: #fef3c7; }
         .status-pm-leave { background: #f0fdf4; color: #166534; border-color: #dcfce7; }
-        .leave-badge { position: absolute; bottom: 4px; font-size: 8px; font-weight: bold; }
+        .leave-badge { position: absolute; bottom: 4px; font-size: 9px; font-weight: bold; }
 
-        /* 列表卡片 */
+        /* 列表與 Banner */
         .history-card { background: white; border: 1px solid #f1f5f9; padding: 20px; border-radius: 24px; margin-bottom: 12px; border-left: 6px solid #1a73e8; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
         .banner-container { width: 100%; border-radius: 24px; overflow: hidden; margin-bottom: 24px; background: #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .card-img-container { height: 16rem; overflow: hidden; position: relative; background-color: #f1f5f9; border-bottom: 1px solid #e2e8f0; }
         .img-proportional { width: 100%; height: 100%; object-fit: contain; }
 
+        /* 底部選單 Modal */
         #leave-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; display: none; align-items: flex-end; backdrop-filter: blur(4px); }
         .modal-body { background: white; width: 100%; border-radius: 32px 32px 0 0; padding: 24px 24px 40px 24px; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
-        #msg-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; background: #0f172a; color: white; padding: 12px 24px; border-radius: 99px; font-weight: 700; font-size: 14px; display: none; }
+        #msg-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10001; background: #0f172a; color: white; padding: 12px 24px; border-radius: 99px; font-weight: 700; font-size: 14px; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .session-row { display: flex; gap: 8px; align-items: center; background: #f8fafc; padding: 10px; border-radius: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -70,7 +77,7 @@
     <!-- 請假選擇彈窗 -->
     <div id="leave-modal" onclick="closeLeaveModal(event)">
         <div class="modal-body" onclick="event.stopPropagation()">
-            <h3 class="text-xl font-black mb-2 text-slate-800 italic uppercase">Attendance Settings</h3>
+            <h3 class="text-xl font-black mb-1 text-slate-800 italic uppercase">Attendance Status</h3>
             <div id="target-date-display" class="mb-6 text-sm font-black text-blue-600"></div>
             <div class="grid grid-cols-1 gap-3">
                 <button onclick="BookingWizard.setLeaveStatus('attend')" class="w-full p-5 rounded-2xl bg-blue-50 text-blue-600 font-black text-left flex justify-between items-center border border-blue-100">全日出席 <span>✓</span></button>
@@ -82,7 +89,7 @@
         </div>
     </div>
 
-    <!-- 頂部功能區 -->
+    <!-- 頂部導航 -->
     <header id="main-header" class="bg-[#1a73e8] text-white pt-4 pb-1 px-4 md:px-12 sticky top-0 z-50 shadow-md header-hidden">
         <div class="max-w-[1280px] mx-auto flex flex-col md:flex-row md:justify-between items-center gap-4">
             <div class="flex items-center justify-between w-full md:w-auto">
@@ -102,28 +109,28 @@
 
     <main id="app-wrapper" class="app-content mode-narrow md:mode-desktop">
         
-        <!-- 載入遮罩 -->
+        <!-- 初始化載入 -->
         <div id="view-loading" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center">
             <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p id="loading-status" class="mt-4 font-black text-slate-400 text-xs tracking-widest italic uppercase">Syncing Cloud...</p>
-            <button id="preview-mode-btn" onclick="RegistrationFlow.skipLogin()" class="mt-8 text-blue-600 font-bold text-xs underline hidden">進入測試模式</button>
+            <p id="loading-status" class="mt-4 font-black text-slate-400 text-xs tracking-widest italic uppercase">Initializing System...</p>
+            <button id="preview-mode-btn" onclick="RegistrationFlow.skipLogin()" class="mt-8 text-blue-600 font-bold text-xs underline hidden">測試開發模式</button>
         </div>
 
-        <!-- [活動專區] -->
+        <!-- [活動專區視圖] -->
         <div id="view-activity" class="section-view active">
             <div class="banner-container"><img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto"></div>
             <div id="event-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4"></div>
         </div>
 
-        <!-- [活動詳情] -->
+        <!-- [活動詳情視圖] -->
         <div id="view-activity-detail" class="section-view max-w-4xl mx-auto">
-            <button onclick="switchMainTab('activity')" class="mb-6 text-slate-400 font-black text-xs uppercase flex items-center gap-2 group"><span class="text-lg">⬅</span> 返回列表</button>
+            <button onclick="switchMainTab('activity')" class="mb-6 text-slate-400 font-black text-xs uppercase flex items-center gap-2 group"><span class="text-lg transition-transform group-hover:-translate-x-1">⬅</span> 返回列表</button>
             <div id="detail-content-area"></div>
         </div>
 
-        <!-- [預約 Wizard] -->
+        <!-- [預約 Wizard 視圖] -->
         <div id="view-booking-wizard" class="section-view max-w-2xl mx-auto">
-            <div class="flex items-center gap-3 mb-8">
+            <div class="flex items-center gap-3 mb-10">
                 <div id="step-1-pill" class="step-pill active">1</div>
                 <div class="flex-1 h-0.5 bg-slate-200"></div>
                 <div id="step-2-pill" class="step-pill">2</div>
@@ -135,88 +142,45 @@
             <div id="wizard-content" class="bg-white border-2 border-slate-100 rounded-[40px] p-8 md:p-12 shadow-sm min-h-[400px]"></div>
         </div>
 
-        <!-- [會員註冊] -->
-        <div id="view-registration-gate" class="section-view max-w-md mx-auto pt-4">
-            <div class="banner-container"><img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto"></div>
-            <div class="text-center mb-8"><h1 class="text-3xl font-black text-slate-900 mb-1">尚未註冊會員</h1><p class="text-slate-400 font-bold text-sm">請先選擇您的使用方式</p></div>
-            <div class="space-y-4">
-                <div onclick="RegistrationFlow.selectRole('本人')" class="card-choice group p-6 bg-white border-2 border-slate-50 rounded-[28px] cursor-pointer flex items-center gap-4 hover:border-blue-500 transition-all">
-                    <div class="text-4xl bg-blue-50 w-16 h-16 flex items-center justify-center rounded-2xl">🙋‍♂️</div>
-                    <div class="flex-1"><h3 class="text-xl font-black text-slate-800">個人使用</h3><p class="text-slate-400 text-xs mt-1 font-bold">本人自行選課使用</p></div>
-                </div>
-                <div onclick="RegistrationFlow.selectRole('家長')" class="card-choice group p-6 bg-white border-2 border-slate-50 rounded-[28px] cursor-pointer flex items-center gap-4 hover:border-blue-500 transition-all">
-                    <div class="text-4xl bg-orange-50 w-16 h-16 flex items-center justify-center rounded-2xl">👪</div>
-                    <div class="flex-1"><h3 class="text-xl font-black text-slate-800">我是家長</h3><p class="text-slate-400 text-xs mt-1 font-bold">幫小孩報名並管理多個成員</p></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- [表單視圖] -->
-        <div id="view-parent-form" class="section-view max-w-md mx-auto pt-4">
-            <div class="bg-white p-8 rounded-[40px] shadow-sm space-y-6 border">
-                <h2 class="text-2xl font-black text-slate-800 italic">Parent Info</h2>
-                <div><label class="tag-label">真實姓名</label><input type="text" id="parent-name" class="input-giant" placeholder="請填寫證件真實姓名"></div>
-                <div><label class="tag-label">聯絡電話</label><input type="tel" id="parent-phone" class="input-giant" placeholder="09xxxxxxxx"></div>
-                <button onclick="RegistrationFlow.submitParent()" class="btn-primary mt-4 uppercase italic">Next Step ➜</button>
-            </div>
-        </div>
-
-        <div id="view-student-form" class="section-view max-w-2xl mx-auto">
-            <div class="bg-white p-8 md:p-12 rounded-[48px] shadow-sm border">
-                <h2 id="stu-form-title" class="text-2xl font-black text-slate-800 mb-8 border-b pb-4 italic text-[#1a73e8]">Member Profile</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div><label class="tag-label">姓名</label><input type="text" id="stu-name" class="input-giant" placeholder="真實姓名"></div>
-                    <div><label class="tag-label">性別</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
-                    <div><label class="tag-label">生日</label><input type="date" id="stu-birthday" class="input-giant" onchange="RegistrationFlow.detectGrade()"></div>
-                    <div><label class="tag-label">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase"></div>
-                    <div class="grid grid-cols-3 gap-2 col-span-full">
-                        <div><label class="tag-label text-[10px]">身高 cm</label><input type="number" id="stu-height" class="input-giant"></div>
-                        <div><label class="tag-label text-[10px]">體重 kg</label><input type="number" id="stu-weight" class="input-giant"></div>
-                        <div><label class="tag-label text-[10px]">腳長 cm</label><input type="number" id="stu-foot" class="input-giant"></div>
-                    </div>
-                    <div><label class="tag-label">就讀學校</label><input type="text" id="stu-school" class="input-giant"></div>
-                    <div><label class="tag-label">目前年級</label><input type="text" id="stu-grade" class="input-giant bg-slate-50" readonly></div>
-                </div>
-                <button onclick="RegistrationFlow.submitStudent()" class="btn-primary mt-12 shadow-xl">儲存檔案 ➜</button>
-            </div>
-        </div>
-
-        <!-- [會員專區：成員清單 + 報名紀錄] -->
+        <!-- [會員中心視圖] -->
         <div id="view-member" class="section-view max-w-6xl mx-auto">
             <div class="banner-container"><img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto"></div>
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 <div class="lg:col-span-7">
-                    <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-black italic uppercase">My Family Members</h2><button onclick="RegistrationFlow.showStudentForm()" class="bg-[#1a73e8] text-white px-5 py-2 rounded-xl font-black text-xs">+ 新增成員</button></div>
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-2xl font-black text-slate-800 italic uppercase">Family Members</h2>
+                        <button onclick="RegistrationFlow.showStudentForm()" class="bg-[#1a73e8] text-white px-5 py-2.5 rounded-xl font-black text-xs shadow-md transition-all active:scale-95">+ 新增成員</button>
+                    </div>
                     <div id="family-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
                 <div class="lg:col-span-5">
-                    <h2 class="text-2xl font-black mb-6 italic uppercase text-slate-400">Booking History</h2>
+                    <h2 class="text-2xl font-black mb-8 italic uppercase text-slate-400">Booking History</h2>
                     <div id="history-container" class="space-y-4"></div>
                 </div>
             </div>
         </div>
 
-        <!-- [管理中心：後台列表] -->
+        <!-- [管理中心視圖] -->
         <div id="view-admin" class="section-view max-w-5xl mx-auto">
              <div id="admin-page-list">
                 <div class="flex justify-between items-center mb-10">
-                    <div><h2 class="text-3xl font-black italic uppercase">Inventory</h2><p class="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Activity Management</p></div>
-                    <button onclick="AdminService.openEditor(null)" class="bg-[#1a73e8] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-lg">+ 新增活動</button>
+                    <div><h2 class="text-3xl font-black italic uppercase">Inventory</h2><p class="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Management Console</p></div>
+                    <button onclick="AdminService.openEditor(null)" class="bg-[#1a73e8] text-white px-6 py-3 rounded-2xl font-black text-sm shadow-lg transition-all active:scale-95">+ 新增課程</button>
                 </div>
                 <div id="admin-event-grid" class="space-y-4"></div>
              </div>
 
-             <!-- [活動編輯器] -->
+             <!-- [活動編輯器視圖] -->
              <div id="admin-edit-page" class="hidden">
                 <div class="bg-white rounded-[40px] shadow-2xl p-8 md:p-12 border border-slate-100 max-w-4xl mx-auto">
-                    <div class="flex justify-between items-center mb-8 border-b pb-4">
-                        <h3 class="text-xl font-black text-slate-800 italic">Edit Activity Detail</h3>
-                        <button onclick="AdminService.switchSubPage('list')" class="text-slate-400 font-bold hover:text-red-500">✕</button>
+                    <div class="flex justify-between items-center mb-8 border-b pb-6">
+                        <h3 class="text-xl font-black text-slate-800 italic uppercase">Edit Course Data</h3>
+                        <button onclick="AdminService.switchSubPage('list')" class="text-slate-400 font-bold text-lg hover:text-red-500">✕</button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                         <div><label class="tag-label">活動型態 (B)</label><select id="edit-type" class="input-giant font-bold" onchange="AdminService.toggleSessionUI()"><option value="單日型">單日型</option><option value="梯次型">梯次型</option></select></div>
                         <div><label class="tag-label">顯示狀態 (O)</label><select id="edit-status" class="input-giant font-bold"><option value="上架">上架</option><option value="隱藏">隱藏</option></select></div>
-                        <div class="col-span-full"><label class="tag-label">名稱 (D)</label><input type="text" id="edit-name" class="input-giant"></div>
+                        <div class="col-span-full"><label class="tag-label">活動名稱 (D)</label><input type="text" id="edit-name" class="input-giant"></div>
                         <div><label class="tag-label">分類 (C)</label><select id="edit-category" class="input-giant font-bold"></select></div>
                         <div id="date-simple-ui" class="grid grid-cols-2 gap-4">
                             <div><label class="tag-label">開始 (F)</label><input type="date" id="edit-start" class="input-giant font-bold"></div>
@@ -224,27 +188,65 @@
                         </div>
                         <div id="session-manager-ui" class="hidden col-span-full bg-slate-50 p-6 rounded-3xl border-2 border-dashed border-slate-200">
                             <div id="session-list-container"></div>
-                            <button onclick="AdminService.addSessionRow('', '')" class="bg-slate-900 text-white px-4 py-1.5 rounded-full text-[10px] mt-4 shadow-lg">+ 新增日期 (E)</button>
+                            <button onclick="AdminService.addSessionRow('', '')" class="bg-slate-900 text-white px-4 py-1.5 rounded-full text-[10px] mt-4 shadow-lg transition-all active:scale-95">+ 新增日期 (E)</button>
                         </div>
-                        <div><label class="tag-label">全日原價 (H)</label><input type="number" id="edit-price" class="input-giant"></div>
-                        <div><label class="tag-label">半日原價 (P)</label><input type="number" id="edit-half-price" class="input-giant"></div>
-                        <div class="grid grid-cols-2 gap-4 bg-blue-50 p-4 rounded-2xl col-span-full">
-                            <div><label class="tag-label text-blue-700 font-bold">全日扣除 (I)</label><input type="number" id="edit-full-deduct" class="input-giant" value="0"></div>
-                            <div><label class="tag-label text-blue-700 font-bold">半日扣除 (J)</label><input type="number" id="edit-half-deduct" class="input-giant" value="0"></div>
+                        <div><label class="tag-label text-blue-600">全日方案原價 (H)</label><input type="number" id="edit-price" class="input-giant"></div>
+                        <div><label class="tag-label text-blue-600">半日方案原價 (P)</label><input type="number" id="edit-half-price" class="input-giant"></div>
+                        <div class="grid grid-cols-2 gap-4 bg-blue-50 p-6 rounded-3xl col-span-full border border-blue-100">
+                            <div><label class="tag-label text-blue-800">全日請假扣額 (I)</label><input type="number" id="edit-full-deduct" class="input-giant" value="0"></div>
+                            <div><label class="tag-label text-blue-800">半日請假扣額 (J)</label><input type="number" id="edit-half-deduct" class="input-giant" value="0"></div>
                         </div>
-                        <div class="col-span-full grid grid-cols-3 gap-4 bg-orange-50 p-4 rounded-2xl border border-orange-100">
-                            <div><label class="tag-label text-orange-700 font-black">全早鳥價 (Q)</label><input type="number" id="edit-early-price" class="input-giant !border-orange-200"></div>
-                            <div><label class="tag-label text-orange-700 font-black">半早鳥價 (S)</label><input type="number" id="edit-half-early-price" class="input-giant !border-orange-200"></div>
-                            <div><label class="tag-label text-orange-700 font-black">早鳥截止 (R)</label><input type="date" id="edit-early-deadline" class="input-giant !border-orange-200"></div>
+                        <div class="col-span-full grid grid-cols-3 gap-4 bg-orange-50 p-6 rounded-3xl border border-orange-100">
+                            <div><label class="tag-label text-orange-700 font-black italic">全早鳥價 (Q)</label><input type="number" id="edit-early-price" class="input-giant !border-orange-200"></div>
+                            <div><label class="tag-label text-orange-700 font-black italic">半早鳥價 (S)</label><input type="number" id="edit-half-early-price" class="input-giant !border-orange-200"></div>
+                            <div><label class="tag-label text-orange-700 font-black italic">早鳥截止 (R)</label><input type="date" id="edit-early-deadline" class="input-giant !border-orange-200"></div>
                         </div>
                         <div><label class="tag-label">總名額 (K)</label><input type="number" id="edit-quota" class="input-giant"></div>
-                        <div class="col-span-full"><label class="tag-label">圖片URL (N)</label><input type="text" id="edit-img" class="input-giant" placeholder="https://..."></div>
+                        <div class="col-span-full"><label class="tag-label">封面圖片網址 (N)</label><input type="text" id="edit-img" class="input-giant" placeholder="https://..."></div>
                         <div class="col-span-full"><label class="tag-label">內容媒體 (M)</label><input type="text" id="edit-media" class="input-giant"></div>
-                        <div class="col-span-full"><label class="tag-label">詳細大綱介紹 (L)</label><textarea id="edit-desc" rows="6" class="input-giant !h-auto !text-base font-normal"></textarea></div>
+                        <div class="col-span-full"><label class="tag-label">課程介紹大綱 (L)</label><textarea id="edit-desc" rows="6" class="input-giant !h-auto !text-base font-normal"></textarea></div>
                     </div>
-                    <button onclick="AdminService.saveEvent()" id="btn-save-event" class="btn-primary mt-12 w-full h-16 shadow-xl italic uppercase tracking-widest">Update Cloud Database ➜</button>
-                    <button onclick="AdminService.switchSubPage('list')" class="btn-secondary mt-4 w-full">取消並返回</button>
+                    <button onclick="AdminService.saveEvent()" id="btn-save-event" class="btn-primary mt-12 w-full h-16 shadow-xl italic uppercase tracking-widest">Push Changes to Cloud ➜</button>
+                    <button onclick="AdminService.switchSubPage('list')" class="btn-secondary mt-4 w-full">取消不儲存</button>
                 </div>
+             </div>
+        </div>
+
+        <!-- [註冊與表單隱藏視圖] -->
+        <div id="view-registration-gate" class="section-view max-w-md mx-auto pt-4">
+            <div class="banner-container"><img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto"></div>
+            <div class="text-center mb-10"><h1 class="text-3xl font-black text-slate-900 mb-1">尚未註冊會員</h1><p class="text-slate-400 font-bold text-sm">請選擇您的使用身分以繼續</p></div>
+            <div class="space-y-4">
+                <div onclick="RegistrationFlow.selectRole('本人')" class="card-choice group p-6 bg-white border-2 border-slate-50 rounded-[32px] cursor-pointer flex items-center gap-5 hover:border-blue-500 transition-all">
+                    <div class="text-4xl bg-blue-50 w-16 h-16 flex items-center justify-center rounded-2xl">🙋‍♂️</div>
+                    <div class="flex-1"><h3 class="text-xl font-black text-slate-800">個人使用</h3><p class="text-slate-400 text-xs mt-1 font-bold">適合已有手機的學員自行操作</p></div>
+                </div>
+                <div onclick="RegistrationFlow.selectRole('家長')" class="card-choice group p-6 bg-white border-2 border-slate-50 rounded-[32px] cursor-pointer flex items-center gap-5 hover:border-blue-500 transition-all">
+                    <div class="text-4xl bg-orange-50 w-16 h-16 flex items-center justify-center rounded-2xl">👪</div>
+                    <div class="flex-1"><h3 class="text-xl font-black text-slate-800">我是家長</h3><p class="text-slate-400 text-xs mt-1 font-bold">幫多個孩子報名並統一管理</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-student-form" class="section-view max-w-2xl mx-auto">
+            <div class="bg-white p-8 md:p-12 rounded-[48px] shadow-sm border border-slate-100">
+                <h2 id="stu-form-title" class="text-2xl font-black text-slate-800 mb-8 border-b pb-4 italic text-[#1a73e8]">Profile Details</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div><label class="tag-label">姓名</label><input type="text" id="stu-name" class="input-giant" placeholder="真實姓名"></div>
+                    <div><label class="tag-label">性別</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
+                    <div><label class="tag-label">生日</label><input type="date" id="stu-birthday" class="input-giant" onchange="RegistrationFlow.detectGrade()"></div>
+                    <div><label class="tag-label">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase"></div>
+                    <div class="grid grid-cols-3 gap-2 col-span-full">
+                        <div><label class="tag-label !text-[10px]">身高 cm</label><input type="number" id="stu-height" class="input-giant"></div>
+                        <div><label class="tag-label !text-[10px]">體重 kg</label><input type="number" id="stu-weight" class="input-giant"></div>
+                        <div><label class="tag-label !text-[10px]">腳長 cm</label><input type="number" id="stu-foot" class="input-giant"></div>
+                    </div>
+                    <div><label class="tag-label">目前年級</label><input type="text" id="stu-grade" class="input-giant bg-slate-50" readonly></div>
+                    <div><label class="tag-label">就讀學校</label><input type="text" id="stu-school" class="input-giant"></div>
+                    <div class="col-span-full"><label class="tag-label">健康狀況與過敏說明</label><textarea id="stu-health" rows="2" class="input-giant !h-auto"></textarea></div>
+                </div>
+                <button onclick="RegistrationFlow.submitStudent()" class="btn-primary mt-12 shadow-xl italic tracking-widest uppercase">Save Records ➜</button>
+                <button onclick="switchMainTab('member')" class="w-full mt-4 text-slate-300 font-bold text-xs uppercase">Cancel & Back</button>
             </div>
         </div>
 
@@ -262,6 +264,7 @@
                 try {
                     await liff.init({ liffId: LIFF_ID });
                     if (!liff.isInClient() && !liff.isLoggedIn()) {
+                        document.getElementById('loading-status').innerText = "Developer Environment";
                         document.getElementById('preview-mode-btn').classList.remove('hidden');
                         return;
                     }
@@ -271,7 +274,7 @@
                     document.getElementById('line-name-display').innerText = p.displayName;
                     document.getElementById('line-logo-display').src = p.pictureUrl || "";
                     this.checkStatus();
-                } catch (e) { document.getElementById('loading-status').innerText = "LIFF ERROR"; }
+                } catch (e) { document.getElementById('loading-status').innerText = "LIFF ERR"; }
             },
             skipLogin() { document.getElementById('view-loading').style.display = 'none'; this.checkStatus(); },
             async checkStatus() {
@@ -280,6 +283,7 @@
                 document.getElementById('view-loading').style.display = 'none';
                 const urlParams = new URLSearchParams(window.location.search);
                 if (urlParams.get('action') === 'admin') document.getElementById('tab-admin').classList.remove('hidden');
+                
                 if (r.status === 'registered') {
                     state.isRegistered = true; state.userType = r.data.type;
                     document.getElementById('main-header').classList.remove('header-hidden');
@@ -301,26 +305,32 @@
                 if (stuId) {
                     const s = state.members.find(m => String(m.學員ID) === String(stuId));
                     if(s) {
-                        document.getElementById('stu-name').value = s.姓名;
-                        document.getElementById('stu-id').value = s.身分證字號;
-                        document.getElementById('stu-birthday').value = s.生日;
-                        this.detectGrade();
+                        document.getElementById('stu-name').value = s.姓名 || "";
+                        document.getElementById('stu-gender').value = s.性別 || "男";
+                        document.getElementById('stu-birthday').value = s.生日 || "";
+                        document.getElementById('stu-id').value = s.身分證字號 || "";
+                        document.getElementById('stu-height').value = s.身高 || 0;
+                        document.getElementById('stu-weight').value = s.體重 || 0;
+                        document.getElementById('stu-foot').value = s.腳長 || 0;
+                        document.getElementById('stu-school').value = s.學校 || "";
+                        document.getElementById('stu-grade').value = s.年級 || "";
+                        document.getElementById('stu-health').value = s.健康狀況 || "";
                     }
                 } else {
-                    ['stu-name','stu-birthday','stu-id','stu-height','stu-weight','stu-foot'].forEach(id=>document.getElementById(id).value="");
+                    ['stu-name','stu-birthday','stu-id','stu-height','stu-weight','stu-foot','stu-school','stu-grade','stu-health'].forEach(id=>document.getElementById(id).value="");
                 }
             },
             async submitParent() {
                 const n = document.getElementById('parent-name').value;
                 const p = document.getElementById('parent-phone').value;
-                if(!n || !p) return showMsg("請正確填寫資訊");
+                if(!n || !p) return showMsg("請填寫家長資料");
                 await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name: n, phone: p, type: '家長' } }) });
                 this.showStudentForm();
             },
             async submitStudent() {
-                const payload = { id: state.currentEditStuId, parentUid: state.uid, name: document.getElementById('stu-name').value, gender: document.getElementById('stu-gender').value, birthday: document.getElementById('stu-birthday').value, idNumber: document.getElementById('stu-id').value, height: document.getElementById('stu-height').value, weight: document.getElementById('stu-weight').value, footSize: document.getElementById('stu-foot').value, grade: document.getElementById('stu-grade').value, school: document.getElementById('stu-school').value };
+                const payload = { id: state.currentEditStuId, parentUid: state.uid, name: document.getElementById('stu-name').value, gender: document.getElementById('stu-gender').value, birthday: document.getElementById('stu-birthday').value, idNumber: document.getElementById('stu-id').value, height: document.getElementById('stu-height').value, weight: document.getElementById('stu-weight').value, footSize: document.getElementById('stu-foot').value, grade: document.getElementById('stu-grade').value, school: document.getElementById('stu-school').value, health: document.getElementById('stu-health').value };
                 if (state.userType === '本人' && !state.isRegistered) {
-                    await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name: payload.name, phone: '個人', type: '本人' } }) });
+                    await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name: payload.name, phone: '個人使用', type: '本人' } }) });
                 }
                 const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'addStudent', payload }) });
                 if((await res.json()).status === 'success') {
@@ -339,13 +349,15 @@
         };
 
         /**
-         * 預約 Wizard
+         * 預約 Wizard 模組
          */
         const BookingWizard = {
             async start(eventId) {
                 if(!state.isRegistered) { state.targetBookingId = eventId; RegistrationFlow.hideAll(); document.getElementById('view-registration-gate').classList.add('active'); return; }
                 const ev = state.events.find(e => String(e['活動ID']) === String(eventId)); if(!ev) return;
                 bookingData = { event: ev, student: null, type: '', session: '', amount: 0, bankLast5: '', attendanceMap: {}, currentWeekIdx: 0 };
+                
+                showMsg("正在抓取成員名單...");
                 const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
                 state.members = (await res.json()).data || [];
                 if(!state.members.length) { showMsg("請先建立成員檔案。"); RegistrationFlow.showStudentForm(); return; }
@@ -355,17 +367,20 @@
                 RegistrationFlow.hideAll();
                 document.getElementById('view-booking-wizard').classList.add('active');
                 for(let i=1; i<=4; i++) document.getElementById(`step-${i}-pill`).classList.toggle('active', i <= step);
-                const el = document.getElementById('wizard-content');
-                if (step === 1) this.renderStep1(el);
-                if (step === 2) this.renderStep2(el);
-                if (step === 3) this.renderStep3(el);
-                if (step === 4) this.renderStep4(el);
+                const container = document.getElementById('wizard-content');
+                if (step === 1) this.renderStep1(container);
+                if (step === 2) this.renderStep2(container);
+                if (step === 3) this.renderStep3(container);
+                if (step === 4) this.renderStep4(container);
             },
             renderStep1(el) {
-                el.innerHTML = `<h2 class="text-2xl font-black mb-8 border-b pb-4 italic text-[#1a73e8]">Step 1: 選擇成員</h2><div class="space-y-4">${state.members.map(m => `
-                    <div onclick="BookingWizard.selectMember('${m.學員ID}')" class="p-6 border-2 border-slate-100 rounded-[28px] cursor-pointer flex items-center justify-between hover:border-blue-500">
-                        <div class="flex items-center gap-4"><div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-black">${(m.姓名||"?").charAt(0)}</div><div><p class="font-black">${m.姓名}</p><p class="text-xs text-slate-400 font-bold">${m.年級}</p></div></div>
-                        <div class="text-blue-500 font-black text-sm">選擇成員 ➜</div>
+                el.innerHTML = `<h2 class="text-2xl font-black mb-8 border-b pb-4 italic text-[#1a73e8]">Step 1: 選擇報名成員</h2><div class="space-y-4">${state.members.map(m => `
+                    <div onclick="BookingWizard.selectMember('${m.學員ID}')" class="p-6 border-2 border-slate-100 rounded-[28px] cursor-pointer flex items-center justify-between hover:border-blue-500 transition-all active:scale-95">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-black">${(m.姓名||"?").charAt(0)}</div>
+                            <div><p class="font-black">${m.姓名}</p><p class="text-xs text-slate-400 font-bold">${m.年級}</p></div>
+                        </div>
+                        <div class="text-blue-500 font-black text-sm">選擇 ➜</div>
                     </div>`).join('')}</div>`;
             },
             selectMember(sid) { bookingData.student = state.members.find(m => String(m.學員ID) === String(sid)); this.goToStep(2); },
@@ -374,12 +389,16 @@
                 let sSelect = '';
                 if (ev['活動型態'] === '梯次型' && ev['梯次資料'] !== '[]') {
                     const ss = JSON.parse(ev['梯次資料']);
-                    sSelect = `<label class="tag-label">選擇梯次</label><select id="wiz-session" class="input-giant mb-8 font-black">${ss.map(s => `<option value="${s.s} ~ ${s.e}">${s.s} 至 ${s.e}</option>`).join('')}</select>`;
+                    sSelect = `<label class="tag-label">選擇梯次日期</label><select id="wiz-session" class="input-giant mb-8 font-black">${ss.map(s => `<option value="${s.s} ~ ${s.e}">${s.s} 至 ${s.e}</option>`).join('')}</select>`;
                 }
-                el.innerHTML = `<h2 class="text-2xl font-black mb-8 border-b pb-4 italic text-[#1a73e8]">Step 2: 方案與梯次</h2>${sSelect}<label class="tag-label">報名方案</label>
+                el.innerHTML = `<h2 class="text-2xl font-black mb-8 border-b pb-4 italic text-[#1a73e8]">Step 2: 方案與梯次</h2>${sSelect}<label class="tag-label">選擇報名方案</label>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                        <div onclick="BookingWizard.selectType('全日', ${ev['全日價']})" class="p-6 border-2 border-slate-100 rounded-[28px] cursor-pointer hover:border-blue-500 text-center"><p class="font-bold text-slate-400 text-sm">全日方案</p><p class="text-2xl font-black text-blue-600 mt-2">NT$ ${parseInt(ev['全日價']).toLocaleString()}</p></div>
-                        <div onclick="BookingWizard.selectType('半日', ${ev['半日價']})" class="p-6 border-2 border-slate-100 rounded-[28px] cursor-pointer hover:border-blue-500 text-center"><p class="font-bold text-slate-400 text-sm">半日方案</p><p class="text-2xl font-black text-blue-600 mt-2">NT$ ${parseInt(ev['半日價']).toLocaleString()}</p></div>
+                        <div onclick="BookingWizard.selectType('全日', ${ev['全日價']})" class="p-6 border-2 border-slate-100 rounded-[28px] cursor-pointer hover:border-blue-500 text-center transition-all active:scale-95">
+                            <p class="font-bold text-slate-400 text-sm">全日正式方案</p><p class="text-2xl font-black text-blue-600 mt-2">NT$ ${parseInt(ev['全日價']).toLocaleString()}</p>
+                        </div>
+                        <div onclick="BookingWizard.selectType('半日', ${ev['半日價']})" class="p-6 border-2 border-slate-100 rounded-[28px] cursor-pointer hover:border-blue-500 text-center transition-all active:scale-95">
+                            <p class="font-bold text-slate-400 text-sm">半日體驗方案</p><p class="text-2xl font-black text-blue-600 mt-2">NT$ ${parseInt(ev['半日價']).toLocaleString()}</p>
+                        </div>
                     </div>`;
             },
             selectType(t, p) { bookingData.type = t; bookingData.amount = p; bookingData.session = document.getElementById('wiz-session')?.value || "單日"; this.goToStep(3); },
@@ -404,58 +423,87 @@
                     calHtml += `<div onclick="BookingWizard.openLeaveSelector('${d}')" class="cal-day ${css}">${dayNum}<span class="leave-badge">${label}</span></div>`;
                 });
                 calHtml += `</div>`;
-                el.innerHTML = `<h2 class="text-2xl font-black mb-2 italic text-[#1a73e8]">Step 3: 確認出席</h2><p class="text-[11px] text-slate-400 font-bold mb-6 tracking-tight">※ 請點擊不出席的日期進入修改 (消去法)。</p>${weekTabs}${calHtml}<button onclick="BookingWizard.goToStep(4)" class="btn-primary mt-4">確認日期 ➜</button>`;
+                el.innerHTML = `<h2 class="text-2xl font-black mb-2 italic text-[#1a73e8]">Step 3: 確認出席</h2><p class="text-[11px] text-slate-400 font-bold mb-6 tracking-tight">※ 請點擊不出席的日期進入修改 (消去法)。</p>${weekTabs}${calHtml}<button onclick="BookingWizard.goToStep(4)" class="btn-primary mt-4 italic uppercase">Next Step ➜</button>`;
             },
             switchWeek(idx) { bookingData.currentWeekIdx = idx; this.renderStep3(document.getElementById('wizard-content')); },
             openLeaveSelector(date) { activeDateKey = date; document.getElementById('target-date-display').innerText = date; document.getElementById('leave-modal').style.display = 'flex'; },
             setLeaveStatus(status) { bookingData.attendanceMap[activeDateKey] = status; document.getElementById('leave-modal').style.display = 'none'; this.renderStep3(document.getElementById('wizard-content')); },
             generateDateList(s, e) { const list = []; let cur = new Date(s); while(cur <= e) { list.push(cur.toISOString().split('T')[0]); cur.setDate(cur.getDate()+1); } return list; },
+            
+            // --- 核心：學費扣除計算與顯示 ---
             renderStep4(el) {
-                el.innerHTML = `<h2 class="text-2xl font-black mb-8 border-b pb-4 italic text-[#1a73e8]">Step 4: 金流確認</h2>
-                    <div class="bg-slate-900 text-white p-6 rounded-[28px] mb-8">
-                        <div class="text-[10px] font-bold opacity-60 mb-2 uppercase italic tracking-widest">匯款資訊</div>
-                        <div class="text-xs font-bold bg-white/10 p-4 rounded-xl mb-6 leading-relaxed">${state.config.bankInfo || '讀取中...'}</div>
-                        <div class="flex justify-between items-end border-t border-white/20 pt-4">
-                            <div><p class="text-[10px] font-bold opacity-60">報名成員</p><p class="text-lg font-black">${bookingData.student.姓名}</p></div>
-                            <div class="text-right"><p class="text-[10px] font-bold opacity-60">應付金額</p><p class="text-3xl font-black italic">NT$ ${parseInt(bookingData.amount).toLocaleString()}</p></div>
+                const ev = bookingData.event;
+                const fullDeduct = parseFloat(ev['全日扣除'] || 0);
+                const halfDeduct = parseFloat(ev['半日扣除'] || 0);
+                
+                let fullLeaveCount = 0;
+                let halfLeaveCount = 0;
+                Object.values(bookingData.attendanceMap).forEach(v => {
+                    if (v === 'full') fullLeaveCount++;
+                    if (v === 'am' || v === 'pm') halfLeaveCount++;
+                });
+
+                const totalDeduction = (fullLeaveCount * fullDeduct) + (halfLeaveCount * halfDeduct);
+                const finalAmount = Math.max(0, bookingData.amount - totalDeduction);
+                bookingData.finalCalculatedAmount = finalAmount; // 暫存最終金額
+
+                el.innerHTML = `
+                    <h2 class="text-2xl font-black mb-8 border-b pb-4 italic text-[#1a73e8] uppercase">Step 4: 金流與支付</h2>
+                    <div class="bg-slate-900 text-white p-8 rounded-[40px] mb-8 shadow-xl">
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center text-sm font-bold opacity-60"><span>原始方案總額</span><span>NT$ ${parseInt(bookingData.amount).toLocaleString()}</span></div>
+                            <div class="flex justify-between items-center text-sm font-bold text-orange-400"><span>請假扣除 (${fullLeaveCount}全/${halfLeaveCount}半)</span><span>- NT$ ${parseInt(totalDeduction).toLocaleString()}</span></div>
+                            <div class="pt-6 border-t border-white/20 flex justify-between items-end">
+                                <div><p class="text-[10px] font-bold opacity-60 uppercase">最終應付總額</p><p class="text-4xl font-black italic">NT$ ${parseInt(finalAmount).toLocaleString()}</p></div>
+                                <div class="text-right text-[10px] font-bold opacity-60"><p>學員: ${bookingData.student.姓名}</p><p>方案: ${bookingData.type}</p></div>
+                            </div>
                         </div>
                     </div>
-                    <label class="tag-label">匯款帳號後五碼</label><input type="text" id="wiz-bank5" class="input-giant mb-8" maxlength="5" placeholder="請輸入 5 碼">
-                    <button onclick="BookingWizard.finalSubmit()" class="btn-primary shadow-xl italic tracking-widest uppercase">Confirm Booking ➜</button>`;
+                    
+                    <div class="mb-10"><label class="tag-label">匯款資訊</label><div class="bg-white border p-4 rounded-2xl text-sm font-bold text-slate-500 whitespace-pre-wrap">${state.config.bankInfo || '讀取中...'}</div></div>
+                    
+                    <label class="tag-label">匯款帳號後五碼</label><input type="text" id="wiz-bank5" class="input-giant mb-8" maxlength="5" placeholder="請輸入匯款後 5 碼">
+                    <button onclick="BookingWizard.finalSubmit()" class="btn-primary shadow-2xl uppercase italic tracking-tighter text-lg">Confirm Registration ➜</button>`;
             },
             async finalSubmit() {
                 const b5 = document.getElementById('wiz-bank5').value; if(!b5 || b5.length < 5) return showMsg("請正確填寫後五碼");
                 showMsg("報名送出中...");
                 const datesStr = Object.entries(bookingData.attendanceMap).map(([d, s]) => `${d}:${s}`).join('|');
-                const payload = { student: bookingData.student, eventId: bookingData.event['活動ID'], eventName: bookingData.event['活動名稱'], type: bookingData.type, session: bookingData.session, amount: bookingData.amount, bankLast5: b5, selectedDates: datesStr };
+                const payload = { student: bookingData.student, eventId: bookingData.event['活動ID'], eventName: bookingData.event['活動名稱'], type: bookingData.type, session: bookingData.session, amount: bookingData.finalCalculatedAmount, bankLast5: b5, selectedDates: datesStr };
                 const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
                 if ((await res.json()).status === 'success') { showMsg("🎉 預約成功！"); switchMainTab('member'); }
             }
         };
 
         /**
-         * 管理中心 Admin 控制器
+         * 管理中心 Admin 邏輯 (完全恢復：編輯、複製、下架)
          */
         const AdminService = {
             switchSubPage(p) {
                 document.getElementById('admin-page-list').classList.toggle('hidden', p !== 'list');
                 document.getElementById('admin-edit-page').classList.toggle('hidden', p !== 'edit');
+                if(p === 'list') loadAdminEvents();
             },
             renderList(data) {
                 const grid = document.getElementById('admin-event-grid');
                 grid.innerHTML = data.map(ev => {
                     const isActive = ev['狀態'] === '上架';
                     return `
-                    <div class="bg-white p-5 rounded-2xl border shadow-sm flex flex-col md:flex-row items-center gap-4">
-                        <img src="${ev['圖片URL'] || 'https://placehold.co/100x100'}" class="w-16 h-16 object-contain rounded flex-shrink-0">
+                    <div class="bg-white p-5 rounded-3xl border shadow-sm flex flex-col md:flex-row items-center gap-5 relative group transition-all hover:shadow-lg">
+                        <div class="w-16 h-16 bg-slate-100 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-100">
+                            <img src="${ev['圖片URL'] || 'https://placehold.co/100x100'}" class="img-proportional">
+                        </div>
                         <div class="flex-1 min-w-0">
                             <h4 class="font-black text-base text-slate-800 truncate">${ev['活動名稱']}</h4>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${ev['分類']} | ID: ${ev['活動ID']} | <span class="${isActive ? 'text-green-500' : 'text-red-400'}">${ev['狀態']}</span></p>
+                            <div class="flex gap-2 mt-1">
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 bg-slate-100 rounded-md text-slate-400">${ev['分類']}</span>
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 ${isActive ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-400'} rounded-md border">${ev['狀態']}</span>
+                            </div>
                         </div>
-                        <div class="flex gap-2 w-full md:w-auto">
-                            <button onclick="AdminService.openEditor('${ev['活動ID']}')" class="btn-secondary flex-1 md:w-28">編輯</button>
-                            <button onclick="AdminService.duplicateEvent('${ev['活動ID']}')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl font-black text-xs flex-1 md:w-28">複製</button>
-                            <button onclick="AdminService.toggleStatus('${ev['活動ID']}', '${ev['狀態']}')" class="${isActive ? 'btn-danger' : 'btn-success'} flex-1 md:w-28">${isActive ? '下架' : '上架'}</button>
+                        <div class="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
+                            <button onclick="AdminService.openEditor('${ev['活動ID']}')" class="btn-secondary flex-1 md:w-24 !text-xs !py-2.5">編輯</button>
+                            <button onclick="AdminService.duplicateEvent('${ev['活動ID']}')" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl font-black text-xs flex-1 md:w-24">複製</button>
+                            <button onclick="AdminService.toggleStatus('${ev['活動ID']}', '${ev['狀態']}')" class="${isActive ? 'btn-danger' : 'btn-success'} flex-1 md:w-24 !text-xs">${isActive ? '下架' : '上架'}</button>
                         </div>
                     </div>`;
                 }).join('');
@@ -474,17 +522,18 @@
                 const getV = (id) => document.getElementById(id)?.value || "";
                 const sessions = []; document.querySelectorAll('.session-row').forEach(row => { const ins = row.querySelectorAll('input'); if (ins[0].value) sessions.push({ s: ins[0].value, e: ins[1].value }); });
                 const payload = { "活動ID": state.currentEditId || ("EVT-" + Date.now()), "活動型態": getV('edit-type'), "分類": getV('edit-category'), "活動名稱": getV('edit-name'), "梯次資料": JSON.stringify(sessions), "開始日期": getV('edit-start'), "結束日期": getV('edit-end'), "全日價": getV('edit-price'), "全日扣除": getV('edit-full-deduct'), "半日扣除": getV('edit-half-deduct'), "總名額": getV('edit-quota'), "描述": getV('edit-desc'), "內容媒體": getV('edit-media'), "圖片URL": getV('edit-img'), "狀態": getV('edit-status'), "半日價": getV('edit-half-price'), "全日早鳥價": getV('edit-early-price'), "早鳥截止日期": getV('edit-early-deadline'), "半日早鳥價": getV('edit-half-early-price') };
+                showMsg("正在同步至 19 欄位資料庫...");
                 const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateEvent', payload }) });
-                if((await res.json()).status === 'success') { showMsg("✅ 已同步雲端"); location.reload(); }
+                if((await res.json()).status === 'success') { showMsg("✅ 已成功儲存！"); this.switchSubPage('list'); }
             },
-            async toggleStatus(id, cur) { const next = cur === '上架' ? '隱藏' : '上架'; const ev = state.events.find(e => String(e['活動ID']) === String(id)); await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateEvent', payload: { ...ev, "狀態": next } }) }); location.reload(); },
-            duplicateEvent(id) { const ev = state.events.find(e => String(e['活動ID']) === String(id)); state.currentEditId = null; this.openEditor(null); document.getElementById('edit-name').value = ev['活動名稱'] + " (複製)"; showMsg("已載入複本，請修改名稱後存檔。"); },
-            addSessionRow(s, e) { const row = document.createElement('div'); row.className = "session-row"; row.innerHTML = `<div class="flex-1"><input type="date" value="${s}" class="w-full bg-transparent outline-none text-sm font-bold"></div><div>~</div><div class="flex-1"><input type="date" value="${e}" class="w-full bg-transparent outline-none text-sm font-bold"></div><button onclick="this.parentElement.remove()" class="text-red-400 font-black">×</button>`; document.getElementById('session-list-container').appendChild(row); },
+            async toggleStatus(id, cur) { const next = cur === '上架' ? '隱藏' : '上架'; const ev = state.events.find(e => String(e['活動ID']) === String(id)); await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateEvent', payload: { ...ev, "狀態": next } }) }); loadAdminEvents(); },
+            duplicateEvent(id) { const ev = state.events.find(e => String(e['活動ID']) === String(id)); state.currentEditId = null; this.openEditor(null); document.getElementById('edit-name').value = ev['活動名稱'] + " (複製)"; showMsg("已載入複本，請修改內容後存檔。"); },
+            addSessionRow(s, e) { const row = document.createElement('div'); row.className = "session-row"; row.innerHTML = `<div class="flex-1"><input type="date" value="${s}" class="w-full bg-transparent outline-none text-sm font-bold"></div><div>~</div><div class="flex-1"><input type="date" value="${e}" class="w-full bg-transparent outline-none text-sm font-bold"></div><button onclick="this.parentElement.remove()" class="text-red-400 font-black">✕</button>`; document.getElementById('session-list-container').appendChild(row); },
             toggleSessionUI() { const t = document.getElementById('edit-type').value; document.getElementById('date-simple-ui').classList.toggle('hidden', t === '梯次型'); document.getElementById('session-manager-ui').classList.toggle('hidden', t !== '梯次型'); },
-            renderCategorySelect() { const s = document.getElementById('edit-category'); s.innerHTML = (state.config.sportCategories || "籃球,足球,游泳,溜冰").split(',').map(c => `<option value="${c.trim()}">${c.trim()}</option>`).join(''); }
+            renderCategorySelect() { const s = document.getElementById('edit-category'); s.innerHTML = (state.config.sportCategories || "籃球,足球,游泳,溜冰,游泳,網球,羽球,桌球,武術").split(',').map(c => `<option value="${c.trim()}">${c.trim()}</option>`).join(''); }
         };
 
-        // --- 全局控制 ---
+        // --- 全局導航與資料控制 ---
         function switchMainTab(m) {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             const tab = document.getElementById('tab-' + m); if(tab) tab.classList.add('active');
@@ -492,21 +541,21 @@
             document.getElementById('view-' + m)?.classList.add('active');
             if (m === 'member') { loadFamilyMembers(); loadHistoryRecords(); }
             if (m === 'activity') loadCourses();
-            if (m === 'admin') loadAdminEvents();
+            if (m === 'admin') AdminService.switchSubPage('list');
         }
 
         async function loadCourses() {
             const list = document.getElementById('event-list');
-            list.innerHTML = '<p class="p-10 text-slate-300 italic text-center animate-pulse">Syncing Courses...</p>';
+            list.innerHTML = '<p class="p-10 text-slate-300 italic text-center animate-pulse">Loading Courses...</p>';
             const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
             const r = await res.json(); state.events = r.data || []; state.config = r.config || {};
             list.innerHTML = state.events.filter(ev => ev['狀態'] === '上架').map(ev => `
-                <div class="bg-white rounded-[32px] overflow-hidden border shadow-sm flex flex-col hover:shadow-lg transition-all group">
+                <div class="bg-white rounded-[40px] overflow-hidden border shadow-sm flex flex-col hover:shadow-xl transition-all group">
                     <div class="card-img-container"><img src="${ev['圖片URL'] || 'https://placehold.co/600x400'}" class="img-proportional group-hover:scale-105 transition-transform duration-500"></div>
-                    <div class="p-6 flex-1 flex flex-col"><h3 class="font-black text-lg text-slate-800">${ev['活動名稱']}</h3><p class="text-[11px] text-slate-400 mt-1 font-bold">📅 ${ev['開始日期']} ~ ${ev['結束日期']}</p>
-                        <div class="mt-auto pt-6 flex flex-col gap-2">
-                            <button onclick="showDetail('${ev['活動ID']}')" class="bg-white border-2 border-blue-600 text-blue-600 rounded-2xl font-black text-xs py-2.5 hover:bg-blue-50">詳細說明</button>
-                            <button onclick="BookingWizard.start('${ev['活動ID']}')" class="bg-[#1a73e8] text-white py-2.5 rounded-2xl font-black text-xs shadow-md">立即預約</button>
+                    <div class="p-8 flex-1 flex flex-col"><h3 class="font-black text-xl text-slate-800">${ev['活動名稱']}</h3><p class="text-[11px] text-slate-400 mt-2 font-bold italic uppercase tracking-widest">📅 ${ev['開始日期']} ~ ${ev['結束日期']}</p>
+                        <div class="mt-auto pt-8 flex flex-col gap-3">
+                            <button onclick="showDetail('${ev['活動ID']}')" class="bg-white border-2 border-blue-600 text-blue-600 rounded-[20px] font-black text-sm py-3 transition-all hover:bg-blue-50 active:scale-95">詳細說明</button>
+                            <button onclick="BookingWizard.start('${ev['活動ID']}')" class="bg-[#1a73e8] text-white py-3 rounded-[20px] font-black text-sm shadow-lg transition-all hover:bg-blue-700 active:scale-95">立即預約報名</button>
                         </div>
                     </div>
                 </div>`).join('');
@@ -515,12 +564,12 @@
         function showDetail(id) {
             const ev = state.events.find(e => String(e['活動ID']) === String(id)); if(!ev) return;
             RegistrationFlow.hideAll(); document.getElementById('view-activity-detail').classList.add('active');
-            document.getElementById('detail-content-area').innerHTML = `<div class="p-8 md:p-12 bg-white rounded-[40px] border shadow-sm">
-                <h2 class="text-3xl font-black text-slate-900 leading-tight mb-8">${ev['活動名稱']}</h2>
-                <div class="rounded-3xl overflow-hidden mb-10 border shadow-md"><img src="${ev['圖片URL'] || 'https://placehold.co/1600x800'}" class="w-full h-auto"></div>
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                    <div class="lg:col-span-8"><h3 class="text-xl font-black mb-6 border-b-4 border-blue-600 inline-block uppercase italic">Introduce</h3><div class="text-slate-700 text-lg leading-relaxed whitespace-pre-wrap font-medium">${ev['描述'] || '內容編輯中...'}</div></div>
-                    <div class="lg:col-span-4"><div class="sticky top-40 bg-slate-50 border p-8 rounded-[40px] text-center shadow-sm"><p class="text-5xl font-black text-blue-600 my-8 italic">NT$ ${parseInt(ev['全日價']||0).toLocaleString()}</p><button onclick="BookingWizard.start('${ev['活動ID']}')" class="btn-primary w-full shadow-lg italic">立即報名 ➜</button></div></div>
+            document.getElementById('detail-content-area').innerHTML = `<div class="p-8 md:p-12 bg-white rounded-[48px] border shadow-2xl">
+                <h2 class="text-3xl font-black text-slate-900 leading-tight mb-8 italic uppercase tracking-tighter">${ev['活動名稱']}</h2>
+                <div class="rounded-3xl overflow-hidden mb-12 shadow-md border border-slate-100"><img src="${ev['圖片URL'] || 'https://placehold.co/1600x800'}" class="w-full h-auto object-contain"></div>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                    <div class="lg:col-span-8"><h3 class="text-xl font-black mb-8 border-b-4 border-blue-600 inline-block uppercase italic">Introduce</h3><div class="text-slate-700 text-lg leading-relaxed whitespace-pre-wrap font-medium">${ev['描述'] || '內容編輯中...'}</div></div>
+                    <div class="lg:col-span-4"><div class="sticky top-40 bg-slate-50 border border-slate-200 p-10 rounded-[48px] text-center shadow-sm"><p class="text-xs font-black text-slate-400 uppercase mb-4">Start From</p><p class="text-5xl font-black text-blue-600 my-8 italic">NT$ ${parseInt(ev['全日價']||0).toLocaleString()}</p><button onclick="BookingWizard.start('${ev['活動ID']}')" class="btn-primary w-full shadow-lg italic">Register Now ➜</button></div></div>
                 </div></div>`;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -529,10 +578,10 @@
             const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
             state.members = (await res.json()).data || [];
             document.getElementById('family-grid').innerHTML = state.members.map(m => `
-                <div class="bg-white p-5 rounded-[28px] border-2 border-slate-50 shadow-sm flex items-center gap-4 relative group">
-                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black text-xl italic">${(m.姓名||"?").charAt(0)}</div>
-                    <div class="flex-1"><h4 class="font-black text-slate-800 text-base">${m.姓名}</h4><p class="text-[10px] text-slate-400 font-bold">${m.年級} | ${m.生日}</p></div>
-                    <button onclick="RegistrationFlow.showStudentForm('${m.學員ID}')" class="text-blue-500 font-black text-xs px-3 py-1 bg-blue-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all">編輯</button>
+                <div class="bg-white p-6 rounded-[32px] border-2 border-slate-50 shadow-sm flex items-center gap-5 relative group transition-all hover:border-blue-300">
+                    <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-[20px] flex items-center justify-center font-black text-2xl italic">${(m.姓名||"?").charAt(0)}</div>
+                    <div class="flex-1"><h4 class="font-black text-slate-800 text-lg">${m.姓名}</h4><p class="text-xs text-slate-400 font-bold">${m.年級} | ${m.生日}</p></div>
+                    <button onclick="RegistrationFlow.showStudentForm('${m.學員ID}')" class="bg-blue-50 text-blue-600 font-black text-xs px-4 py-2 rounded-xl border border-blue-100 opacity-0 group-hover:opacity-100 transition-all active:scale-90">編輯</button>
                 </div>`).join('');
         }
 
@@ -541,19 +590,13 @@
             const r = await res.json();
             document.getElementById('history-container').innerHTML = (r.data || []).map(h => `
                 <div class="history-card">
-                    <h4 class="font-black text-slate-800 text-base truncate">${h.活動名稱}</h4>
-                    <p class="text-[10px] text-slate-400 font-black uppercase mt-1">學員：${h.學員姓名} | 方案：${h.報名型態}</p>
-                    <p class="text-[10px] text-slate-400 font-black uppercase">梯次：${h.梯次時間}</p>
-                    <div class="flex justify-between items-end mt-4 pt-4 border-t border-slate-50">
-                        <div>
-                            <p class="text-[10px] text-slate-400 font-bold">報名時間：${h.報名時間}</p>
-                            <p class="text-[11px] font-black text-slate-900 mt-1 uppercase tracking-tighter">匯款後五碼：${h.匯款後五碼 || '<span class="text-red-500">未填</span>'}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-blue-600 font-black text-lg italic">NT$ ${parseInt(h.應付金額||0).toLocaleString()}</p>
-                        </div>
+                    <h4 class="font-black text-slate-800 text-base truncate uppercase tracking-tighter">${h.活動名稱}</h4>
+                    <p class="text-[10px] text-slate-400 font-black mt-1">學員：${h.學員姓名} | 方案：${h.報名型態}</p>
+                    <div class="flex justify-between items-end mt-5 pt-5 border-t border-slate-50">
+                        <div><p class="text-[10px] text-slate-400 font-bold">報名時間：${h.報名時間}</p><p class="text-[11px] font-black text-slate-900 mt-1 uppercase tracking-tighter">匯款後五碼：${h.匯款後五碼 || '<span class="text-red-500">未填</span>'}</p></div>
+                        <div class="text-right"><p class="text-blue-600 font-black text-xl italic leading-none">NT$ ${parseInt(h.應付金額||0).toLocaleString()}</p></div>
                     </div>
-                    ${!h.匯款後五碼 ? `<button onclick="promptPay('${h.報名ID}')" class="w-full mt-4 bg-orange-50 text-orange-600 py-2 rounded-xl text-xs font-black border border-orange-100 transition-all hover:bg-orange-100">補填匯款後五碼</button>` : ''}
+                    ${!h.匯款後五碼 ? `<button onclick="promptPay('${h.報名ID}')" class="w-full mt-4 bg-orange-50 text-orange-600 py-3 rounded-2xl text-xs font-black border border-orange-100 transition-all hover:bg-orange-100 active:scale-95">補填匯款後五碼</button>` : ''}
                 </div>`).join('');
         }
 
