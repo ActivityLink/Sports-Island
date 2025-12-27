@@ -1,146 +1,408 @@
-/**
- * 運動島預約系統 - 後端核心 (角色權限配套版)
- * 適用角色：一般成員、教練、學校、機關單位、管理員
- */
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="icon" href="data:,">
+    <title>運動島 SPORTS ISLAND - 穩定優化版</title>
+    <!-- LINE SDK & Libraries -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&display=swap');
+        
+        /* 1. 核心穩定設定：防止跳動與閃爍 */
+        :root {
+            --bg-color: #f0f2f5;
+            --primary-blue: #1877f2;
+        }
 
-const SS_ID = "1Q2pyb7ljtWg3n_R8KSeyHrFLt6Ra4nXUmqhTZhUWZJg";
-const SS = SpreadsheetApp.openById(SS_ID);
+        html, body { 
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            /* 預設隱藏滾動條，初始化後再打開 */
+            overflow: hidden; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            color: #1c1e21; 
+            font-size: 17px; /* 放大字體 */
+            line-height: 1.6;
+        }
+        
+        /* 主容器：使用 dvh 單位適應行動裝置工具列 */
+        .main-container { 
+            max-width: 1080px; 
+            margin: 0 auto; 
+            padding: 0 16px; 
+            min-height: 100dvh;
+        }
+        
+        .content-card { 
+            background: white; 
+            border-radius: 16px; 
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08); 
+            padding: 28px; 
+            margin-bottom: 24px; 
+        }
 
-function doGet(e) {
-  const action = e.parameter.action;
-  const uid = e.parameter.uid;
-  try {
-    if (action === 'checkUser') return createJsonResponse(checkUserStatus(uid));
-    if (action === 'getFamily') return createJsonResponse(getFamilyMembers(uid));
-    if (action === 'getHistory') return createJsonResponse(getHistoryByUid(uid));
-    if (action === 'getEvents') return createJsonResponse({ status: 'success', data: getSheetData("Events"), config: getSystemConfig() });
-    
-    // 店家管理專用接口
-    if (action === 'adminGetAllRegs') return createJsonResponse({ status: 'success', data: getSheetData("Registrations") });
-    if (action === 'adminGetAllStudents') return createJsonResponse({ status: 'success', data: getSheetData("Students") });
-    
-    return createJsonResponse({ status: 'online', version: 'Role_Access_v1' });
-  } catch (err) {
-    return createJsonResponse({ status: 'error', message: err.toString() });
-  }
-}
+        /* 導覽列穩定化 */
+        .nav-tab { 
+            flex: 1; 
+            text-align: center; 
+            padding: 18px 0; 
+            font-size: 16px; 
+            color: rgba(255,255,255,0.7); 
+            border-bottom: 3px solid transparent; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+        }
+        .nav-tab.active { 
+            color: white !important; 
+            border-bottom-color: white !important; 
+        }
 
-function doPost(e) {
-  let postData;
-  try { postData = JSON.parse(e.postData.contents); } catch (err) { return createJsonResponse({ status: 'error', message: 'JSON Parse Fail' }); }
-  const action = postData.action;
-  const payload = postData.payload;
+        /* 介面準備狀態：隱藏但佔位，減少 Reflow */
+        #main-header, #main-content { 
+            visibility: hidden;
+            opacity: 0;
+        }
 
-  try {
-    if (action === 'registerUser') return createJsonResponse(registerUser(payload));
-    if (action === 'addStudent') return createJsonResponse(addOrUpdateStudent(payload));
-    if (action === 'submitRegistration') return createJsonResponse(submitRegistrationLogic(payload));
-    if (action === 'adminVerifyPayment') return createJsonResponse(adminVerifyPayment(payload));
-    if (action === 'updateConfig') return createJsonResponse(updateConfig(payload));
-    return createJsonResponse({ status: 'error', message: 'Unknown Command' });
-  } catch (err) {
-    return createJsonResponse({ status: 'error', message: err.toString() });
-  }
-}
+        /* 視圖切換：純透明度過渡 */
+        .section-view { 
+            display: none; 
+            opacity: 0; 
+        }
+        .section-view.active { 
+            display: block; 
+            animation: fadeInPure 0.4s forwards; 
+        }
+        @keyframes fadeInPure { 
+            from { opacity: 0; } 
+            to { opacity: 1; } 
+        }
+        
+        /* 角色按鈕優化：大空間，舒適字體 */
+        .role-option { 
+            border: 1px solid #dddfe2; 
+            padding: 24px; 
+            border-radius: 16px; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            text-align: center; 
+            background: white; 
+            font-size: 16px;
+        }
+        .role-option.selected { 
+            border-color: var(--primary-blue); 
+            background: #e7f3ff; 
+            color: var(--primary-blue); 
+            box-shadow: 0 0 0 1px var(--primary-blue);
+        }
 
-/* --- 會員身分與角色核心邏輯 --- */
+        .input-giant { 
+            width: 100%; 
+            border: 1px solid #dddfe2; 
+            border-radius: 12px; 
+            padding: 16px; 
+            outline: none; 
+            background: #f5f6f7; 
+            font-size: 17px; 
+            transition: all 0.2s;
+        }
+        .input-giant:focus { 
+            border-color: var(--primary-blue); 
+            background: white; 
+            box-shadow: 0 0 0 3px rgba(24,119,242,0.1);
+        }
+        
+        .btn-primary { 
+            background: var(--primary-blue); 
+            color: white; 
+            padding: 20px; 
+            border-radius: 14px; 
+            width: 100%; 
+            text-align: center; 
+            cursor: pointer; 
+            border: none; 
+            display: block; 
+            font-size: 18px; 
+            transition: opacity 0.2s;
+        }
+        .btn-primary:active { opacity: 0.8; }
 
-/**
- * 檢查用戶是否註冊及其身分角色
- */
-function checkUserStatus(uid) {
-  const sheet = getSheet("Users", ["UID", "姓名", "電話", "註冊型態", "註冊日期"]);
-  const data = sheet.getDataRange().getValues();
-  
-  // 尋找符合 UID 的列
-  const userRow = data.find(r => String(r[0]) === String(uid));
-  
-  if (userRow) {
-    return { 
-      status: 'registered', 
-      data: { 
-        uid: userRow[0], 
-        name: userRow[1], 
-        type: userRow[3] // 這裡會回傳：一般成員、管理員、教練等
-      } 
-    };
-  } else {
-    return { status: 'not_found' };
-  }
-}
+        /* 全螢幕載入畫面：穩定背景色 */
+        #view-loading {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-color);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
 
-/**
- * 執行註冊 (配合前端選取的 Role)
- */
-function registerUser(p) {
-  const sheet = getSheet("Users", ["UID", "姓名", "電話", "註冊型態", "註冊日期"]);
-  const data = sheet.getDataRange().getValues();
-  
-  let rowIndex = -1;
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(p.uid)) {
-      rowIndex = i + 1;
-      break;
-    }
-  }
+        #msg-box { 
+            position: fixed; 
+            top: 24px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            z-index: 10001; 
+            background: rgba(0,0,0,0.85); 
+            color: white; 
+            padding: 16px 36px; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            display: none; 
+            backdrop-filter: blur(8px);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
 
-  const rowData = [
-    p.uid, 
-    p.name, 
-    p.phone || "LINE", 
-    p.type || "一般成員", // 這裡接收前端傳來的：學校、機關單位、管理員、教練
-    new Date()
-  ];
+    <div id="msg-box"></div>
 
-  if (rowIndex > 0) {
-    // 已存在則更新身分
-    sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
-  } else {
-    // 新用戶則新增行
-    sheet.appendRow(rowData);
-  }
-  
-  return { status: 'success' };
-}
+    <!-- 載入中畫面 -->
+    <div id="view-loading">
+        <div class="w-12 h-12 border-[3px] border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
+        <p id="loading-status" class="mt-8 text-gray-400 text-sm tracking-[0.2em] uppercase">Sport Island Syncing</p>
+    </div>
 
-/* --- 通用工具與其他邏輯 --- */
+    <!-- 頂部導覽 -->
+    <header id="main-header" class="bg-[#1877f2] text-white pt-5 pb-1 sticky top-0 z-50 shadow-sm">
+        <div class="main-container flex justify-between items-center">
+            <div class="flex items-center gap-5">
+                <h1 class="text-2xl cursor-pointer tracking-tight" onclick="location.reload()">SPORTS ISLAND</h1>
+                <div class="profile-chip flex items-center gap-3 bg-white/10 p-1 px-4 rounded-full">
+                    <div class="avatar-frame w-8 h-8 rounded-full overflow-hidden bg-white shadow-inner">
+                        <img id="line-logo-display" src="" class="w-full h-full object-cover">
+                    </div>
+                    <span id="line-name-display" class="text-sm truncate max-w-[90px]">...</span>
+                </div>
+            </div>
+            <nav id="top-nav" class="flex gap-4">
+                <div onclick="switchMainTab('activity')" id="tab-activity" class="nav-tab active">活動列表</div>
+                <div onclick="switchMainTab('member')" id="tab-member" class="nav-tab">會員中心</div>
+                <div onclick="switchMainTab('admin')" id="tab-admin" class="nav-tab hidden">管理後台</div>
+            </nav>
+        </div>
+    </header>
 
-function getSheetData(name) {
-  const sheet = SS.getSheetByName(name);
-  if (!sheet) return [];
-  const values = sheet.getDataRange().getValues();
-  if (values.length <= 1) return [];
-  const headers = values[0].map(h => String(h).trim());
-  return values.slice(1).map(row => {
-    let obj = {};
-    headers.forEach((h, i) => {
-      let val = row[i];
-      if (val instanceof Date) val = Utilities.formatDate(val, "GMT+8", "yyyy-MM-dd");
-      obj[h] = val;
-    });
-    return obj;
-  });
-}
+    <main id="main-content" class="main-container py-10">
+        
+        <!-- [0. 註冊視圖] -->
+        <div id="view-register" class="section-view max-w-xl mx-auto">
+            <div class="content-card">
+                <h2 class="text-2xl mb-4 text-center">歡迎來到運動島</h2>
+                <p class="text-gray-500 text-center mb-12">請選擇您的使用者身份以完成註冊</p>
+                
+                <div class="space-y-8">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-3 ml-1">顯示名稱</label>
+                        <input type="text" id="reg-name" class="input-giant" placeholder="個人姓名或單位名稱">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-3 ml-1">帳號角色</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="role-option" onclick="selectRole(this, '一般成員')">一般成員</div>
+                            <div class="role-option" onclick="selectRole(this, '教練')">教練</div>
+                            <div class="role-option" onclick="selectRole(this, '學校')">學校單位</div>
+                            <div class="role-option" onclick="selectRole(this, '機關單位')">機關單位</div>
+                            <div class="role-option col-span-2" onclick="selectRole(this, '管理員')">系統管理員</div>
+                        </div>
+                    </div>
+                    <button onclick="RegistrationFlow.completeUserRegistration()" class="btn-primary mt-12 shadow-lg">完成註冊並登入</button>
+                </div>
+            </div>
+        </div>
 
-function getSheet(name, headers) {
-  let s = SS.getSheetByName(name);
-  if (!s) { s = SS.insertSheet(name); if(headers.length) s.appendRow(headers); }
-  return s;
-}
+        <!-- [1. 活動列表視圖] -->
+        <div id="view-activity" class="section-view">
+            <div class="rounded-3xl overflow-hidden mb-12 shadow-sm">
+                <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto max-h-[300px] object-cover">
+            </div>
+            <div class="flex flex-col gap-6 mb-12">
+                <input type="text" id="search-input" oninput="loadCourses()" placeholder="🔍 搜尋感興趣的活動名稱..." class="input-giant !bg-white border-none shadow-sm">
+                <div id="category-tags" class="flex gap-4 overflow-x-auto no-scrollbar pb-2"></div>
+            </div>
+            <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10"></div>
+        </div>
 
-function getSystemConfig() {
-  const sheet = getSheet("SystemConfig", ["Key", "Value", "Date"]);
-  const config = { bankInfo: "", sportCategories: "籃球,足球,溜冰,游泳,體操,武術" };
-  const data = sheet.getDataRange().getValues();
-  data.slice(1).forEach(r => { 
-    if (String(r[0]) === "bankInfo") config.bankInfo = r[1]; 
-    if (String(r[0]) === "sportCategories") config.sportCategories = r[1]; 
-  });
-  return config;
-}
+        <!-- [5. 會員中心視圖] -->
+        <div id="view-member" class="section-view">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                <div class="lg:col-span-7">
+                    <h2 class="text-2xl mb-10">成員維護</h2>
+                    <div id="family-grid" class="space-y-6"></div>
+                    <button onclick="RegistrationFlow.showStudentForm()" class="btn-primary mt-10">＋ 新增學員成員</button>
+                </div>
+                <div class="lg:col-span-5">
+                    <h2 class="text-2xl mb-10">報名歷史</h2>
+                    <div id="history-container" class="space-y-6"></div>
+                </div>
+            </div>
+        </div>
 
-function createJsonResponse(data) { 
-  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON); 
-}
+        <!-- [6. 管理後台視圖] -->
+        <div id="view-admin" class="section-view">
+            <div class="flex gap-4 mb-12 bg-white p-3 rounded-2xl shadow-sm overflow-x-auto no-scrollbar">
+                <button onclick="AdminService.switchModule('dashboard')" class="px-8 py-3 rounded-xl text-base hover:bg-gray-50 transition-all">營運總覽</button>
+                <button onclick="AdminService.switchModule('events')" class="px-8 py-3 rounded-xl text-base hover:bg-gray-50 transition-all">活動庫管理</button>
+            </div>
+            <div id="adm-content" class="min-h-[400px]">
+                <p class="text-center py-20 text-gray-400">管理模組載入中...</p>
+            </div>
+        </div>
 
-// 其餘邏輯 (addOrUpdateStudent, submitRegistrationLogic 等) 請維持您原始 Expert 版代碼即可
+    </main>
+
+    <script>
+        const LIFF_ID = "2008786875-7COWtgtL";
+        const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
+        let state = { uid: "DEBUG_USER", name: "", role: "", isRegistered: false, currentView: "" };
+        let selectedRoleName = "一般成員";
+
+        const RegistrationFlow = {
+            async init() {
+                try {
+                    await liff.init({ liffId: LIFF_ID });
+                    if (!liff.isLoggedIn()) { liff.login(); return; }
+                    const p = await liff.getProfile();
+                    state.uid = p.userId;
+                    document.getElementById('line-name-display').innerText = p.displayName;
+                    document.getElementById('line-logo-display').src = p.pictureUrl || "";
+                    await this.checkStatus();
+                } catch (e) { 
+                    console.error("LIFF Error", e);
+                    this.showApp('activity');
+                }
+            },
+            async checkStatus() {
+                try {
+                    const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
+                    const r = await res.json();
+                    
+                    if (r.status === 'registered') {
+                        state.isRegistered = true;
+                        state.role = r.data.type;
+                        if (state.role === '管理員') document.getElementById('tab-admin').classList.remove('hidden');
+                        this.showApp('activity');
+                    } else {
+                        this.showApp('register');
+                        document.getElementById('reg-name').value = document.getElementById('line-name-display').innerText;
+                    }
+                } catch (err) {
+                    this.showApp('activity');
+                }
+            },
+            showApp(targetView = 'activity') {
+                // 1. 先執行佈局渲染
+                const header = document.getElementById('main-header');
+                const content = document.getElementById('main-content');
+                
+                header.style.visibility = 'visible';
+                header.style.opacity = '1';
+                content.style.visibility = 'visible';
+                content.style.opacity = '1';
+                
+                switchView(targetView);
+                
+                // 2. 佈局完成後，淡出 Loading 畫面
+                const loading = document.getElementById('view-loading');
+                loading.style.opacity = '0';
+                
+                setTimeout(() => {
+                    loading.style.visibility = 'hidden';
+                    // 3. 最後解鎖滾動條，避免載入時畫面跳動
+                    document.documentElement.style.overflow = 'auto';
+                    document.body.style.overflow = 'auto';
+                }, 500);
+            },
+            async completeUserRegistration() {
+                const name = document.getElementById('reg-name').value;
+                if (!name) return showMsg("請輸入正確姓名");
+                showMsg("建立帳號中...");
+                const res = await fetch(PROXY_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ 
+                        action: 'registerUser', 
+                        payload: { uid: state.uid, name: name, type: selectedRoleName } 
+                    }) 
+                });
+                if ((await res.json()).status === 'success') {
+                    showMsg("🎉 註冊成功");
+                    location.reload();
+                }
+            }
+        };
+
+        function selectRole(el, role) {
+            document.querySelectorAll('.role-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedRoleName = role;
+        }
+
+        function switchMainTab(m) {
+            if (state.currentView === m) return;
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + m)?.classList.add('active');
+            switchView(m);
+            if (m === 'activity') loadCourses();
+        }
+
+        function switchView(v) {
+            if (state.currentView === v) return;
+            const views = document.querySelectorAll('.section-view');
+            views.forEach(el => el.classList.remove('active'));
+            const target = document.getElementById('view-' + v);
+            if (target) {
+                target.classList.add('active');
+                state.currentView = v;
+                // 僅在初始化完成且不是第一次顯示時執行滾動，徹底防止閃爍
+                if (document.getElementById('view-loading').style.visibility === 'hidden') {
+                    window.scrollTo(0, 0);
+                }
+            }
+        }
+
+        async function loadCourses() {
+            try {
+                const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
+                const r = await res.json();
+                const list = document.getElementById('event-list');
+                if (!list) return;
+                list.innerHTML = (r.data || []).map(ev => `
+                    <div class="content-card !p-0 overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300">
+                        <img src="${ev['圖片URL']}" class="h-56 w-full object-cover">
+                        <div class="p-8">
+                            <p class="text-xs text-[#1877f2] uppercase mb-2 tracking-widest">${ev['分類']}</p>
+                            <h3 class="text-xl mb-6 truncate leading-snug">${ev['活動名稱']}</h3>
+                            <button class="btn-primary !py-3 !text-base shadow-sm">詳情與報名</button>
+                        </div>
+                    </div>`).join('');
+            } catch (e) {}
+        }
+
+        const AdminService = {
+            switchModule(m) {
+                document.getElementById('adm-content').innerHTML = `<p class="text-center py-20 text-gray-400">營運模組 ${m} 載入中...</p>`;
+            }
+        };
+
+        window.onload = () => RegistrationFlow.init();
+        function showMsg(t) { 
+            const b = document.getElementById('msg-box'); 
+            b.innerText = t; b.style.display='block'; 
+            setTimeout(()=>b.style.display='none', 3000); 
+        }
+    </script>
+</body>
+</html>
