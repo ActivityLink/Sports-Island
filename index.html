@@ -11,7 +11,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
         
-        /* 仿 FB 網頁佈局：中心凝聚、左右留白 */
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; color: #1c1e21; font-size: 15px; scroll-behavior: smooth; }
         .main-container { max-width: 960px; margin: 0 auto; padding: 0 12px; }
         .content-card { background: white; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 12px; }
@@ -21,7 +20,7 @@
         .nav-tab.active { color: white !important; border-bottom-color: white !important; }
         .header-hidden { display: none !important; }
         
-        /* 頭像與 Profile 尺寸嚴格鎖定 (32px) */
+        /* 頭像尺寸鎖定 */
         .avatar-frame { 
             width: 32px !important; height: 32px !important; border-radius: 50% !important; 
             overflow: hidden !important; border: 1.5px solid rgba(255,255,255,0.5); 
@@ -35,15 +34,13 @@
         .section-view.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 標籤列樣式 */
+        /* 標籤樣式 */
         .tag-pill { padding: 6px 14px; border-radius: 99px; background: white; border: 1px solid #dddfe2; font-size: 12px; font-weight: 900; cursor: pointer; white-space: nowrap; color: #606770; transition: 0.2s; }
         .tag-pill.active { background: #e7f3ff; color: #1877f2; border-color: #1877f2; }
 
-        /* 課程卡片小型化 */
         .event-card-img { height: 160px; width: 100%; object-fit: cover; }
         .card-title { font-size: 16px; font-weight: 900; color: #1c1e21; line-height: 1.3; }
 
-        /* 通用元件 */
         .input-giant { width: 100%; border: 1px solid #dddfe2; border-radius: 8px; padding: 12px; font-weight: 700; outline: none; background: #f5f6f7; font-size: 14px; }
         .input-giant:focus { border-color: #1877f2; background: white; box-shadow: 0 0 0 2px rgba(24,119,242,0.1); }
         .tag-label { color: #606770; font-weight: 900; margin-bottom: 6px; display: block; font-size: 12px; }
@@ -52,11 +49,10 @@
         .btn-primary:active { transform: scale(0.98); }
         .btn-secondary { background: white; color: #606770; border: 1px solid #dddfe2; padding: 8px 16px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor: pointer; }
 
-        /* 管理中心專屬 */
-        .admin-sub-tab { padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: 13px; color: #606770; cursor: pointer; transition: 0.2s; }
+        /* 管理中心子分頁 */
+        .admin-sub-tab { padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: 13px; color: #606770; cursor: pointer; transition: 0.2s; white-space: nowrap; }
         .admin-sub-tab.active { background: #1877f2; color: white; }
 
-        /* 日曆系統 */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .cal-day { aspect-ratio: 1; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; cursor: pointer; border: 1px solid #eee; }
         .status-attend { background: #e7f3ff; color: #1877f2; border-color: #1877f2; }
@@ -71,6 +67,7 @@
         #leave-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; display: none; align-items: flex-end; backdrop-filter: blur(4px); }
         .modal-body { background: white; width: 100%; border-radius: 24px 24px 0 0; padding: 24px; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
@@ -93,7 +90,7 @@
     </div>
 
     <!-- 頂部導航 -->
-    <header id="main-header" class="bg-[#1877f2] text-white pt-3 pb-1 sticky top-0 z-50 shadow-md header-hidden">
+    <header id="main-header" class="bg-[#1877f2] text-white pt-3 pb-1 sticky top-0 z-50 shadow-md">
         <div class="main-container flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <h1 class="text-lg font-black italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">SPORTS ISLAND</h1>
@@ -121,12 +118,9 @@
         <div id="view-activity" class="section-view active">
             <div class="rounded-xl overflow-hidden mb-6 shadow-sm"><img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto max-h-[220px] object-cover"></div>
             
-            <!-- 搜尋與分類導覽列 (回覆功能) -->
             <div class="flex flex-col gap-4 mb-8">
                 <input type="text" id="search-input" oninput="loadCourses()" placeholder="🔍 搜尋活動名稱..." class="input-giant !bg-white border-none shadow-sm">
-                <div id="category-tags" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                    <!-- 由 JS 動態生成標籤 -->
-                </div>
+                <div id="category-tags" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
             </div>
 
             <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -134,7 +128,7 @@
 
         <!-- [2. 活動詳情視圖] -->
         <div id="view-activity-detail" class="section-view">
-            <button onclick="switchMainTab('activity')" class="mb-4 text-gray-500 font-black text-xs flex items-center gap-1 group">⬅ 返回活動列表</button>
+            <button onclick="switchMainTab('activity')" class="mb-4 text-gray-500 font-black text-xs flex items-center gap-1">⬅ 返回活動列表</button>
             <div id="detail-content-area" class="content-card !p-0 overflow-hidden"></div>
         </div>
 
@@ -143,23 +137,23 @@
             <div id="wizard-content" class="content-card min-h-[500px]"></div>
         </div>
 
-        <!-- [4. 會員個資編輯 (16 欄規格鎖定)] -->
+        <!-- [4. 會員個資編輯] -->
         <div id="view-student-form" class="section-view max-w-2xl mx-auto">
             <div class="content-card">
-                <h2 id="stu-form-title" class="text-xl font-black mb-8 border-b pb-4 text-[#1877f2]">成員詳細個資編輯</h2>
+                <h2 class="text-xl font-black mb-8 border-b pb-4 text-[#1877f2]">成員詳細個資編輯</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="col-span-full"><label class="tag-label">真實姓名</label><input type="text" id="stu-name" class="input-giant"></div>
                     <div><label class="tag-label">生日</label><input type="date" id="stu-birthday" class="input-giant" onchange="RegistrationFlow.detectGrade()"></div>
                     <div><label class="tag-label">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase"></div>
                     <div><label class="tag-label">性別</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
                     <div class="grid grid-cols-3 gap-2 col-span-full">
-                        <div><label class="tag-label !text-[10px]">身高 cm</label><input type="number" id="stu-height" class="input-giant"></div>
-                        <div><label class="tag-label !text-[10px]">體重 kg</label><input type="number" id="stu-weight" class="input-giant"></div>
-                        <div><label class="tag-label !text-[10px]">腳長 cm</label><input type="number" id="stu-foot" class="input-giant"></div>
+                        <div><label class="tag-label">身高 cm</label><input type="number" id="stu-height" class="input-giant"></div>
+                        <div><label class="tag-label">體重 kg</label><input type="number" id="stu-weight" class="input-giant"></div>
+                        <div><label class="tag-label">腳長 cm</label><input type="number" id="stu-foot" class="input-giant"></div>
                     </div>
                     <div><label class="tag-label">就讀學校</label><input type="text" id="stu-school" class="input-giant"></div>
                     <div><label class="tag-label">目前年級</label><input type="text" id="stu-grade" class="input-giant bg-gray-100" readonly></div>
-                    <div class="col-span-full"><label class="tag-label">健康狀況與受傷史說明</label><textarea id="stu-health" rows="2" class="input-giant !h-auto"></textarea></div>
+                    <div class="col-span-full"><label class="tag-label">健康狀況與受傷史</label><textarea id="stu-health" rows="2" class="input-giant !h-auto"></textarea></div>
                     <div><label class="tag-label">飲食習慣</label><select id="stu-diet" class="input-giant font-bold"><option value="葷食">葷食</option><option value="素食">素食</option></select></div>
                     <div><label class="tag-label">興趣項目</label><input type="text" id="stu-interests" class="input-giant"></div>
                 </div>
@@ -182,7 +176,7 @@
             </div>
         </div>
 
-        <!-- [6. 管理中心 - 專家全功能面板] -->
+        <!-- [6. 管理中心] -->
         <div id="view-admin" class="section-view">
             <div class="flex gap-2 mb-8 bg-white p-2 rounded-xl shadow-sm overflow-x-auto no-scrollbar">
                 <button onclick="AdminService.switchModule('events')" id="adm-m-events" class="admin-sub-tab active">活動庫 (19欄)</button>
@@ -203,7 +197,7 @@
             <!-- 參數模組 -->
             <div id="adm-view-config" class="hidden">
                 <div class="content-card space-y-6">
-                    <div><label class="tag-label">店家匯款帳號 (顯示於支付頁)</label><textarea id="cfg-bank" rows="3" class="input-giant !h-auto"></textarea></div>
+                    <div><label class="tag-label">店家匯款帳號</label><textarea id="cfg-bank" rows="3" class="input-giant !h-auto"></textarea></div>
                     <div><label class="tag-label">分類標籤 (逗號隔開)</label><input type="text" id="cfg-cats" class="input-giant"></div>
                     <button onclick="AdminService.saveConfig()" class="btn-primary">保存參數設定 ➜</button>
                 </div>
@@ -212,7 +206,7 @@
             <!-- 19 欄位旗艦編輯器 -->
             <div id="event-editor-modal" class="fixed inset-0 bg-white z-[5000] hidden overflow-y-auto p-6">
                 <div class="max-w-4xl mx-auto bg-white p-10 rounded-[32px] shadow-2xl border">
-                    <h2 class="text-2xl font-black mb-8 italic uppercase border-b pb-4">Activity Specs (19 Fields)</h2>
+                    <h2 class="text-2xl font-black mb-8 italic uppercase border-b pb-4">Activity Specs</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div><label class="tag-label">活動型態</label><select id="ed-type" class="input-giant font-bold"><option value="單日型">單日型</option><option value="梯次型">梯次型</option></select></div>
                         <div><label class="tag-label">分類</label><input type="text" id="ed-cat" class="input-giant"></div>
@@ -221,11 +215,11 @@
                         <div><label class="tag-label">結束日期</label><input type="date" id="ed-end" class="input-giant"></div>
                         <div><label class="tag-label">全日原價</label><input type="number" id="ed-price" class="input-giant"></div>
                         <div><label class="tag-label">半日原價</label><input type="number" id="ed-hprice" class="input-giant"></div>
-                        <div><label class="tag-label text-[#1877f2]">全日請假扣額 (I)</label><input type="number" id="ed-deduct" class="input-giant"></div>
-                        <div><label class="tag-label text-[#1877f2]">半日請假扣額 (J)</label><input type="number" id="ed-hdeduct" class="input-giant"></div>
+                        <div><label class="tag-label text-[#1877f2]">全日請假扣額</label><input type="number" id="ed-deduct" class="input-giant"></div>
+                        <div><label class="tag-label text-[#1877f2]">半日請假扣額</label><input type="number" id="ed-hdeduct" class="input-giant"></div>
                         <div><label class="tag-label">總名額</label><input type="number" id="ed-quota" class="input-giant"></div>
-                        <div class="col-span-full"><label class="tag-label">圖片URL (N)</label><input type="text" id="ed-img" class="input-giant"></div>
-                        <div class="col-span-full"><label class="tag-label">課程介紹描述 (L)</label><textarea id="ed-desc" rows="5" class="input-giant !h-auto"></textarea></div>
+                        <div class="col-span-full"><label class="tag-label">圖片URL</label><input type="text" id="ed-img" class="input-giant"></div>
+                        <div class="col-span-full"><label class="tag-label">課程介紹描述</label><textarea id="ed-desc" rows="5" class="input-giant !h-auto"></textarea></div>
                     </div>
                     <button onclick="AdminService.saveEvent()" class="btn-primary mt-12 w-full shadow-xl">確認更新雲端資料庫 ➜</button>
                     <button onclick="document.getElementById('event-editor-modal').classList.add('hidden')" class="w-full mt-4 text-gray-400 font-bold uppercase text-center">返回活動清單</button>
@@ -239,7 +233,7 @@
         const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
         let state = { uid: "DEBUG_USER", members: [], events: [], isRegistered: false, currentEditId: null, config: {}, selectedCategory: '全部' };
-        let bookingData = { event: null, student: null, type: '', session: '', amount: 0, attendanceMap: {}, currentWeekIdx: 0, isSubmitting: false };
+        let bookingData = { event: null, student: null, type: '', session: '', amount: 0, attendanceMap: {}, currentWeekIdx: 0 };
         let activeDateKey = null;
 
         const RegistrationFlow = {
@@ -264,24 +258,51 @@
                 const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
                 const r = await res.json();
                 document.getElementById('view-loading').style.display = 'none';
-                if (new URLSearchParams(window.location.search).get('action') === 'admin') document.getElementById('tab-admin').classList.remove('hidden');
+                
+                // 檢查是否為管理員模式
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('action') === 'admin' || r.data?.type === '管理員') {
+                    document.getElementById('tab-admin').classList.remove('hidden');
+                }
+
                 if (r.status === 'registered') {
-                    state.isRegistered = true; state.userType = r.data.type;
-                    document.getElementById('main-header').classList.remove('header-hidden');
+                    state.isRegistered = true;
                     switchMainTab('activity');
-                } else { switchMainTab('activity'); }
+                } else { 
+                    switchMainTab('activity'); 
+                }
             },
             showStudentForm(stuId = null) {
                 state.currentEditStuId = stuId; switchView('student-form');
                 if (!stuId) ['stu-name','stu-id','stu-birthday','stu-height','stu-weight','stu-foot','stu-school','stu-grade','stu-health','stu-interests'].forEach(id=>document.getElementById(id).value="");
                 else {
                     const s = state.members.find(m => String(m.學員ID) === String(stuId));
-                    if(s) { document.getElementById('stu-name').value = s.姓名; document.getElementById('stu-id').value = s.身分證字號; document.getElementById('stu-birthday').value = s.生日; this.detectGrade(); }
+                    if(s) { 
+                        document.getElementById('stu-name').value = s.姓名; 
+                        document.getElementById('stu-id').value = s.身分證字號; 
+                        document.getElementById('stu-birthday').value = s.生日; 
+                        this.detectGrade(); 
+                    }
                 }
             },
             async submitStudent() {
-                const payload = { id: state.currentEditStuId, parentUid: state.uid, name: document.getElementById('stu-name').value, birthday: document.getElementById('stu-birthday').value, idNumber: document.getElementById('stu-id').value, height: document.getElementById('stu-height').value, weight: document.getElementById('stu-weight').value, footSize: document.getElementById('stu-foot').value, school: document.getElementById('stu-school').value, grade: document.getElementById('stu-grade').value, health: document.getElementById('stu-health').value, interests: document.getElementById('stu-interests').value, gender: document.getElementById('stu-gender').value, identity: document.getElementById('stu-identity').value, diet: document.getElementById('stu-diet').value };
-                if (!state.isRegistered) await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name: payload.name, phone: 'Member', type: '本人' } }) });
+                const payload = { 
+                    id: state.currentEditStuId, 
+                    parentUid: state.uid, 
+                    name: document.getElementById('stu-name').value, 
+                    birthday: document.getElementById('stu-birthday').value, 
+                    idNumber: document.getElementById('stu-id').value, 
+                    height: document.getElementById('stu-height').value, 
+                    weight: document.getElementById('stu-weight').value, 
+                    footSize: document.getElementById('stu-foot').value, 
+                    school: document.getElementById('stu-school').value, 
+                    grade: document.getElementById('stu-grade').value, 
+                    health: document.getElementById('stu-health').value, 
+                    interests: document.getElementById('stu-interests').value, 
+                    gender: document.getElementById('stu-gender').value, 
+                    diet: document.getElementById('stu-diet').value 
+                };
+                if (!state.isRegistered) await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name: payload.name, phone: 'Member', type: '成員' } }) });
                 const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'addStudent', payload }) });
                 if((await res.json()).status === 'success') { showMsg("✅ 已存檔個資"); location.reload(); }
             },
@@ -292,13 +313,10 @@
             }
         };
 
-        /**
-         * 預約與日曆邏輯 (Step 3 核心)
-         */
         const BookingWizard = {
             async start(eid) {
                 const ev = state.events.find(e => String(e['活動ID']) === String(eid)); if(!ev) return;
-                bookingData = { event: ev, student: null, type: '全日', session: '單日', amount: Number(ev['全日價']), bankLast5: '', attendanceMap: {}, currentWeekIdx: 0 };
+                bookingData = { event: ev, student: null, type: '全日', session: '單日', amount: Number(ev['全日價']), attendanceMap: {}, currentWeekIdx: 0 };
                 showMsg("正在讀取成員名單...");
                 const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
                 state.members = (await res.json()).data || [];
@@ -336,26 +354,24 @@
                 const ad = this.generateDateList(sd, ed);
                 if (Object.keys(bookingData.attendanceMap).length === 0) ad.forEach(d => bookingData.attendanceMap[d] = 'attend');
                 const w = []; for (let i = 0; i < ad.length; i += 7) w.push(ad.slice(i, i + 7));
-                let wt = w.length > 1 ? `<div class="flex overflow-x-auto gap-2 no-scrollbar mb-6">${w.map((_, i) => `<div onclick="BookingWizard.switchWeek(${i})" class="week-chip ${bookingData.currentWeekIdx === i ? 'active' : ''}">第 ${i+1} 週</div>`).join('')}</div>` : '';
+                let wt = w.length > 1 ? `<div class="flex overflow-x-auto gap-2 no-scrollbar mb-6">${w.map((_, i) => `<div onclick="BookingWizard.switchWeek(${i})" class="tag-pill ${bookingData.currentWeekIdx === i ? 'active' : ''}">第 ${i+1} 週</div>`).join('')}</div>` : '';
                 const cwd = w[bookingData.currentWeekIdx] || [];
                 let ch = `<div class="cal-grid mb-8">`;
                 ["日","一","二","三","四","五","六"].forEach(x => ch += `<div class="text-center text-[10px] font-black text-gray-300 uppercase">${x}</div>`);
                 for(let i=0; i<(new Date(cwd[0])).getDay(); i++) ch += `<div></div>`;
                 cwd.forEach(d => {
                     const st = bookingData.attendanceMap[d], dn = d.split('-')[2];
-                    let cs = 'status-attend', lb = '';
-                    if (st === 'full') { cs = 'status-full-leave', lb = '✕'; } if (st === 'am') { cs = 'status-am-leave', lb = '△'; } if (st === 'pm') { cs = 'status-pm-leave', lb = '▽'; }
+                    let cs = 'status-attend';
+                    if (st === 'full') cs = 'status-full-leave'; if (st === 'am') cs = 'status-am-leave'; if (st === 'pm') cs = 'status-pm-leave';
                     ch += `<div onclick="BookingWizard.openLeaveSelector('${d}')" class="cal-day ${cs}">${dn}</div>`;
                 });
                 ch += `</div>`;
-                el.innerHTML = `<h2 class="text-xl font-black mb-2 text-[#1877f2]">3. 確認出席日</h2><p class="text-[11px] text-gray-500 font-bold mb-6">請點擊不出席的日期進入修改</p>${wt}${ch}<button onclick="BookingWizard.goToStep(4)" class="btn-primary mt-4">確認日期，下一步 ➜</button>`;
+                el.innerHTML = `<h2 class="text-xl font-black mb-2 text-[#1877f2]">3. 確認出席日</h2><p class="text-[11px] text-gray-500 font-bold mb-6">請點擊日期修改出席狀態</p>${wt}${ch}<button onclick="BookingWizard.goToStep(4)" class="btn-primary mt-4">確認日期，下一步 ➜</button>`;
             },
             switchWeek(idx) { bookingData.currentWeekIdx = idx; this.renderStep3(document.getElementById('wizard-content')); },
             openLeaveSelector(d) { activeDateKey = d; document.getElementById('target-date-display').innerText = d; document.getElementById('leave-modal').style.display = 'flex'; },
             setLeaveStatus(st) { bookingData.attendanceMap[activeDateKey] = st; document.getElementById('leave-modal').style.display = 'none'; this.renderStep3(document.getElementById('wizard-content')); },
             generateDateList(s, e) { const l = []; let c = new Date(s); while(c <= e) { l.push(c.toISOString().split('T')[0]); c.setDate(c.getDate()+1); } return l; },
-            
-            // --- 核心：學費扣除邏輯 ---
             renderStep4(el) {
                 const ev = bookingData.event, fd = Number(ev['全日扣除'] || 0), hd = Number(ev['半日扣除'] || 0);
                 let fl=0, hl=0; Object.values(bookingData.attendanceMap).forEach(v => { if (v === 'full') fl++; else if (v === 'am' || v === 'pm') hl++; });
@@ -373,12 +389,15 @@
             }
         };
 
-        /**
-         * 管理中心核心模組 (CRM / Inventory / Accounting / Config)
-         */
         const AdminService = {
             switchModule(m) {
-                ['events', 'crm', 'accounting', 'config'].forEach(i => { document.getElementById(`adm-m-${i}`).classList.toggle('active', i === m); document.getElementById(`adm-view-${i}`).classList.toggle('hidden', i !== m); });
+                ['events', 'crm', 'accounting', 'config'].forEach(i => { 
+                    document.getElementById(`adm-m-${i}`).classList.toggle('active', i === m); 
+                    document.getElementById(`adm-view-${i}`).classList.toggle('hidden', i !== m); 
+                });
+                
+                // 修正：在這裡主動觸發載入資料
+                if (m === 'events') loadAdminEvents();
                 if (m === 'crm') this.loadCRM();
                 if (m === 'accounting') this.loadAccounting();
                 if (m === 'config') this.loadConfigUI();
@@ -386,7 +405,7 @@
             async loadCRM() {
                 const res = await fetch(`${PROXY_URL}?action=adminGetAllStudents`);
                 const r = await res.json();
-                document.getElementById('admin-crm-list').innerHTML = r.data.map(s => `<div class="content-card flex items-center gap-4 !py-3 hover:bg-gray-50"><div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-black text-xs">${s.姓名.charAt(0)}</div><div class="flex-1 min-w-0"><h4>${s.姓名} <span class="text-[9px] text-gray-400 font-bold ml-1">${s.身分證字號}</span></h4><p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">${s.學校} | ${s.年級} | 健康: ${s.健康狀況 || '良'}</p></div><button onclick="RegistrationFlow.showStudentForm('${s.學員ID}')" class="text-blue-600 font-black text-[10px]">個資編輯</button></div>`).join('');
+                document.getElementById('admin-crm-list').innerHTML = r.data.map(s => `<div class="content-card flex items-center gap-4 !py-3 hover:bg-gray-50"><div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-black text-xs">${s.姓名.charAt(0)}</div><div class="flex-1 min-w-0"><h4>${s.姓名} <span class="text-[9px] text-gray-400 font-bold ml-1">${s.身分證字號}</span></h4><p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">${s.學校} | ${s.年級}</p></div><button onclick="RegistrationFlow.showStudentForm('${s.學員ID}')" class="text-blue-600 font-black text-[10px]">個資編輯</button></div>`).join('');
             },
             async loadAccounting() {
                 const res = await fetch(`${PROXY_URL}?action=adminGetAllRegs`);
@@ -402,7 +421,13 @@
             },
             loadConfigUI() { document.getElementById('cfg-bank').value = state.config.bankInfo || ""; document.getElementById('cfg-cats').value = state.config.sportCategories || ""; },
             async saveConfig() { const bankInfo = document.getElementById('cfg-bank').value; const sportCategories = document.getElementById('cfg-cats').value; await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateConfig', payload: { bankInfo, sportCategories } }) }); showMsg("✅ 已同步全局參數"); },
-            openEventEditor(id) { state.currentEditId = id; const ev = state.events.find(e => String(e['活動ID']) === String(id)) || {}; document.getElementById('event-editor-modal').classList.remove('hidden'); const set = (i, v) => document.getElementById(i).value = v || ""; set('ed-type', ev['活動型態']); set('ed-cat', ev['分類']); set('ed-name', ev['活動名稱']); set('ed-start', ev['開始日期']); set('ed-end', ev['結束日期']); set('ed-price', ev['全日價']); set('ed-hprice', ev['半日價']); set('ed-deduct', ev['全日扣除']); set('ed-hdeduct', ev['半日扣除']); set('ed-quota', ev['總名額']); set('ed-img', ev['圖片URL']); set('ed-desc', ev['描述']); },
+            openEventEditor(id) { 
+                state.currentEditId = id; 
+                const ev = state.events.find(e => String(e['活動ID']) === String(id)) || {}; 
+                document.getElementById('event-editor-modal').classList.remove('hidden'); 
+                const set = (i, v) => document.getElementById(i).value = v || ""; 
+                set('ed-type', ev['活動型態']); set('ed-cat', ev['分類']); set('ed-name', ev['活動名稱']); set('ed-start', ev['開始日期']); set('ed-end', ev['結束日期']); set('ed-price', ev['全日價']); set('ed-hprice', ev['半日價']); set('ed-deduct', ev['全日扣除']); set('ed-hdeduct', ev['半日扣除']); set('ed-quota', ev['總名額']); set('ed-img', ev['圖片URL']); set('ed-desc', ev['描述']); 
+            },
             async saveEvent() {
                 const get = (i) => document.getElementById(i).value;
                 const payload = { "活動ID": state.currentEditId || ("EVT-" + Date.now()), "活動型態": get('ed-type'), "分類": get('ed-cat'), "活動名稱": get('ed-name'), "開始日期": get('ed-start'), "結束日期": get('ed-end'), "全日價": get('ed-price'), "半日價": get('ed-hprice'), "全日扣除": get('ed-deduct'), "半日扣除": get('ed-hdeduct'), "圖片URL": get('ed-img'), "描述": get('ed-desc'), "狀態": "上架" };
@@ -411,7 +436,6 @@
             }
         };
 
-        /* --- 基礎 UI 控制項 --- */
         function switchMainTab(m) {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             const tab = document.getElementById('tab-' + m); if(tab) tab.classList.add('active');
@@ -425,7 +449,6 @@
             const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
             const r = await res.json(); state.events = r.data || []; state.config = r.config || {};
             
-            // 搜尋標籤回覆
             const tagsEl = document.getElementById('category-tags');
             const cats = ['全部', ...(state.config.sportCategories || "").split(',')];
             tagsEl.innerHTML = cats.map(c => `<div onclick="filterCat('${c.trim()}')" class="tag-pill ${state.selectedCategory === c.trim() ? 'active' : ''}">${c.trim()}</div>`).join('');
@@ -438,7 +461,7 @@
             });
 
             document.getElementById('event-list').innerHTML = filtered.map(ev => `
-                <div class="content-card !p-0 overflow-hidden flex flex-col hover:shadow-md transition-all group">
+                <div class="content-card !p-0 overflow-hidden flex flex-col hover:shadow-md transition-all">
                     <img src="${ev['圖片URL'] || 'https://placehold.co/600x400'}" class="event-card-img">
                     <div class="p-4 flex-1 flex flex-col"><p class="text-[10px] font-black text-[#1877f2] uppercase mb-1">${ev['分類']}</p><h3 class="card-title mb-4 truncate">${ev['活動名稱']}</h3><div class="mt-auto flex flex-col gap-2"><button onclick="showDetail('${ev['活動ID']}')" class="btn-secondary !py-2 !w-full">詳情</button><button onclick="BookingWizard.start('${ev['活動ID']}')" class="btn-primary !py-2 !text-xs !w-full shadow-md">預約</button></div></div>
                 </div>`).join('');
@@ -459,7 +482,7 @@
         async function loadFamilyMembers() {
             const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
             state.members = (await res.json()).data || [];
-            document.getElementById('family-grid').innerHTML = state.members.map(m => `<div class="content-card flex items-center gap-4 !py-3 hover:bg-gray-50 transition-all group"><div class="avatar-frame !bg-[#e7f3ff]"><div class="text-[#1877f2] font-black text-xl italic">${(m.姓名||"?").charAt(0)}</div></div><div class="flex-1"><h4 class="font-black text-sm">${m.姓名}</h4><p class="text-[10px] text-gray-400 font-bold">${m.年級} | ${m.生日}</p></div><button onclick="RegistrationFlow.showStudentForm('${m.學員ID}')" class="text-gray-400 font-black text-[10px]">編輯</button></div>`).join('');
+            document.getElementById('family-grid').innerHTML = state.members.map(m => `<div class="content-card flex items-center gap-4 !py-3 hover:bg-gray-50 transition-all"><div class="avatar-frame !bg-[#e7f3ff]"><div class="text-[#1877f2] font-black text-xl italic">${(m.姓名||"?").charAt(0)}</div></div><div class="flex-1"><h4 class="font-black text-sm">${m.姓名}</h4><p class="text-[10px] text-gray-400 font-bold">${m.年級} | ${m.生日}</p></div><button onclick="RegistrationFlow.showStudentForm('${m.學員ID}')" class="text-gray-400 font-black text-[10px]">編輯</button></div>`).join('');
         }
 
         async function loadHistoryRecords() {
@@ -471,9 +494,16 @@
             }).join('');
         }
 
+        // 核心修正：讀取後台活動清單
         async function loadAdminEvents() {
+            document.getElementById('admin-event-grid').innerHTML = '<p class="text-center py-10 font-black text-gray-400">Loading Events...</p>';
             const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
-            const r = await res.json(); state.events = r.data || [];
+            const r = await res.json(); 
+            state.events = r.data || [];
+            if(state.events.length === 0) {
+                document.getElementById('admin-event-grid').innerHTML = '<p class="text-center py-10 font-black text-gray-400">尚未建立活動</p>';
+                return;
+            }
             document.getElementById('admin-event-grid').innerHTML = state.events.map(ev => `<div class="content-card flex justify-between items-center !py-3"><div><h4 class="font-black text-sm">${ev['活動名稱']}</h4><p class="text-[9px] text-gray-400 font-black uppercase">${ev['分類']} | ID: ${ev['活動ID']}</p></div><button onclick="AdminService.openEventEditor('${ev['活動ID']}')" class="text-blue-600 font-black text-[10px]">編輯規格</button></div>`).join('');
         }
 
