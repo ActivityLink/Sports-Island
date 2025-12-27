@@ -16,7 +16,7 @@
         .mode-desktop { max-width: 1300px; }
 
         /* 頂部導航區 */
-        .nav-tab { flex: 1; text-align: center; padding: 14px 0; font-weight: 900; font-size: 15px; color: rgba(255,255,255,0.6); border-bottom: 4px solid transparent; cursor: pointer; transition: 0.3s; }
+        .nav-tab { flex: 1; text-align: center; padding: 14px 0; font-weight: 900; font-size: 14px; color: rgba(255,255,255,0.6); border-bottom: 4px solid transparent; cursor: pointer; transition: 0.3s; }
         .nav-tab.active { color: white !important; border-bottom-color: white !important; }
 
         .section-view { display: none; }
@@ -41,6 +41,9 @@
 
         /* 隱藏未註冊時的導航 */
         .header-hidden { display: none !important; }
+
+        /* LINE 頭像樣式 */
+        .line-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); object-fit: cover; }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -48,14 +51,28 @@
     <div id="msg-box"></div>
 
     <!-- 頂部功能區 (Header) -->
-    <header id="main-header" class="bg-[#1a73e8] text-white pt-6 pb-1 px-4 md:px-12 sticky top-0 z-50 shadow-md header-hidden">
-        <div class="max-w-[1280px] mx-auto flex flex-col md:flex-row md:justify-between items-center">
-            <h1 class="text-xl md:text-2xl font-black italic tracking-tighter uppercase mb-4 md:mb-0 cursor-pointer" onclick="location.reload()">SPORTS ISLAND</h1>
+    <header id="main-header" class="bg-[#1a73e8] text-white pt-4 pb-1 px-4 md:px-12 sticky top-0 z-50 shadow-md header-hidden">
+        <div class="max-w-[1280px] mx-auto flex flex-col md:flex-row md:justify-between items-center gap-4">
+            <div class="flex items-center justify-between w-full md:w-auto">
+                <h1 class="text-xl md:text-2xl font-black italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">SPORTS ISLAND</h1>
+                <!-- 行動端顯示頭像與名稱 -->
+                <div class="flex items-center gap-2 md:hidden">
+                    <span id="line-name-mobile" class="text-xs font-bold opacity-90"></span>
+                    <img id="line-logo-mobile" src="" class="line-avatar">
+                </div>
+            </div>
+            
             <nav class="flex w-full md:w-auto md:min-w-[400px]">
                 <div onclick="switchMainTab('activity')" id="tab-activity" class="nav-tab active">活動專區</div>
                 <div onclick="switchMainTab('member')" id="tab-member" class="nav-tab">會員專區</div>
                 <div onclick="switchMainTab('admin')" id="tab-admin" class="nav-tab hidden">管理中心</div>
             </nav>
+
+            <!-- 桌機端顯示頭像與名稱 -->
+            <div class="hidden md:flex items-center gap-3 bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
+                <img id="line-logo-desktop" src="" class="line-avatar">
+                <span id="line-name-desktop" class="text-sm font-black"></span>
+            </div>
         </div>
     </header>
 
@@ -99,7 +116,11 @@
         <div id="view-parent-form" class="section-view max-w-md mx-auto pt-4">
             <h2 class="text-2xl font-black text-slate-800 mb-8 pl-4 border-l-4 border-blue-600 italic">Parent Contact</h2>
             <div class="bg-white p-8 rounded-[40px] shadow-sm space-y-6 border">
-                <div><label class="tag-label">家長/聯絡人姓名</label><input type="text" id="parent-name" class="input-giant"></div>
+                <div>
+                    <label class="tag-label">家長/聯絡人姓名</label>
+                    <input type="text" id="parent-name" class="input-giant" placeholder="請填寫真實姓名">
+                    <p class="text-[10px] text-red-500 font-bold mt-1 ml-2">※ 請務必填寫與證件一致之姓名</p>
+                </div>
                 <div><label class="tag-label">聯絡電話</label><input type="tel" id="parent-phone" class="input-giant" placeholder="09xxxxxxxx"></div>
                 <button onclick="RegistrationFlow.submitParent()" class="btn-primary mt-4 uppercase italic">Next Step ➜</button>
             </div>
@@ -113,7 +134,11 @@
             </div>
             <div class="bg-white p-8 md:p-12 rounded-[48px] shadow-sm border">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div><label class="tag-label">姓名</label><input type="text" id="stu-name" class="input-giant"></div>
+                    <div>
+                        <label class="tag-label">學員姓名</label>
+                        <input type="text" id="stu-name" class="input-giant" placeholder="請填寫真實姓名">
+                        <p class="text-[10px] text-red-500 font-bold mt-1 ml-2">※ 投保使用，請填寫真實姓名</p>
+                    </div>
                     <div><label class="tag-label">性別</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
                     <div><label class="tag-label">生日</label><input type="date" id="stu-birthday" class="input-giant" onchange="RegistrationFlow.detectGrade()"></div>
                     <div><label class="tag-label">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase"></div>
@@ -160,7 +185,7 @@
                     </div>
                 </div>
                 
-                <!-- 右側：課程/報名紀錄 (恢復此功能) -->
+                <!-- 右側：課程/報名紀錄 -->
                 <div class="lg:col-span-5">
                     <div class="mb-6">
                         <h2 class="text-2xl font-black text-slate-800">課程紀錄</h2>
@@ -173,7 +198,7 @@
             </div>
         </div>
 
-        <!-- 6. 管理後台 (暫略，邏輯穩定) -->
+        <!-- 6. 管理後台 -->
         <div id="view-admin" class="section-view">
             <div id="admin-event-grid" class="space-y-4"></div>
         </div>
@@ -190,26 +215,33 @@
                 try {
                     await liff.init({ liffId: LIFF_ID });
                     
-                    // 環境偵測：防止 PC 預覽無限跳轉
+                    // 環境偵測
                     if (!liff.isInClient() && !liff.isLoggedIn()) {
-                        document.getElementById('loading-status').innerText = "Web Developer Environment";
+                        document.getElementById('loading-status').innerText = "Web Dev Mode";
                         document.getElementById('preview-mode-btn').classList.remove('hidden');
                         return;
                     }
 
-                    // 正式 LINE 環境自動登入
-                    if (!liff.isLoggedIn()) {
-                        liff.login();
-                        return;
-                    }
+                    if (!liff.isLoggedIn()) { liff.login(); return; }
 
                     const p = await liff.getProfile();
                     state.uid = p.userId; state.lineProfile = p;
+                    
+                    // 渲染個人頭像與名稱
+                    this.renderLineProfile(p);
                     this.checkStatus();
                 } catch (e) {
                     console.error(e);
                     document.getElementById('loading-status').innerText = "LIFF 初期化錯誤";
                 }
+            },
+            renderLineProfile(p) {
+                // 桌機端
+                document.getElementById('line-logo-desktop').src = p.pictureUrl || "https://placehold.co/100x100?text=USER";
+                document.getElementById('line-name-desktop').innerText = p.displayName;
+                // 行動端
+                document.getElementById('line-logo-mobile').src = p.pictureUrl || "https://placehold.co/100x100?text=USER";
+                document.getElementById('line-name-mobile').innerText = p.displayName;
             },
             skipLogin() { document.getElementById('view-loading').style.display = 'none'; this.checkStatus(); },
             async checkStatus() {
@@ -221,7 +253,7 @@
                 if (r.status === 'registered') {
                     state.isRegistered = true; state.userType = r.data.type;
                     this.unlockHeader();
-                    switchMainTab('member'); // 註冊過的人直接進會員中心看紀錄
+                    switchMainTab('member');
                 } else {
                     this.hideAll();
                     document.getElementById('view-registration-gate').classList.add('active');
@@ -238,7 +270,6 @@
             showStudentForm() {
                 this.hideAll();
                 document.getElementById('view-student-form').classList.add('active');
-                // 清空快取表單
                 ['stu-name', 'stu-birthday', 'stu-id', 'stu-height', 'stu-weight', 'stu-foot', 'stu-school', 'stu-grade', 'stu-health'].forEach(id => {
                     const el = document.getElementById(id); if(el) el.value = "";
                 });
@@ -246,7 +277,7 @@
             async submitParent() {
                 const n = document.getElementById('parent-name').value;
                 const p = document.getElementById('parent-phone').value;
-                if(!n || !p) return showMsg("請填寫聯繫資訊");
+                if(!n || !p) return showMsg("請完整填寫");
                 await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: state.uid, name: n, phone: p, type: '家長' } }) });
                 this.showStudentForm();
             },
