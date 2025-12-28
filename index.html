@@ -1,120 +1,330 @@
-/**
- * 運動島預約系統 - 後端核心 (旗艦鎖定版)
- * 規格對齊：Events(19欄), Students(16欄), Registrations(12欄), Users(5)
- */
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="data:,">
+    <title>運動島 SPORTS ISLAND - 活動中心</title>
+    <!-- LINE SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; color: #1c1e21; font-size: 15px; scroll-behavior: smooth; overflow-x: hidden; }
+        .main-container { max-width: 960px; margin: 0 auto; padding: 0 12px; }
+        .content-card { background: white; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 12px; }
 
-const SS_ID = "1Q2pyb7ljtWg3n_R8KSeyHrFLt6Ra4nXUmqhTZhUWZJg";
-const SS = SpreadsheetApp.openById(SS_ID);
+        /* 頂部功能表 */
+        .nav-tab { flex: 1; text-align: center; padding: 12px 0; font-weight: 900; font-size: 13px; color: rgba(255,255,255,0.7); border-bottom: 3px solid transparent; cursor: pointer; }
+        .nav-tab.active { color: white !important; border-bottom-color: white !important; }
+        .header-hidden { display: none !important; }
+        
+        /* 32px 頭像鎖定 */
+        .avatar-frame { width: 32px !important; height: 32px !important; border-radius: 50% !important; overflow: hidden !important; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center; }
+        .line-avatar { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block; }
+        .profile-chip { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); padding: 4px 10px 4px 4px; border-radius: 99px; }
 
-function doGet(e) {
-  const action = e.parameter.action;
-  const uid = e.parameter.uid;
-  try {
-    if (action === 'checkUser') return createJsonResponse(checkUserStatus(uid));
-    if (action === 'getFamily') return createJsonResponse(getFamilyMembers(uid));
-    if (action === 'getHistory') return createJsonResponse(getHistoryByUid(uid));
-    if (action === 'getEvents') return createJsonResponse({ status: 'success', data: getSheetData("Events"), config: getSystemConfig() });
-    
-    // 管理端專用
-    if (action === 'adminGetAllRegs') return createJsonResponse({ status: 'success', data: getSheetData("Registrations") });
-    if (action === 'adminGetAllStudents') return createJsonResponse({ status: 'success', data: getSheetData("Students") });
-    
-    return createJsonResponse({ status: 'online', userId: uid || 'visitor' });
-  } catch (err) {
-    return createJsonResponse({ status: 'error', message: err.toString() });
-  }
-}
+        .section-view { display: none; }
+        .section-view.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+        
+        /* 標籤列 */
+        .tag-pill { padding: 6px 16px; border-radius: 99px; background: white; border: 1px solid #dddfe2; font-size: 12px; font-weight: 900; cursor: pointer; color: #606770; transition: 0.2s; white-space: nowrap; }
+        .tag-pill.active { background: #e7f3ff; color: #1877f2; border-color: #1877f2; }
+        .event-card-img { height: 160px; width: 100%; object-fit: cover; }
+        .card-title { font-size: 16px; font-weight: 900; color: #1c1e21; }
 
-function doPost(e) {
-  let postData;
-  try { postData = JSON.parse(e.postData.contents); } catch (err) { return createJsonResponse({ status: 'error', message: 'JSON Fail' }); }
-  const action = postData.action;
-  const payload = postData.payload;
+        .input-giant { width: 100%; border: 1px solid #dddfe2; border-radius: 8px; padding: 12px; font-weight: 700; outline: none; background: #f5f6f7; }
+        .input-giant:focus { border-color: #1877f2; background: white; }
+        .tag-label { color: #606770; font-weight: 900; margin-bottom: 6px; display: block; font-size: 12px; text-transform: uppercase; }
 
-  try {
-    if (action === 'registerUser') return createJsonResponse(registerUser(payload));
-    if (action === 'addStudent') return createJsonResponse(addOrUpdateStudent(payload));
-    if (action === 'updateEvent') return createJsonResponse(updateEventLogic(payload));
-    if (action === 'submitRegistration') return createJsonResponse(submitRegistrationLogic(payload));
-    if (action === 'updateConfig') return createJsonResponse(updateConfig(payload));
-    if (action === 'adminVerifyPayment') return createJsonResponse(adminVerifyPayment(payload));
-    return createJsonResponse({ status: 'error', message: '未知操作' });
-  } catch (err) {
-    return createJsonResponse({ status: 'error', message: err.toString() });
-  }
-}
+        .btn-primary { background: #1877f2; color: white; padding: 14px; border-radius: 8px; font-weight: 900; width: 100%; text-align: center; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-secondary { background: white; color: #606770; border: 1px solid #dddfe2; padding: 8px 16px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor: pointer; }
 
-/* --- 核心邏輯：活動規格更新 (19 欄位) --- */
+        /* 管理中心專用 */
+        .admin-sub-tab { padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: 12px; color: #606770; cursor: pointer; }
+        .admin-sub-tab.active { background: #1877f2; color: white; }
+        #msg-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10001; background: #1c1e21; color: white; padding: 10px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; display: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
 
-function updateEventLogic(ev) {
-  const sheet = getSheet("Events", ["活動ID", "活動型態", "分類", "活動名稱", "梯次資料", "開始日期", "結束日期", "全日價", "全日扣除", "半日扣除", "總名額", "描述", "內容媒體", "圖片URL", "狀態", "半日價", "全日早鳥價", "早鳥截止日期", "半日早鳥價"]);
-  const targetId = String(ev["活動ID"]);
-  const data = sheet.getDataRange().getValues();
-  let rowIndex = -1;
-  for (let i = 1; i < data.length; i++) { if (String(data[i][0]) === targetId) { rowIndex = i + 1; break; } }
-  
-  // 依照 19 欄位順序填寫
-  const rowData = [
-    targetId, ev["活動型態"], ev["分類"], ev["活動名稱"], ev["梯次資料"] || "[]",
-    ev["開始日期"], ev["結束日期"], ev["全日價"], ev["全日扣除"] || 0, ev["半日扣除"] || 0,
-    ev["總名額"], ev["描述"], ev["內容媒體"] || "", ev["圖片URL"], ev["狀態"] || "上架",
-    ev["半日價"] || 0, ev["全日早鳥價"] || 0, ev["早鳥截止日期"] || "", ev["半日早鳥價"] || 0
-  ];
-  
-  if (rowIndex > 0) sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
-  else sheet.appendRow(rowData);
-  return { status: 'success' };
-}
+    <div id="msg-box"></div>
 
-/* --- 基礎讀寫工具與查詢邏輯 --- */
+    <header id="main-header" class="bg-[#1877f2] text-white pt-3 pb-1 sticky top-0 z-50 shadow-sm header-hidden">
+        <div class="main-container flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <h1 class="text-lg font-black italic uppercase cursor-pointer" onclick="location.reload()">SPORTS ISLAND</h1>
+                <div class="profile-chip">
+                    <div class="avatar-frame"><img id="line-logo-display" src="" class="line-avatar"></div>
+                    <span id="line-name-display" class="text-[10px] font-black truncate">...</span>
+                </div>
+            </div>
+            <nav id="top-nav" class="flex gap-1">
+                <div onclick="switchMainTab('activity')" id="tab-activity" class="nav-tab active px-4">活動</div>
+                <div onclick="switchMainTab('member')" id="tab-member" class="nav-tab px-4">會員</div>
+                <div onclick="switchMainTab('admin')" id="tab-admin" class="nav-tab hidden px-4">管理</div>
+            </nav>
+        </div>
+    </header>
 
-function getSheetData(name) {
-  const sheet = SS.getSheetByName(name);
-  if (!sheet) return [];
-  const values = sheet.getDataRange().getValues();
-  if (values.length <= 1) return [];
-  const headers = values[0].map(h => String(h).trim());
-  return values.slice(1).map(row => {
-    let obj = {};
-    headers.forEach((h, i) => {
-      let val = row[i];
-      if (val instanceof Date) val = Utilities.formatDate(val, "GMT+8", "yyyy-MM-dd");
-      obj[h] = val;
-    });
-    return obj;
-  });
-}
+    <div id="view-loading" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center">
+        <div class="w-10 h-10 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
+        <p id="loading-status" class="mt-4 font-black text-gray-400 text-xs tracking-widest uppercase italic">Expert Syncing...</p>
+    </div>
 
-function submitRegistrationLogic(p) {
-  const sheet = getSheet("Registrations", ["報名ID", "學員身分證", "學員姓名", "活動ID", "活動名稱", "報名型態", "梯次時間", "應付金額", "報名時間", "對帳狀態", "匯款後五碼", "備註(日期清單)"]);
-  const stu = p.student || {};
-  const rowData = ["REG-"+Date.now(), "'"+(stu["身分證字號"]||stu.idNumber||""), stu["姓名"]||stu.name||"", p.eventId, p.eventName, p.type, p.session, Number(p.amount), new Date(), "未核帳", "'"+(p.bankLast5||""), p.selectedDates||""];
-  sheet.appendRow(rowData);
-  return { status: 'success' };
-}
+    <main class="main-container py-6">
+        
+        <!-- [1. 活動展示列表] -->
+        <div id="view-activity" class="section-view active">
+            <div class="rounded-xl overflow-hidden mb-6 shadow-sm border bg-white"><img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto max-h-[180px] object-cover"></div>
+            
+            <div class="flex flex-col gap-3 mb-8">
+                <input type="text" id="search-input" oninput="loadCourses()" placeholder="🔍 搜尋課程名稱..." class="input-giant !bg-white border-none shadow-sm">
+                <div id="category-tags" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+            </div>
 
-function checkUserStatus(uid) {
-  const sheet = getSheet("Users", ["UID", "姓名", "電話", "註冊型態", "註冊日期"]);
-  const data = sheet.getDataRange().getValues();
-  const user = data.find(r => String(r[0]) === String(uid));
-  return user ? { status: 'registered', data: { uid: user[0], name: user[1], type: user[3] } } : { status: 'not_found' };
-}
+            <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
 
-function getFamilyMembers(uid) {
-  const data = getSheetData("Students");
-  return { status: 'success', data: data.filter(r => String(r["家長UID"]||r.家長UID).trim() === String(uid).trim()) };
-}
+        <!-- [2. 活動詳情頁面] -->
+        <div id="view-activity-detail" class="section-view">
+            <button onclick="switchMainTab('activity')" class="mb-4 text-gray-500 font-black text-xs flex items-center gap-1 group">⬅ 返回活動清單</button>
+            <div id="detail-content-area" class="content-card !p-0 overflow-hidden"></div>
+        </div>
 
-function getSystemConfig() {
-  const sheet = getSheet("SystemConfig", ["Key", "Value"]);
-  const config = { bankInfo: "", sportCategories: "籃球,足球,溜冰,游泳,體操,武術" };
-  if (!sheet) return config;
-  const data = sheet.getDataRange().getValues();
-  data.forEach(r => { if(r[0]==="bankInfo") config.bankInfo = r[1]; if(r[0]==="sportCategories") config.sportCategories = r[1]; });
-  return config;
-}
+        <!-- [3. 預約報名 Wizard] -->
+        <div id="view-booking-wizard" class="section-view max-w-xl mx-auto">
+            <div id="wizard-content" class="content-card min-h-[400px]"></div>
+        </div>
 
-function getSheet(n, h) { let s = SS.getSheetByName(n); if(!s) { s = SS.insertSheet(n); if(h.length) s.appendRow(h); } return s; }
-function createJsonResponse(data) { return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON); }
-function addOrUpdateStudent(p) { /* 同上個版本，維持 16 欄位邏輯 */ }
-function adminVerifyPayment(p) { /* 對帳邏輯 */ }
+        <!-- [4. 管理中心 - 店家規格] -->
+        <div id="view-admin" class="section-view">
+            <div class="flex gap-2 mb-8 bg-white p-2 rounded-xl shadow-sm overflow-x-auto no-scrollbar">
+                <button onclick="AdminService.switchModule('events')" id="adm-m-events" class="admin-sub-tab active">活動庫 (19欄)</button>
+                <button onclick="AdminService.switchModule('crm')" id="adm-m-crm" class="admin-sub-tab">CRM會員管理</button>
+                <button onclick="AdminService.switchModule('accounting')" id="adm-m-accounting" class="admin-sub-tab">對帳核帳</button>
+            </div>
+            
+            <div id="adm-view-events">
+                <div class="flex justify-between items-center mb-6"><h3>Inventory</h3><button onclick="AdminService.openEventEditor(null)" class="text-[#1877f2] font-black text-xs">+ 新增活動</button></div>
+                <div id="admin-event-grid" class="space-y-3"></div>
+            </div>
+            <div id="adm-view-crm" class="hidden"><div id="admin-crm-list" class="space-y-3"></div></div>
+            <div id="adm-view-accounting" class="hidden"><div id="admin-accounting-list" class="space-y-3"></div></div>
+        </div>
+
+        <!-- [5. 會員中心] -->
+        <div id="view-member" class="section-view">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-7">
+                    <div class="flex justify-between mb-6"><h2>家庭成員庫</h2><button onclick="window.location.href='register.html?mode=add'" class="bg-[#1877f2] text-white px-3 py-1 rounded-md text-xs font-black">+ 新增成員</button></div>
+                    <div id="family-grid" class="space-y-4"></div>
+                </div>
+                <div class="lg:col-span-5"><h2>報名歷史</h2><div id="history-container" class="space-y-4"></div></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 19 欄活動編輯器 Modal -->
+    <div id="event-editor-modal" class="fixed inset-0 bg-white z-[5000] hidden overflow-y-auto p-4">
+        <div class="max-w-4xl mx-auto bg-white p-8 rounded-[32px] border shadow-2xl">
+            <h2 class="text-xl font-black mb-6 italic uppercase border-b pb-4 text-[#1877f2]">Inventory Specification (19 Fields)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="col-span-full"><label class="tag-label">活動名稱</label><input type="text" id="ed-name" class="input-giant"></div>
+                <div><label class="tag-label">分類</label><input type="text" id="ed-cat" class="input-giant"></div>
+                <div><label class="tag-label">活動型態</label><select id="ed-type" class="input-giant font-bold"><option value="單日型">單日型</option><option value="梯次型">梯次型</option></select></div>
+                <div><label class="tag-label">開始日期</label><input type="date" id="ed-start" class="input-giant"></div>
+                <div><label class="tag-label">結束日期</label><input type="date" id="ed-end" class="input-giant"></div>
+                <div><label class="tag-label">全日價格</label><input type="number" id="ed-price" class="input-giant"></div>
+                <div><label class="tag-label text-[#1877f2]">全日請假扣額 (I)</label><input type="number" id="ed-deduct" class="input-giant"></div>
+                <div class="col-span-full"><label class="tag-label">圖片URL</label><input type="text" id="ed-img" class="input-giant"></div>
+                <div class="col-span-full"><label class="tag-label">介紹描述</label><textarea id="ed-desc" rows="5" class="input-giant !h-auto"></textarea></div>
+            </div>
+            <button onclick="AdminService.saveEvent()" class="btn-primary mt-8 shadow-xl">確認存檔 PUSH TO CLOUD ➜</button>
+            <button onclick="document.getElementById('event-editor-modal').classList.add('hidden')" class="w-full mt-4 text-gray-400 font-bold text-xs text-center">取消返回</button>
+        </div>
+    </div>
+
+    <script>
+        const LIFF_ID = "2008786875-7COWtgtL";
+        const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
+        let state = { uid: null, isRegistered: false, members: [], events: [], config: {}, selectedCategory: '全部' };
+        let bookingData = { event: null, student: null, type: '全日', amount: 0, bankLast5: '' };
+
+        const RegistrationFlow = {
+            async init() {
+                try {
+                    await liff.init({ liffId: LIFF_ID });
+                    if (!liff.isLoggedIn()) { 
+                        if (!liff.isInClient()) { document.getElementById('view-loading').style.display = 'none'; switchMainTab('activity'); return; }
+                        liff.login(); return; 
+                    }
+                    const p = await liff.getProfile();
+                    state.uid = p.userId;
+                    document.getElementById('line-name-display').innerText = p.displayName;
+                    document.getElementById('line-logo-display').src = p.pictureUrl || "https://placehold.co/100x100?text=島";
+                    this.checkStatus();
+                } catch (e) { console.error(e); }
+            },
+            async checkStatus() {
+                const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
+                const r = await res.json();
+                document.getElementById('view-loading').style.display = 'none';
+                document.getElementById('main-header').classList.remove('header-hidden');
+                if (new URLSearchParams(window.location.search).get('action') === 'admin') document.getElementById('tab-admin').classList.remove('hidden');
+                if (r.status === 'registered') state.isRegistered = true;
+                switchMainTab('activity');
+            }
+        };
+
+        const BookingWizard = {
+            async start(eid) {
+                const ev = state.events.find(e => String(e['活動ID']) === String(eid));
+                if(!ev) return;
+                bookingData = { event: ev, student: null, type: '全日', amount: Number(ev['全日價']), bankLast5: '' };
+                
+                // 1. 檢查是否註冊，沒註冊引導去 register.html
+                if (!state.isRegistered) {
+                    showMsg("報名前請先完成註冊");
+                    setTimeout(() => window.location.href = 'register.html', 1000);
+                    return;
+                }
+                
+                // 2. 抓取成員名單
+                showMsg("讀取成員庫...");
+                const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
+                const r = await res.json();
+                state.members = r.data || [];
+                
+                if (state.members.length === 0) {
+                    window.location.href = 'register.html?mode=add';
+                    return;
+                }
+                
+                this.goToStep(1);
+            },
+            goToStep(step) {
+                switchView('booking-wizard');
+                const el = document.getElementById('wizard-content');
+                if (step === 1) this.renderStep1(el);
+                if (step === 4) this.renderStep4(el);
+            },
+            renderStep1(el) {
+                el.innerHTML = `<h2 class="text-xl font-black mb-6 border-b pb-2 text-[#1877f2]">1. 選擇報名成員</h2><div class="space-y-3">${state.members.map(m => `
+                    <div onclick="BookingWizard.selectMember('${m.學員ID}')" class="p-4 border border-gray-100 rounded-xl cursor-pointer flex justify-between items-center hover:bg-gray-50 transition-all">
+                        <div class="flex items-center gap-3"><div class="w-9 h-9 bg-[#e7f3ff] text-[#1877f2] rounded-full flex items-center justify-center font-black text-xs">${m.姓名.charAt(0)}</div><p class="font-black text-sm">${m.姓名}</p></div>
+                        <div class="text-[#1877f2] font-black text-xs">選擇 ➜</div>
+                    </div>`).join('')}</div>`;
+            },
+            selectMember(sid) {
+                bookingData.student = state.members.find(m => String(m.學員ID) === String(sid));
+                this.goToStep(4);
+            },
+            renderStep4(el) {
+                el.innerHTML = `<h2 class="text-xl font-black mb-6 text-center italic uppercase tracking-tighter">報名結帳</h2>
+                    <div class="bg-gray-900 text-white p-8 rounded-2xl mb-8 shadow-xl text-center">
+                        <p class="text-[10px] uppercase font-bold opacity-50 mb-1">應付總額 Total</p>
+                        <p class="text-4xl font-black italic">NT$ ${parseInt(bookingData.amount).toLocaleString()}</p>
+                    </div>
+                    <label class="tag-label">匯款帳號後五碼</label>
+                    <input type="text" id="wiz-bank5" class="input-giant mb-8" maxlength="5" placeholder="填寫店家對帳用">
+                    <button onclick="BookingWizard.finalSubmit()" class="btn-primary shadow-lg font-black uppercase">Confirm Registration ➜</button>`;
+            },
+            async finalSubmit() {
+                const b5 = document.getElementById('wiz-bank5').value;
+                if(!b5) return showMsg("請填寫五碼");
+                const payload = { student: bookingData.student, eventId: bookingData.event['活動ID'], eventName: bookingData.event['活動名稱'], type: '全日', session: '預約', amount: bookingData.amount, bankLast5: b5, selectedDates: '' };
+                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
+                if ((await res.json()).status === 'success') {
+                    showMsg("🎉 預約成功！前往紀錄頁面");
+                    setTimeout(() => switchMainTab('member'), 1000);
+                }
+            }
+        };
+
+        const AdminService = {
+            switchModule(m) {
+                ['events', 'crm', 'accounting'].forEach(i => {
+                    document.getElementById(`adm-m-${i}`)?.classList.toggle('active', i === m);
+                    document.getElementById(`adm-view-${i}`)?.classList.toggle('hidden', i !== m);
+                });
+                if (m === 'crm') this.loadCRM();
+                if (m === 'events') this.loadAdminEvents();
+            },
+            async loadCRM() {
+                const res = await fetch(`${PROXY_URL}?action=adminGetAllStudents`);
+                const r = await res.json();
+                document.getElementById('admin-crm-list').innerHTML = r.data.map(s => `<div class="content-card flex justify-between items-center !py-3 hover:bg-gray-50"><div class="avatar-frame !bg-gray-100 font-black text-sm flex items-center justify-center">${(s.姓名||"?").charAt(0)}</div><div class="flex-1 min-w-0 ml-4"><h4>${s.姓名}</h4><p class="text-[10px] text-gray-400 font-bold uppercase">${s.學校} | ${s.健康狀況||'良好'}</p></div><button onclick="window.location.href='register.html?edit=${s.學員ID}'" class="text-[#1877f2] font-black text-xs">詳情/修改</button></div>`).join('');
+            },
+            async loadAdminEvents() {
+                const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
+                const r = await res.json();
+                document.getElementById('admin-event-grid').innerHTML = r.data.map(ev => `<div class="content-card flex justify-between items-center !py-3"><div><h4 class="font-black text-sm">${ev['活動名稱']}</h4><p class="text-[9px] text-gray-400 uppercase">${ev['分類']}</p></div><button onclick="AdminService.openEventEditor('${ev['活動ID']}')" class="text-blue-600 font-black text-[10px]">規格編輯</button></div>`).join('');
+            },
+            openEventEditor(id) {
+                state.currentEditId = id;
+                const ev = state.events.find(e => String(e['活動ID']) === String(id)) || {};
+                document.getElementById('event-editor-modal').classList.remove('hidden');
+                document.getElementById('ed-name').value = ev['活動名稱'] || "";
+                document.getElementById('ed-cat').value = ev['分類'] || "";
+                document.getElementById('ed-type').value = ev['活動型態'] || "單日型";
+                document.getElementById('ed-start').value = ev['開始日期'] || "";
+                document.getElementById('ed-end').value = ev['結束日期'] || "";
+                document.getElementById('ed-price').value = ev['全日價'] || 0;
+                document.getElementById('ed-deduct').value = ev['全日扣除'] || 0;
+                document.getElementById('ed-img').value = ev['圖片URL'] || "";
+                document.getElementById('ed-desc').value = ev['描述'] || "";
+            },
+            async saveEvent() {
+                const payload = { "活動ID": state.currentEditId || ("EVT-" + Date.now()), "活動名稱": document.getElementById('ed-name').value, "分類": document.getElementById('ed-cat').value, "活動型態": document.getElementById('ed-type').value, "開始日期": document.getElementById('ed-start').value, "結束日期": document.getElementById('ed-end').value, "全日價": document.getElementById('ed-price').value, "全日扣除": document.getElementById('ed-deduct').value, "圖片URL": document.getElementById('ed-img').value, "描述": document.getElementById('ed-desc').value, "狀態": "上架" };
+                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateEvent', payload }) });
+                if ((await res.json()).status === 'success') { showMsg("✅ 活動規格已發布至雲端"); document.getElementById('event-editor-modal').classList.add('hidden'); this.loadAdminEvents(); }
+            }
+        };
+
+        function switchMainTab(m) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + (m === 'admin' ? 'admin' : m))?.classList.add('active');
+            switchView(m);
+            if (m === 'member') { if(!state.uid) return; loadFamilyMembers(); }
+            if (m === 'activity') loadCourses();
+            if (m === 'admin') AdminService.switchModule('events');
+        }
+
+        async function loadCourses() {
+            const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
+            const r = await res.json(); state.events = r.data || []; state.config = r.config || {};
+            const cats = ['全部', ...(state.config.sportCategories || "").split(',')];
+            document.getElementById('category-tags').innerHTML = cats.map(c => `<div onclick="filterCat('${c.trim()}')" class="tag-pill ${state.selectedCategory === c.trim() ? 'active' : ''}">${c.trim()}</div>`).join('');
+            const sVal = document.getElementById('search-input').value.toLowerCase();
+            const filtered = state.events.filter(ev => (state.selectedCategory === '全部' || ev['分類'] === state.selectedCategory) && ev['狀態'] === '上架' && ev['活動名稱'].toLowerCase().includes(sVal));
+            document.getElementById('event-list').innerHTML = filtered.map(ev => `<div class="content-card !p-0 overflow-hidden flex flex-col hover:shadow-md transition-all group"><img src="${ev['圖片URL'] || 'https://placehold.co/600x400'}" class="event-card-img"><div class="p-4 flex-1 flex flex-col"><p class="text-[9px] font-black text-[#1877f2] uppercase mb-1">${ev['分類']}</p><h3 class="card-title truncate mb-4">${ev['活動名稱']}</h3><div class="mt-auto flex flex-col gap-2"><button onclick="showDetail('${ev['活動ID']}')" class="btn-secondary">詳情</button><button onclick="BookingWizard.start('${ev['活動ID']}')" class="btn-primary !py-2 !text-xs shadow-sm">預約</button></div></div></div>`).join('');
+        }
+
+        function filterCat(c) { state.selectedCategory = c; loadCourses(); }
+        
+        function showDetail(id) {
+            const ev = state.events.find(e => String(e['活動ID']) === String(id));
+            if(!ev) return;
+            switchView('activity-detail');
+            document.getElementById('detail-content-area').innerHTML = `<img src="${ev['圖片URL']}" class="w-full h-auto max-h-[300px] object-cover"><div class="p-8"><h2 class="text-2xl font-black mb-4 italic uppercase">${ev['活動名稱']}</h2><div class="text-gray-700 text-sm leading-relaxed mb-10 whitespace-pre-wrap">${ev['描述'] || '內容載入中...'}</div><button onclick="BookingWizard.start('${ev['活動ID']}')" class="btn-primary shadow-xl italic uppercase">立即預約報名 NT$ ${parseInt(ev['全日價']).toLocaleString()} ➜</button></div>`;
+            window.scrollTo(0,0);
+        }
+
+        async function loadFamilyMembers() {
+            const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
+            state.members = (await res.json()).data || [];
+            document.getElementById('family-grid').innerHTML = state.members.map(m => `<div class="content-card flex items-center gap-4 !py-3 hover:bg-gray-50 transition-all group"><div class="avatar-frame !bg-[#e7f3ff] flex items-center justify-center font-black text-xl italic text-[#1877f2]">${(m.姓名||"?").charAt(0)}</div><div class="flex-1"><h4>${m.姓名}</h4><p class="text-[10px] text-gray-400 font-bold">${m.年級}</p></div><button onclick="window.location.href='register.html?edit=${m.學員ID}'" class="text-gray-400 font-black text-[10px]">資料修改</button></div>`).join('');
+        }
+
+        function switchView(v) { document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active')); document.getElementById('view-' + v)?.classList.add('active'); window.scrollTo(0,0); }
+        window.onload = () => RegistrationFlow.init();
+        function showMsg(t) { const b = document.getElementById('msg-box'); b.innerText = t; b.style.display='block'; setTimeout(()=>b.style.display='none', 3000); }
+    </script>
+</body>
+</html>
