@@ -35,7 +35,8 @@
                 </div>
                 <h1 class="text-xl font-black italic tracking-tighter uppercase">Admin Console</h1>
             </div>
-            <button onclick="window.location.href='index.html'" class="text-slate-400 font-bold text-xs hover:text-slate-900 border px-4 py-2 rounded-lg bg-white">⬅ 返回前台</button>
+            <!-- 修改點：使用 safeNavigate -->
+            <button onclick="safeNavigate('index.html')" class="text-slate-400 font-bold text-xs hover:text-slate-900 border px-4 py-2 rounded-lg bg-white">⬅ 返回前台</button>
         </div>
 
         <div class="flex gap-2 mb-6 bg-white p-1.5 rounded-xl shadow-sm border border-slate-200 overflow-x-auto no-scrollbar">
@@ -106,6 +107,24 @@
     <script>
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
         let state = { events: [], students: [], config: { sportCategories: [], rentalItems: [] } };
+
+        /**
+         * 處理安全導航，解決在 blob: 預覽環境中相對網址無法解析的問題
+         */
+        function safeNavigate(target) {
+            try {
+                // 如果目前是 blob: 協議，跳轉會失敗
+                if (window.location.protocol === 'blob:') {
+                    console.warn("[預覽環境跳轉攔截] 欲跳轉至: " + target);
+                    return;
+                }
+                // 真實環境執行跳轉
+                window.location.href = target;
+            } catch (e) {
+                console.error("導覽錯誤:", e);
+                try { window.location.assign(target); } catch(i) {}
+            }
+        }
 
         async function init() {
             const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
@@ -179,20 +198,23 @@
         async function loadCRM() {
             const res = await fetch(`${PROXY_URL}?action=adminGetAllStudents`);
             const r = await res.json();
+            // 修改點：按鈕調用 safeNavigate
             document.getElementById('crm-table-body').innerHTML = r.data.map(s => `
                 <tr>
                     <td><span class="font-black">${s.姓名}</span></td>
                     <td><span class="text-xs font-bold">${s.身分}</span></td>
                     <td><p class="text-xs font-bold">${s.學校}</p><p class="text-[10px] text-slate-400">${s.年級}</p></td>
                     <td><span class="text-[10px] font-bold text-slate-400">${s.更新日期}</span></td>
-                    <td class="text-right"><button onclick="window.location.href='register.html?edit=${s.學員ID}'" class="text-blue-600 font-black text-xs">詳情</button></td>
+                    <td class="text-right"><button onclick="safeNavigate('register.html?edit=${s.學員ID}')" class="text-blue-600 font-black text-xs">詳情</button></td>
                 </tr>`).join('');
         }
 
         function switchTab(t) {
             ['events', 'config', 'crm'].forEach(i => {
-                document.getElementById(`view-${i}`).classList.toggle('hidden', i !== t);
-                document.getElementById(`btn-${i}`).classList.toggle('active', i === t);
+                const view = document.getElementById(`view-${i}`);
+                const btn = document.getElementById(`btn-${i}`);
+                if (view) view.classList.toggle('hidden', i !== t);
+                if (btn) btn.classList.toggle('active', i === t);
             });
             if (t === 'crm') loadCRM();
         }
