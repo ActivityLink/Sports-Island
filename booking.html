@@ -34,20 +34,18 @@
     </div>
 
     <div class="main-container">
+        <!-- 步驟 1. 選擇成員 -->
         <div id="view-member" class="hidden">
             <h2 class="text-2xl font-black mb-8 italic">1. 選擇成員</h2>
             <div id="member-list" class="space-y-3"></div>
             <button onclick="safeNavigate('register.html?mode=add')" class="w-full mt-6 py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-black">+ 新增成員</button>
         </div>
 
+        <!-- 步驟 2. 日曆安排 -->
         <div id="view-details" class="hidden">
             <button onclick="switchView('member')" class="mb-4 text-slate-400 font-bold text-xs">⬅ 上一步</button>
             <div class="content-card">
                 <h2 id="event-name-display" class="text-xl font-black text-blue-600 mb-6 italic">---</h2>
-                <div class="flex justify-between items-end mb-4">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">請假安排 (預設全出席)</label>
-                    <span id="calendar-month-label" class="font-black text-sm">---</span>
-                </div>
                 <div class="calendar-grid mb-2">
                     <div class="cal-header">日</div><div class="cal-header">一</div><div class="cal-header">二</div><div class="cal-header">三</div><div class="cal-header">四</div><div class="cal-header">五</div><div class="cal-header">六</div>
                 </div>
@@ -59,6 +57,7 @@
             </div>
         </div>
 
+        <!-- 步驟 3. 結帳 -->
         <div id="view-checkout" class="hidden">
             <div class="content-card">
                 <h2 class="text-xl font-black mb-8 border-b pb-4">報名結帳摘要</h2>
@@ -71,34 +70,36 @@
                     </div>
                 </div>
                 <label class="tag-label text-[10px] font-black text-gray-400 uppercase">匯款後五碼</label>
-                <input type="text" id="bank-5" class="w-full border-2 rounded-xl p-4 font-black bg-slate-50 mb-8" maxlength="5">
-                <button onclick="submitFinalBooking()" id="btn-submit" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black shadow-xl italic">CONFIRM ➜</button>
+                <input type="text" id="bank-5" class="w-full border-2 rounded-xl p-4 font-black bg-slate-50 mb-8 shadow-inner" maxlength="5" placeholder="00000">
+                <button onclick="submitFinalBooking()" id="btn-submit" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black shadow-xl italic">CONFIRM ORDER ➜</button>
             </div>
         </div>
     </div>
 
+    <!-- 底部計費浮動欄 -->
     <div id="checkout-bar" class="sticky-footer flex items-center justify-between hidden">
         <div><p class="text-[10px] font-black text-slate-400 uppercase">預計總額</p><p id="floating-total" class="text-2xl font-black italic text-blue-600">NT$ 0</p></div>
         <button onclick="switchView('checkout')" class="btn-checkout">下一步 ➜</button>
     </div>
 
+    <!-- 請假選單 -->
     <div id="overlay" class="overlay" onclick="closeLeaveMenu()"></div>
     <div id="leave-menu" class="leave-menu">
-        <h3 id="menu-date-title" class="text-lg font-black mb-8 italic">出席狀態修改</h3>
+        <h3 id="menu-date-title" class="text-lg font-black mb-8 italic text-slate-800">狀態修改</h3>
         <div class="grid grid-cols-2 gap-4 mb-8">
-            <button onclick="updateDayStatus('出席')" class="p-5 border-2 rounded-2xl font-black text-sm">恢復上課</button>
-            <button onclick="updateDayStatus('全日')" class="p-5 border-2 border-red-50 bg-red-50 text-red-600 rounded-2xl font-black text-sm">全日請假</button>
-            <button onclick="updateDayStatus('上午')" class="p-5 border-2 border-orange-50 bg-orange-50 text-orange-600 rounded-2xl font-black text-sm">上午請假</button>
-            <button onclick="updateDayStatus('下午')" class="p-5 border-2 border-orange-50 bg-orange-50 text-orange-600 rounded-2xl font-black text-sm">下午請假</button>
+            <button onclick="updateDayStatus('出席')" class="p-5 border-2 rounded-2xl font-black text-sm hover:bg-blue-50">恢復上課</button>
+            <button onclick="updateDayStatus('全日')" class="p-5 border-2 border-red-100 bg-red-50 text-red-600 rounded-2xl font-black text-sm">全日請假</button>
+            <button onclick="updateDayStatus('上午')" class="p-5 border-2 border-orange-100 bg-orange-50 text-orange-600 rounded-2xl font-black text-sm">上午請假</button>
+            <button onclick="updateDayStatus('下午')" class="p-5 border-2 border-orange-100 bg-orange-50 text-orange-600 rounded-2xl font-black text-sm">下午請假</button>
         </div>
-        <button onclick="closeLeaveMenu()" class="w-full py-2 text-slate-400 font-bold text-sm">取消</button>
+        <button onclick="closeLeaveMenu()" class="w-full py-2 text-slate-400 font-bold text-sm">取消返回</button>
     </div>
 
     <script>
         const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
         const eventId = new URLSearchParams(window.location.search).get('id');
-        let state = { uid: null, event: null, members: [], leaves: {}, rentedItems: [], currentFocusDate: null };
+        let state = { uid: null, event: null, members: [], leaves: {}, rentedItems: [], selectedMember: null, currentFocusDate: null };
 
         function safeNavigate(t) { if (window.location.protocol === 'blob:') return; window.location.href = t; }
 
@@ -106,7 +107,7 @@
             try {
                 await liff.init({ liffId: LIFF_ID });
                 if (!liff.isLoggedIn() && liff.isInClient()) { liff.login(); return; }
-                const p = liff.isLoggedIn() ? await liff.getProfile() : { userId: "SI_GUEST" };
+                const p = liff.isLoggedIn() ? await liff.getProfile() : { userId: "DEBUG_GUEST" };
                 state.uid = p.userId;
 
                 const [evRes, memRes] = await Promise.all([
@@ -134,7 +135,6 @@
             const classDays = (state.event['梯次資料'] || "").split(',').map(Number);
             const isRegular = state.event['活動型態'] === '常態型';
 
-            document.getElementById('calendar-month-label').innerText = `${start.getFullYear()}年 ${start.getMonth()+1}月`;
             const firstDay = new Date(start.getFullYear(), start.getMonth(), 1).getDay();
             let html = "";
             for (let i = 0; i < firstDay; i++) html += `<div class="cal-day status-disabled"></div>`;
@@ -160,22 +160,18 @@
             if(items.length === 0) return;
             document.getElementById('rental-card').classList.remove('hidden');
             document.getElementById('rental-options-list').innerHTML = items.map(it => `
-                <label class="flex justify-between p-4 border rounded-2xl bg-slate-50">
-                    <div class="flex gap-3"><input type="checkbox" onchange="updateRental('${it.name}', ${it.price}, this.checked)" class="w-5 h-5 accent-blue-600"><span class="font-bold">${it.name}</span></div>
+                <label class="flex justify-between p-4 border rounded-2xl bg-slate-50 items-center">
+                    <div class="flex gap-3"><input type="checkbox" onchange="updateRental('${it.name}', ${it.price}, this.checked)" class="w-6 h-6 accent-blue-600"><span class="font-black text-slate-700">${it.name}</span></div>
                     <span class="font-black text-blue-600">$${it.price}</span>
                 </label>`).join('');
         }
 
-        function updateRental(n, p, c) {
-            if(c) state.rentedItems.push({n, p});
-            else state.rentedItems = state.rentedItems.filter(i => i.n !== n);
-            calculate();
-        }
+        function updateRental(n, p, c) { if(c) state.rentedItems.push({n, p}); else state.rentedItems = state.rentedItems.filter(i => i.n !== n); calculate(); }
 
         function calculate() {
             const unit = Number(state.event['全日價'] || 0);
-            const days = Object.keys(state.leaves).length;
-            const base = unit * days;
+            const activeDays = Object.keys(state.leaves).length;
+            const base = unit * activeDays;
             let deduct = 0;
             Object.values(state.leaves).forEach(v => {
                 if(v === '全日') deduct += Number(state.event['全日扣除'] || 0);
@@ -190,7 +186,7 @@
             state.finalAmount = total;
         }
 
-        function openLeaveMenu(d) { state.currentFocusDate = d; document.getElementById('menu-date-title').innerText = `${d} 狀態修改`; document.getElementById('overlay').style.display='block'; document.getElementById('leave-menu').classList.add('active'); }
+        function openLeaveMenu(d) { state.currentFocusDate = d; document.getElementById('menu-date-title').innerText = `${d} 出席設定`; document.getElementById('overlay').style.display='block'; document.getElementById('leave-menu').classList.add('active'); }
         function closeLeaveMenu() { document.getElementById('overlay').style.display='none'; document.getElementById('leave-menu').classList.remove('active'); }
         function updateDayStatus(s) {
             state.leaves[state.currentFocusDate] = s;
@@ -200,21 +196,57 @@
             lb.innerText = s==='出席'?'出席':s+'假';
             calculate(); closeLeaveMenu();
         }
-        function renderMembers() { document.getElementById('member-list').innerHTML = state.members.map(m => `<div onclick="selectMember('${m.學員ID}')" class="bg-white p-5 rounded-2xl border flex justify-between items-center"><p class="font-black">${m.姓名}</p><span class="text-blue-600 font-bold text-xs">選擇 ➜</span></div>`).join(''); }
+
+        function renderMembers() {
+            document.getElementById('member-list').innerHTML = state.members.map(m => `
+                <div onclick="selectMember('${m.學員ID}')" class="bg-white p-6 rounded-3xl border-2 border-transparent hover:border-blue-500 shadow-sm flex justify-between items-center transition-all cursor-pointer">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-black italic text-xl">${m.姓名.charAt(0)}</div>
+                        <p class="font-black text-slate-800 text-lg">${m.姓名}</p>
+                    </div>
+                    <span class="text-blue-600 font-black text-sm">SELECT ➜</span>
+                </div>`).join('') || '<div class="text-center py-10 text-slate-400 font-bold">請先新增家庭成員</div>';
+        }
+
         function selectMember(id) { state.selectedMember = state.members.find(m => String(m.學員ID) === id); switchView('details'); }
+
+        async function submitFinalBooking() {
+            const b5 = document.getElementById('bank-5').value;
+            if(b5.length < 5) { alert("請輸入完整後五碼"); return; }
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true; btn.innerText = "正在同步雲端...";
+            
+            const leaves = Object.entries(state.leaves).filter(e => e[1] !== '出席').map(e => `${e[0]}(${e[1]}假)`).join(', ');
+            const payload = { 
+                student: state.selectedMember, 
+                eventId: state.event['活動ID'], 
+                eventName: state.event['活動名稱'], 
+                amount: state.finalAmount, 
+                bankLast5: b5, 
+                rentedItems: state.rentedItems.map(i=>i.n), 
+                selectedDates: leaves || '全勤參加' 
+            };
+            
+            try {
+                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
+                const r = await res.json();
+                if(r.status === 'success') {
+                    alert("🎉 預約成功！報名資料已寫入雲端。");
+                    safeNavigate('index.html');
+                } else {
+                    alert("寫入失敗：" + r.message);
+                    btn.disabled = false; btn.innerText = "CONFIRM ORDER ➜";
+                }
+            } catch(e) {
+                alert("網路異常，請稍後再試");
+                btn.disabled = false; btn.innerText = "CONFIRM ORDER ➜";
+            }
+        }
+
         function switchView(v) {
             ['member', 'details', 'checkout'].forEach(i => document.getElementById('view-' + i).classList.toggle('hidden', i !== v));
             document.getElementById('checkout-bar').classList.toggle('hidden', v !== 'details');
             window.scrollTo(0,0);
-        }
-        async function submitFinalBooking() {
-            const b5 = document.getElementById('bank-5').value;
-            if(b5.length < 5) return alert("請輸入五碼");
-            document.getElementById('btn-submit').innerText = "PUSHING...";
-            const leaves = Object.entries(state.leaves).filter(e => e[1] !== '出席').map(e => `${e[0]}(${e[1]}假)`).join(', ');
-            const payload = { student: state.selectedMember, eventId: state.event['活動ID'], eventName: state.event['活動名稱'], amount: state.finalAmount, bankLast5: b5, rentedItems: state.rentedItems.map(i=>i.n), selectedDates: leaves || '全勤參加' };
-            const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
-            if((await res.json()).status === 'success') { alert("預約成功！"); safeNavigate('index.html'); }
         }
         window.onload = init;
     </script>
