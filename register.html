@@ -15,7 +15,7 @@
         .input-giant:focus { border-color: #1877f2; background: white; box-shadow: 0 0 0 2px rgba(24,119,242,0.1); }
         .tag-label { color: #606770; font-weight: 900; margin-bottom: 6px; display: block; font-size: 13px; text-transform: uppercase; }
         .btn-primary { background: #1877f2; color: white; padding: 16px; border-radius: 8px; font-weight: 900; width: 100%; cursor: pointer; border: none; }
-        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { background: #ccd0d5; cursor: not-allowed; }
         .section-view { display: none; }
         .section-view.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -29,7 +29,7 @@
             <p class="mt-4 font-black text-gray-400 text-xs tracking-widest uppercase italic">身分驗證中...</p>
         </div>
 
-        <!-- 選擇身分 (僅全新帳號第一次註冊顯示) -->
+        <!-- 選擇身分 (僅全新用戶第一次註冊顯示) -->
         <div id="view-choice" class="section-view">
             <div class="content-card text-center">
                 <h1 class="text-2xl font-black mb-2">加入運動島</h1>
@@ -51,14 +51,14 @@
                     <div><label class="tag-label">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase" placeholder="A123456789"></div>
                     <div><label class="tag-label">性別</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
                     
-                    <!-- 修正：身分別選項 (對應 G 欄位) -->
+                    <!-- 身分別選項 (對應 G 欄位) -->
                     <div class="col-span-full">
-                        <label class="tag-label text-blue-600">身分別</label>
+                        <label class="tag-label text-blue-600">身分別 (將存入G欄)</label>
                         <select id="stu-identity" class="input-giant font-bold border-[#1877f2] bg-blue-50">
-                            <option value="學生">學生</option>
                             <option value="一般人士">一般人士</option>
                             <option value="辦課單位">辦課單位</option>
                             <option value="廠商">廠商</option>
+                            <option value="學生">學生</option>
                         </select>
                     </div>
 
@@ -100,19 +100,29 @@
                     document.getElementById('view-form').classList.add('active');
                     document.getElementById('form-title').innerText = "新增成員資料";
                 } else {
-                    const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${userUid}`);
-                    const r = await res.json();
-                    document.getElementById('view-loading').style.display = 'none';
-                    if (r.status === 'registered') {
-                        window.location.href = 'index.html';
-                    } else {
-                        document.getElementById('view-choice').classList.add('active');
+                    // 初始註冊檢查，加上 Error Handling 防止 JSON 噴錯
+                    try {
+                        const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${userUid}`);
+                        const r = await res.json();
+                        document.getElementById('view-loading').style.display = 'none';
+                        if (r.status === 'registered') {
+                            window.location.href = 'index.html';
+                        } else {
+                            document.getElementById('view-choice').classList.add('active');
+                        }
+                    } catch (err) {
+                        console.error("API Error", err);
+                        alert("連線失敗，請檢查網路或系統權限設定。");
                     }
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Init Error", e); }
         }
 
-        function selectRole(role) { window.selectedRole = role; document.getElementById('view-choice').classList.remove('active'); document.getElementById('view-form').classList.add('active'); }
+        function selectRole(role) { 
+            window.selectedRole = role; 
+            document.getElementById('view-choice').classList.remove('active'); 
+            document.getElementById('view-form').classList.add('active'); 
+        }
         
         async function loadStuData(id) {
             const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${userUid}`);
@@ -126,7 +136,7 @@
                 document.getElementById('stu-id').value = s.身分證字號 || "";
                 document.getElementById('stu-birthday').value = s.生日 || "";
                 document.getElementById('stu-gender').value = s.性別 || "男";
-                document.getElementById('stu-identity').value = s.身分 || "學生";
+                document.getElementById('stu-identity').value = s.身分 || "一般人士";
                 document.getElementById('stu-height').value = s.身高 || 0;
                 document.getElementById('stu-weight').value = s.體重 || 0;
                 document.getElementById('stu-foot').value = s.腳長 || 0;
@@ -156,12 +166,23 @@
                 interests: document.getElementById('stu-interests').value, diet: '葷食'
             };
             if (!payload.name) { alert("請填寫姓名"); return; }
+            
             document.getElementById('btn-save').disabled = true;
+            document.getElementById('btn-save').innerText = "儲存中...";
+
             if (!editStuId && !isAddMode) {
                 await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: userUid, name: payload.name, phone: 'Member', type: window.selectedRole } }) });
             }
+            
             const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'addStudent', payload }) });
-            if ((await res.json()).status === 'success') { window.location.href = 'index.html'; }
+            const r = await res.json();
+            if (r.status === 'success') { 
+                window.location.href = 'index.html'; 
+            } else {
+                alert("儲存失敗，請重試");
+                document.getElementById('btn-save').disabled = false;
+                document.getElementById('btn-save').innerText = "確認儲存並更新 ➜";
+            }
         }
         window.onload = init;
     </script>
