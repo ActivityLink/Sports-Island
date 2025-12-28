@@ -3,82 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>活動預約結帳 - 運動島</title>
+    <title>活動預約 - 運動島</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; color: #1c1e21; }
-        .main-container { max-width: 600px; margin: 0 auto; padding: 32px 16px; }
+        .main-container { max-width: 600px; margin: 0 auto; padding: 24px 16px; }
         .content-card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 24px; }
-        .input-field { width: 100%; border: 1px solid #dddfe2; border-radius: 8px; padding: 12px; font-weight: 700; outline: none; background: #f5f6f7; }
-        .input-field:focus { border-color: #1877f2; background: white; box-shadow: 0 0 0 2px rgba(24,119,242,0.1); }
-        .btn-primary { background: #1877f2; color: white; padding: 16px; border-radius: 8px; font-weight: 900; width: 100%; cursor: pointer; border: none; transition: 0.2s; }
-        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary { background: #1877f2; color: white; padding: 16px; border-radius: 8px; font-weight: 900; width: 100%; cursor: pointer; border: none; }
         .section-view { display: none; }
         .section-view.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-
     <div class="main-container">
-        <!-- 讀取中狀態 -->
-        <div id="view-loading" class="text-center py-20 active section-view">
-            <div class="inline-block w-8 h-8 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
-            <p class="mt-4 font-black text-gray-400 text-xs tracking-widest uppercase">Securing Connection...</p>
+        <div id="view-step1" class="section-view active">
+            <h2 class="text-xl font-black mb-6 text-[#1877f2]">選擇報名成員</h2>
+            <div id="member-list" class="space-y-3"></div>
         </div>
 
-        <!-- 步驟一：選擇成員 -->
-        <div id="view-step1" class="section-view">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black text-[#1877f2]">1. 選擇報名成員</h2>
-                <button onclick="safeNavigate('index.html')" class="text-gray-400 text-sm font-bold">取消</button>
-            </div>
-            <div id="member-list" class="space-y-3">
-                <!-- 由 JavaScript 渲染成員清單 -->
-            </div>
-            <button onclick="safeNavigate('register.html?mode=add')" class="w-full mt-6 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-400 font-bold text-sm hover:bg-gray-50">+ 新增其他家人</button>
-        </div>
-
-        <!-- 步驟二：結帳與設備租借 -->
         <div id="view-step2" class="section-view">
-            <button onclick="switchView('step1')" class="mb-4 text-gray-400 font-bold text-xs">⬅ 上一步</button>
             <div class="content-card">
-                <h2 class="text-xl font-black mb-6 border-b pb-4">報名結帳摘要</h2>
+                <h2 class="text-xl font-black mb-6 border-b pb-4">報名與設備租借</h2>
                 
-                <div class="mb-6">
-                    <p class="text-[10px] font-black text-gray-400 uppercase mb-1">活動名稱</p>
-                    <p id="summary-event" class="font-black text-lg">---</p>
+                <p class="text-xs font-black text-gray-400 mb-1">活動</p>
+                <p id="summary-event" class="font-black mb-6">---</p>
+
+                <!-- 多項目設備租借 (升級功能) -->
+                <p class="text-xs font-black text-blue-600 mb-2 uppercase">選購租借項目</p>
+                <div id="rental-options-container" class="space-y-2 mb-8">
+                    <!-- JS 生成 -->
                 </div>
 
-                <div class="mb-6">
-                    <p class="text-[10px] font-black text-gray-400 uppercase mb-1">報名成員</p>
-                    <p id="summary-member" class="font-black text-gray-700">---</p>
-                </div>
-
-                <!-- 設備租借區 -->
-                <div id="rental-box" class="bg-blue-50 p-4 rounded-xl mb-8 border border-blue-100 hidden">
-                    <label class="flex items-center justify-between cursor-pointer">
-                        <div class="flex items-center gap-3">
-                            <input type="checkbox" id="rent-check" onchange="calculateTotal()" class="w-5 h-5 accent-[#1877f2]">
-                            <span class="font-black text-sm text-blue-800">我需要租用設備</span>
-                        </div>
-                        <span id="rental-price-tag" class="font-black text-blue-600 text-sm">+$0</span>
-                    </label>
-                </div>
-
-                <div class="bg-gray-900 text-white p-8 rounded-2xl mb-8 shadow-xl text-center">
-                    <p class="text-[10px] uppercase font-bold opacity-50 mb-1">應付總額 Total</p>
+                <div class="bg-gray-900 text-white p-8 rounded-2xl mb-8 text-center shadow-xl">
+                    <p class="text-[10px] opacity-50 font-bold mb-1">應付總額</p>
                     <p id="display-total" class="text-4xl font-black italic">NT$ 0</p>
                 </div>
 
-                <div class="mb-8">
-                    <label class="block text-[#606770] font-black text-xs mb-2 uppercase">匯款帳號後五碼</label>
-                    <input type="text" id="bank-last-5" class="input-field" maxlength="5" placeholder="店家對帳使用">
-                </div>
+                <label class="block text-xs font-black text-gray-400 mb-2">匯款帳號後五碼</label>
+                <input type="text" id="bank-5" class="w-full border rounded-lg p-3 font-black bg-gray-50 mb-8" maxlength="5">
 
-                <button onclick="submitRegistration()" id="btn-submit" class="btn-primary shadow-lg uppercase italic">Confirm Booking ➜</button>
+                <button onclick="submitFinal()" id="btn-submit" class="btn-primary uppercase italic">Confirm ➜</button>
             </div>
         </div>
     </div>
@@ -86,148 +53,78 @@
     <script>
         const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
-        const urlParams = new URLSearchParams(window.location.search);
-        const eventId = urlParams.get('id');
-
-        let state = { uid: null, event: null, members: [], config: {}, selectedMember: null };
-
-        /**
-         * 穩健的導航函式，解決在預覽環境中相對路徑無法解析的問題
-         */
-        function safeNavigate(target) {
-            try {
-                // 如果目前是 blob: 協議，相對跳轉會失敗
-                if (window.location.protocol === 'blob:') {
-                    console.warn("[Navigation Blocked] 無法在預覽環境中導航至: " + target);
-                    // 在真實 GitHub 環境中這將正常運作，此處僅攔截錯誤防止崩潰
-                    return;
-                }
-                // 嘗試標準跳轉
-                window.location.href = target;
-            } catch (e) {
-                console.error("Navigation error:", e);
-                // 最後的備選方案：強行賦值
-                try { window.location = target; } catch(i) {}
-            }
-        }
+        const eid = new URLSearchParams(window.location.search).get('id');
+        let state = { uid: null, event: null, members: [], rentalItems: [], selectedMember: null, rentedItems: [] };
 
         async function init() {
-            // 如果沒有活動 ID，跳回首頁
-            if (!eventId) { 
-                safeNavigate('index.html');
-                return; 
-            }
-            
-            try {
-                await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) { liff.login(); return; }
-                const p = await liff.getProfile();
-                state.uid = p.userId;
+            await liff.init({ liffId: LIFF_ID });
+            if (!liff.isLoggedIn()) { liff.login(); return; }
+            const p = await liff.getProfile();
+            state.uid = p.userId;
 
-                // 同步抓取活動資料、參數、成員名單
-                const [evRes, memRes] = await Promise.all([
-                    fetch(`${PROXY_URL}?action=getEvents`),
-                    fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`)
-                ]);
+            const [evRes, memRes] = await Promise.all([
+                fetch(`${PROXY_URL}?action=getEvents`),
+                fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`)
+            ]);
+            const evData = await evRes.json();
+            const memData = await memRes.json();
 
-                const evData = await evRes.json();
-                const memData = await memRes.json();
+            state.event = evData.data.find(e => String(e['活動ID']) === String(eid));
+            state.rentalItems = JSON.parse(evData.config.rentalItems || "[]");
+            state.members = memData.data || [];
 
-                state.event = evData.data.find(e => String(e['活動ID']) === String(eventId));
-                state.config = evData.config || {};
-                state.members = memData.data || [];
-
-                if (!state.event) { 
-                    alert("找不到活動資訊"); 
-                    safeNavigate('index.html');
-                    return; 
-                }
-                
-                renderMembers();
-                switchView('step1');
-            } catch (e) { console.error("Init failed:", e); }
+            renderMembers();
         }
 
         function renderMembers() {
-            const container = document.getElementById('member-list');
-            if (state.members.length === 0) {
-                safeNavigate('register.html');
-                return;
-            }
-            container.innerHTML = state.members.map(m => `
-                <div onclick="selectMember('${m.學員ID}')" class="p-4 bg-white border border-gray-100 rounded-xl cursor-pointer flex justify-between items-center hover:bg-gray-50 transition-all">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-[#e7f3ff] text-[#1877f2] rounded-full flex items-center justify-center font-black">${m.姓名 ? m.姓名.charAt(0) : '?'}</div>
-                        <p class="font-black text-sm">${m.姓名 || '未命名'}</p>
-                    </div>
+            document.getElementById('member-list').innerHTML = state.members.map(m => `
+                <div onclick="selectMember('${m.學員ID}')" class="p-4 bg-white border rounded-xl cursor-pointer flex justify-between items-center hover:bg-gray-50 transition-all shadow-sm">
+                    <p class="font-black text-sm">${m.姓名}</p>
                     <div class="text-[#1877f2] font-black text-xs">選擇報名 ➜</div>
-                </div>
-            `).join('');
+                </div>`).join('');
         }
 
         function selectMember(mid) {
             state.selectedMember = state.members.find(m => String(m.學員ID) === String(mid));
             document.getElementById('summary-event').innerText = state.event['活動名稱'];
-            document.getElementById('summary-member').innerText = state.selectedMember.姓名;
             
-            // 處理設備租借單價
-            const rentalFee = Number(state.config.rentalFee || 0);
-            if (rentalFee > 0) {
-                document.getElementById('rental-box').classList.remove('hidden');
-                document.getElementById('rental-price-tag').innerText = `+$${rentalFee}`;
-            }
-            
+            // 生成多選租借項目
+            document.getElementById('rental-options-container').innerHTML = state.rentalItems.map((item, i) => `
+                <label class="flex items-center justify-between p-3 border rounded-lg cursor-pointer bg-gray-50">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" value="${i}" onchange="calculateTotal()" class="rent-checkbox w-5 h-5 accent-[#1877f2]">
+                        <span class="font-black text-sm text-gray-700">${item.name}</span>
+                    </div>
+                    <span class="font-black text-blue-600 text-xs">+$${item.price}</span>
+                </label>`).join('') || '<p class="text-center text-gray-400 py-4 italic">目前無可選租借設備</p>';
+
             calculateTotal();
             switchView('step2');
         }
 
         function calculateTotal() {
-            const basePrice = Number(state.event['全日價'] || 0);
-            const rentalFee = document.getElementById('rent-check').checked ? Number(state.config.rentalFee || 0) : 0;
-            const total = basePrice + rentalFee;
+            let total = Number(state.event['全日價'] || 0);
+            state.rentedItems = [];
+            document.querySelectorAll('.rent-checkbox:checked').forEach(cb => {
+                const item = state.rentalItems[cb.value];
+                total += item.price;
+                state.rentedItems.push(item.name);
+            });
             document.getElementById('display-total').innerText = `NT$ ${total.toLocaleString()}`;
-            state.finalAmount = total;
+            state.finalTotal = total;
         }
 
-        async function submitRegistration() {
-            const b5 = document.getElementById('bank-last-5').value;
-            if (!b5 || b5.length < 5) { alert("請填寫正確的匯款後五碼"); return; }
-
+        async function submitFinal() {
+            const b5 = document.getElementById('bank-5').value;
+            if (b5.length < 5) return alert("請輸入五碼");
+            
             document.getElementById('btn-submit').disabled = true;
-            document.getElementById('btn-submit').innerText = "提交報名中...";
-
-            const payload = {
-                student: state.selectedMember,
-                eventId: state.event['活動ID'],
-                eventName: state.event['活動名稱'],
-                amount: state.finalAmount,
-                bankLast5: b5,
-                rentEquipment: document.getElementById('rent-check').checked,
-                rentalFee: state.config.rentalFee
-            };
-
-            try {
-                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
-                const r = await res.json();
-                if (r.status === 'success') {
-                    alert("🎉 預約成功！店家核帳後會發送通知。");
-                    safeNavigate('index.html');
-                } else {
-                    throw new Error("Submit failed");
-                }
-            } catch (err) {
-                alert("報名失敗，請連繫店家或重試");
-                document.getElementById('btn-submit').disabled = false;
-                document.getElementById('btn-submit').innerText = "Confirm Booking ➜";
-            }
+            const payload = { student: state.selectedMember, eventId: state.event['活動ID'], eventName: state.event['活動名稱'], amount: state.finalTotal, bankLast5: b5, rentedItems: state.rentedItems };
+            const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
+            if ((await res.json()).status === 'success') { alert("🎉 報名成功！"); window.location.href = 'index.html'; }
         }
 
-        function switchView(v) {
-            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
-            document.getElementById('view-' + v).classList.add('active');
-            window.scrollTo(0,0);
-        }
-
+        function switchView(v) { document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active')); document.getElementById('view-' + v).classList.add('active'); window.scrollTo(0,0); }
         window.onload = init;
     </script>
 </body>
