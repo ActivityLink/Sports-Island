@@ -3,49 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>活動預約 - 運動島</title>
+    <title>活動預約報名 - 運動島</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; color: #1c1e21; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; color: #1e293b; }
         .main-container { max-width: 600px; margin: 0 auto; padding: 24px 16px; }
-        .content-card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 24px; }
-        .btn-primary { background: #1877f2; color: white; padding: 16px; border-radius: 8px; font-weight: 900; width: 100%; cursor: pointer; border: none; }
+        .content-card { background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
         .section-view { display: none; }
-        .section-view.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .section-view.active { display: block; animation: slideUp 0.4s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .date-chip { padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; text-align: center; font-size: 13px; font-weight: 700; transition: 0.2s; }
+        .date-chip.selected { background: #3b82f6; border-color: #3b82f6; color: white; }
+        
+        .input-field { width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; font-weight: 700; outline: none; background: #f8fafc; }
+        .input-field:focus { border-color: #3b82f6; background: #fff; }
+        
+        .btn-primary { background: #3b82f6; color: white; padding: 16px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-secondary { background: #fff; color: #64748b; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
+
     <div class="main-container">
-        <div id="view-step1" class="section-view active">
-            <h2 class="text-xl font-black mb-6 text-[#1877f2]">選擇報名成員</h2>
-            <div id="member-list" class="space-y-3"></div>
+        <!-- 0. 讀取中 -->
+        <div id="view-loading" class="text-center py-20 section-view active">
+            <div class="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="mt-4 font-black text-slate-400 text-xs tracking-widest uppercase">Initializing Wizard...</p>
         </div>
 
-        <div id="view-step2" class="section-view">
+        <!-- 1. 選擇成員 -->
+        <div id="view-member" class="section-view">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-black italic">1. 選擇成員</h2>
+                <button onclick="safeNavigate('index.html')" class="text-slate-400 text-xs font-bold">返回活動</button>
+            </div>
+            <div id="member-list" class="grid gap-3"></div>
+            <button onclick="safeNavigate('register.html?mode=add')" class="w-full mt-6 py-4 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 font-black text-sm hover:bg-white">+ 新增其他家人</button>
+        </div>
+
+        <!-- 2. 規格與日期選擇 -->
+        <div id="view-options" class="section-view">
+            <button onclick="switchView('member')" class="mb-4 text-slate-400 font-bold text-xs">⬅ 上一步</button>
             <div class="content-card">
-                <h2 class="text-xl font-black mb-6 border-b pb-4">報名與設備租借</h2>
+                <h2 class="text-xl font-black mb-6 border-b pb-4">2. 預約細節</h2>
                 
-                <p class="text-xs font-black text-gray-400 mb-1">活動</p>
-                <p id="summary-event" class="font-black mb-6">---</p>
-
-                <!-- 多項目設備租借 (升級功能) -->
-                <p class="text-xs font-black text-blue-600 mb-2 uppercase">選購租借項目</p>
-                <div id="rental-options-container" class="space-y-2 mb-8">
-                    <!-- JS 生成 -->
+                <!-- 全日/半日 -->
+                <div class="mb-6">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">預約時段</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div onclick="setDayType('全日')" id="type-full" class="date-chip selected">全日</div>
+                        <div onclick="setDayType('半日')" id="type-half" class="date-chip">半日</div>
+                    </div>
                 </div>
 
-                <div class="bg-gray-900 text-white p-8 rounded-2xl mb-8 text-center shadow-xl">
-                    <p class="text-[10px] opacity-50 font-bold mb-1">應付總額</p>
-                    <p id="display-total" class="text-4xl font-black italic">NT$ 0</p>
+                <!-- 梯次/日期 (日曆選擇模擬) -->
+                <div class="mb-6">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">日期選擇 (請勾選參加日期)</label>
+                    <div id="date-selector-grid" class="grid grid-cols-3 gap-2">
+                        <!-- 由 JS 渲染日期清單 -->
+                    </div>
+                    <p id="early-bird-hint" class="text-[10px] text-green-600 mt-2 font-bold hidden">✨ 已套用早鳥優惠價格</p>
                 </div>
 
-                <label class="block text-xs font-black text-gray-400 mb-2">匯款帳號後五碼</label>
-                <input type="text" id="bank-5" class="w-full border rounded-lg p-3 font-black bg-gray-50 mb-8" maxlength="5">
+                <!-- 設備租借 (多選) -->
+                <div id="rental-section" class="mb-8 hidden">
+                    <label class="block text-[10px] font-black text-blue-500 uppercase mb-2">選購設備租借</label>
+                    <div id="rental-options" class="space-y-2"></div>
+                </div>
 
-                <button onclick="submitFinal()" id="btn-submit" class="btn-primary uppercase italic">Confirm ➜</button>
+                <button onclick="switchView('checkout')" class="btn-primary">下一步：核對金額 ➜</button>
+            </div>
+        </div>
+
+        <!-- 3. 結帳付款 -->
+        <div id="view-checkout" class="section-view">
+            <button onclick="switchView('options')" class="mb-4 text-slate-400 font-bold text-xs">⬅ 上一步</button>
+            <div class="content-card">
+                <h2 class="text-xl font-black mb-6 border-b pb-4">3. 報名結帳</h2>
+                
+                <div class="space-y-4 mb-8">
+                    <div class="flex justify-between text-sm font-bold"><span>活動費用</span><span id="price-base">NT$ 0</span></div>
+                    <div id="rental-summary-row" class="flex justify-between text-sm font-bold text-blue-600 hidden"><span>設備租金</span><span id="price-rental">NT$ 0</span></div>
+                    <div class="flex justify-between text-xl font-black border-t pt-4"><span>應付總計</span><span id="price-total">NT$ 0</span></div>
+                </div>
+
+                <div class="mb-8">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">匯款帳號後五碼</label>
+                    <input type="text" id="bank-5" class="input-field" maxlength="5" placeholder="填寫後五碼以便對帳">
+                </div>
+
+                <button onclick="submitOrder()" id="btn-submit" class="btn-primary shadow-xl italic uppercase tracking-tighter">Confirm Registration ➜</button>
             </div>
         </div>
     </div>
@@ -53,78 +104,209 @@
     <script>
         const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
-        const eid = new URLSearchParams(window.location.search).get('id');
-        let state = { uid: null, event: null, members: [], rentalItems: [], selectedMember: null, rentedItems: [] };
+        const eventId = new URLSearchParams(window.location.search).get('id');
+
+        let state = { 
+            uid: null, event: null, members: [], config: {}, 
+            selectedMember: null, dayType: '全日', selectedDates: [], 
+            rentedItems: [], isEarlyBird: false 
+        };
+
+        /**
+         * 處理安全導覽，確保在 blob: 環境下不會崩潰
+         */
+        function safeNavigate(target) {
+            // 如果是在 blob 預覽環境，無法執行網址跳轉，我們攔截它並記錄日誌
+            if (window.location.protocol === 'blob:') {
+                console.warn("[預覽模式導航攔截] 欲跳轉至: " + target);
+                return;
+            }
+            try {
+                // 真實環境下執行跳轉
+                window.location.href = target;
+            } catch (e) {
+                console.error("跳轉失敗:", e);
+                // 嘗試最後的退路
+                try { window.location.replace(target); } catch(i) {}
+            }
+        }
 
         async function init() {
-            await liff.init({ liffId: LIFF_ID });
-            if (!liff.isLoggedIn()) { liff.login(); return; }
-            const p = await liff.getProfile();
-            state.uid = p.userId;
+            if (!eventId) { safeNavigate('index.html'); return; }
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) { liff.login(); return; }
+                const p = await liff.getProfile();
+                state.uid = p.userId;
 
-            const [evRes, memRes] = await Promise.all([
-                fetch(`${PROXY_URL}?action=getEvents`),
-                fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`)
-            ]);
-            const evData = await evRes.json();
-            const memData = await memRes.json();
+                const [evRes, memRes] = await Promise.all([
+                    fetch(`${PROXY_URL}?action=getEvents`),
+                    fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`)
+                ]);
+                const evData = await evRes.json();
+                const memData = await memRes.json();
 
-            state.event = evData.data.find(e => String(e['活動ID']) === String(eid));
-            state.rentalItems = JSON.parse(evData.config.rentalItems || "[]");
-            state.members = memData.data || [];
+                state.event = evData.data.find(e => String(e['活動ID']) === String(eventId));
+                state.config = evData.config || {};
+                state.members = memData.data || [];
 
-            renderMembers();
+                if (!state.event) { 
+                    alert("活動不存在"); 
+                    safeNavigate('index.html');
+                    return; 
+                }
+                
+                // 早鳥判斷
+                const deadline = new Date(state.event['早鳥截止日期']);
+                state.isEarlyBird = !isNaN(deadline) && (new Date() <= deadline);
+                if(state.isEarlyBird) document.getElementById('early-bird-hint').classList.remove('hidden');
+
+                renderMembers();
+                renderDates();
+                renderRentalOptions();
+                switchView('member');
+            } catch (e) { console.error("初始化失敗:", e); }
         }
 
         function renderMembers() {
-            document.getElementById('member-list').innerHTML = state.members.map(m => `
-                <div onclick="selectMember('${m.學員ID}')" class="p-4 bg-white border rounded-xl cursor-pointer flex justify-between items-center hover:bg-gray-50 transition-all shadow-sm">
-                    <p class="font-black text-sm">${m.姓名}</p>
-                    <div class="text-[#1877f2] font-black text-xs">選擇報名 ➜</div>
+            const container = document.getElementById('member-list');
+            if(state.members.length === 0) { safeNavigate('register.html?mode=add'); return; }
+            container.innerHTML = state.members.map(m => `
+                <div onclick="selectMember('${m.學員ID}')" class="bg-white p-4 rounded-xl border border-slate-200 cursor-pointer flex justify-between items-center hover:border-blue-500 transition-all">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center font-black text-blue-600">${m.姓名 ? m.姓名.charAt(0) : '?'}</div>
+                        <div><p class="font-black text-sm">${m.姓名}</p><p class="text-[10px] text-slate-400 font-bold">${m.身分 || '成員'}</p></div>
+                    </div>
+                    <div class="text-blue-500 font-black text-xs">選擇 ➜</div>
                 </div>`).join('');
         }
 
-        function selectMember(mid) {
-            state.selectedMember = state.members.find(m => String(m.學員ID) === String(mid));
-            document.getElementById('summary-event').innerText = state.event['活動名稱'];
+        function renderDates() {
+            const container = document.getElementById('date-selector-grid');
+            if (!state.event['開始日期'] || !state.event['結束日期']) return;
             
-            // 生成多選租借項目
-            document.getElementById('rental-options-container').innerHTML = state.rentalItems.map((item, i) => `
-                <label class="flex items-center justify-between p-3 border rounded-lg cursor-pointer bg-gray-50">
+            const start = new Date(state.event['開始日期']);
+            const end = new Date(state.event['結束日期']);
+            
+            if (state.event['開始日期'] === state.event['結束日期']) {
+                const dStr = state.event['開始日期'];
+                state.selectedDates = [dStr];
+                container.innerHTML = `<div class="date-chip selected">${dStr}</div>`;
+                return;
+            }
+
+            let html = "";
+            let current = new Date(start);
+            while (current <= end) {
+                const dStr = current.toISOString().split('T')[0];
+                html += `<div id="date-${dStr}" onclick="toggleDate('${dStr}')" class="date-chip">${dStr.substring(5)}</div>`;
+                current.setDate(current.getDate() + 1);
+            }
+            container.innerHTML = html;
+        }
+
+        function toggleDate(d) {
+            const idx = state.selectedDates.indexOf(d);
+            if (idx > -1) state.selectedDates.splice(idx, 1);
+            else state.selectedDates.push(d);
+            
+            const el = document.getElementById(`date-${d}`);
+            if (el) el.classList.toggle('selected');
+            calculatePrice();
+        }
+
+        function renderRentalOptions() {
+            const items = JSON.parse(state.config.rentalItems || "[]");
+            if (items.length === 0) return;
+            document.getElementById('rental-section').classList.remove('hidden');
+            document.getElementById('rental-options').innerHTML = items.map((item, i) => `
+                <label class="flex items-center justify-between p-4 border rounded-xl bg-slate-50 cursor-pointer">
                     <div class="flex items-center gap-3">
-                        <input type="checkbox" value="${i}" onchange="calculateTotal()" class="rent-checkbox w-5 h-5 accent-[#1877f2]">
-                        <span class="font-black text-sm text-gray-700">${item.name}</span>
+                        <input type="checkbox" onchange="updateRental(${i}, this.checked)" class="w-5 h-5 accent-blue-600">
+                        <span class="font-bold text-sm text-slate-700">${item.name}</span>
                     </div>
-                    <span class="font-black text-blue-600 text-xs">+$${item.price}</span>
-                </label>`).join('') || '<p class="text-center text-gray-400 py-4 italic">目前無可選租借設備</p>';
-
-            calculateTotal();
-            switchView('step2');
+                    <span class="font-black text-blue-600">$${item.price}</span>
+                </label>`).join('');
         }
 
-        function calculateTotal() {
-            let total = Number(state.event['全日價'] || 0);
-            state.rentedItems = [];
-            document.querySelectorAll('.rent-checkbox:checked').forEach(cb => {
-                const item = state.rentalItems[cb.value];
-                total += item.price;
-                state.rentedItems.push(item.name);
-            });
-            document.getElementById('display-total').innerText = `NT$ ${total.toLocaleString()}`;
-            state.finalTotal = total;
+        function updateRental(idx, checked) {
+            const items = JSON.parse(state.config.rentalItems || "[]");
+            if (checked) state.rentedItems.push(items[idx]);
+            else state.rentedItems = state.rentedItems.filter(it => it.name !== items[idx].name);
+            calculatePrice();
         }
 
-        async function submitFinal() {
-            const b5 = document.getElementById('bank-5').value;
-            if (b5.length < 5) return alert("請輸入五碼");
+        function setDayType(t) {
+            state.dayType = t;
+            document.getElementById('type-full').classList.toggle('selected', t === '全日');
+            document.getElementById('type-half').classList.toggle('selected', t === '半日');
+            calculatePrice();
+        }
+
+        function calculatePrice() {
+            if (!state.event) return;
+            let unitPrice = 0;
+            if (state.dayType === '全日') {
+                unitPrice = state.isEarlyBird ? Number(state.event['全日早鳥價'] || state.event['全日價']) : Number(state.event['全日價']);
+            } else {
+                unitPrice = state.isEarlyBird ? Number(state.event['半日早鳥價'] || state.event['半日價']) : Number(state.event['半日價']);
+            }
+
+            const baseTotal = unitPrice * (state.selectedDates.length || 1);
+            const rentalTotal = state.rentedItems.reduce((acc, it) => acc + Number(it.price), 0);
             
-            document.getElementById('btn-submit').disabled = true;
-            const payload = { student: state.selectedMember, eventId: state.event['活動ID'], eventName: state.event['活動名稱'], amount: state.finalTotal, bankLast5: b5, rentedItems: state.rentedItems };
-            const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
-            if ((await res.json()).status === 'success') { alert("🎉 報名成功！"); window.location.href = 'index.html'; }
+            state.finalTotal = baseTotal + rentalTotal;
+            
+            document.getElementById('price-base').innerText = `NT$ ${baseTotal.toLocaleString()}`;
+            document.getElementById('price-rental').innerText = `NT$ ${rentalTotal.toLocaleString()}`;
+            document.getElementById('rental-summary-row').classList.toggle('hidden', rentalTotal === 0);
+            document.getElementById('price-total').innerText = `NT$ ${state.finalTotal.toLocaleString()}`;
         }
 
-        function switchView(v) { document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active')); document.getElementById('view-' + v).classList.add('active'); window.scrollTo(0,0); }
+        function selectMember(mid) { state.selectedMember = state.members.find(m => String(m.學員ID) === String(mid)); switchView('options'); calculatePrice(); }
+
+        async function submitOrder() {
+            const b5 = document.getElementById('bank-5').value;
+            if (!b5 || b5.length < 5) return alert("請填寫匯款後五碼");
+            if (state.selectedDates.length === 0) return alert("請至少選擇一個日期");
+
+            document.getElementById('btn-submit').disabled = true;
+            document.getElementById('btn-submit').innerText = "處理中...";
+
+            const payload = {
+                student: state.selectedMember,
+                eventId: state.event['活動ID'],
+                eventName: state.event['活動名稱'],
+                type: state.dayType,
+                session: state.selectedDates.join(', '),
+                amount: state.finalTotal,
+                bankLast5: b5,
+                rentedItems: state.rentedItems.map(it => it.name)
+            };
+
+            try {
+                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    alert("🎉 預約成功！");
+                    safeNavigate('index.html');
+                } else {
+                    throw new Error("伺服器回傳失敗");
+                }
+            } catch (err) {
+                alert("報名失敗，請連繫店家");
+                document.getElementById('btn-submit').disabled = false;
+                document.getElementById('btn-submit').innerText = "Confirm Registration ➜";
+            }
+        }
+
+        function switchView(v) {
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById('view-' + v);
+            if (target) target.classList.add('active');
+            window.scrollTo(0,0);
+        }
+
         window.onload = init;
     </script>
 </body>
