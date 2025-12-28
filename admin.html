@@ -10,23 +10,19 @@
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; color: #1e293b; }
         .main-container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
         
-        /* 側邊導航與標籤樣式 */
         .admin-sub-tab { padding: 10px 20px; border-radius: 6px; font-weight: 900; font-size: 14px; color: #64748b; cursor: pointer; transition: 0.2s; white-space: nowrap; }
         .admin-sub-tab.active { background: #0f172a; color: white; }
         
-        /* 表格樣式 */
         .table-container { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e2e8f0; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
         th { background-color: #f8fafc; padding: 12px 16px; font-size: 12px; font-weight: 900; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
         td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #f1f5f9; color: #334155; }
         tr:hover td { background-color: #f8fafc; }
         
-        .crm-badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 900; display: inline-block; }
+        .input-field { width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; font-weight: 700; outline: none; background: #fff; }
+        .input-field:focus { border-color: #3b82f6; }
         
-        /* 表單與輸入框 */
-        .input-field { width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-weight: 700; outline: none; background: #fff; }
-        .input-field:focus { border-color: #3b82f6; ring: 2px #3b82f622; }
-        
+        .tag-pill { display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #1d4ed8; padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: 900; border: 1px solid #dbeafe; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -37,94 +33,73 @@
                 <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center">
                     <span class="text-white font-black italic">IS</span>
                 </div>
-                <div>
-                    <h1 class="text-xl font-black italic tracking-tighter">ADMIN CONSOLE</h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sport Island Management System</p>
-                </div>
+                <h1 class="text-xl font-black italic tracking-tighter uppercase">Admin Console</h1>
             </div>
-            <button onclick="window.location.href='index.html'" class="text-slate-400 font-bold text-xs hover:text-slate-900 transition-all px-4 py-2 border rounded-lg bg-white">⬅ 前台</button>
+            <button onclick="window.location.href='index.html'" class="text-slate-400 font-bold text-xs hover:text-slate-900 border px-4 py-2 rounded-lg bg-white">⬅ 返回前台</button>
         </div>
 
-        <!-- 頂部切換頁籤 -->
         <div class="flex gap-2 mb-6 bg-white p-1.5 rounded-xl shadow-sm border border-slate-200 overflow-x-auto no-scrollbar">
-            <button onclick="switchTab('events')" id="btn-events" class="admin-sub-tab active">活動庫</button>
+            <button onclick="switchTab('config')" id="btn-config" class="admin-sub-tab active">參數管理 (租借/標籤)</button>
+            <button onclick="switchTab('events')" id="btn-events" class="admin-sub-tab">活動庫</button>
             <button onclick="switchTab('crm')" id="btn-crm" class="admin-sub-tab">會員 CRM</button>
-            <button onclick="switchTab('config')" id="btn-config" class="admin-sub-tab">系統參數</button>
         </div>
 
-        <!-- [1. 活動庫模組] -->
-        <div id="view-events" class="space-y-4">
+        <!-- [參數管理模組] -->
+        <div id="view-config" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 1. 課程標籤 -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-lg font-black mb-6 border-b pb-2 text-slate-800">1. 課程類別標籤</h3>
+                    <div id="category-list" class="flex flex-wrap gap-2 mb-6">
+                        <!-- JS 渲染 -->
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-cat" class="input-field" placeholder="新增標籤名稱">
+                        <button onclick="addItem('cat')" class="bg-slate-900 text-white px-6 py-2 rounded-lg font-black text-xs shrink-0">+ 新增</button>
+                    </div>
+                </div>
+
+                <!-- 2. 設備租借 -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-lg font-black mb-6 border-b pb-2 text-blue-600">2. 設備租借項目 (多項目單價)</h3>
+                    <div id="rental-list" class="space-y-2 mb-6">
+                        <!-- JS 渲染 -->
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="rent-name" class="input-field" placeholder="品名(如:溜冰鞋)">
+                        <input type="number" id="rent-price" class="input-field" placeholder="單價">
+                    </div>
+                    <button onclick="addItem('rent')" class="bg-blue-600 text-white w-full mt-2 py-3 rounded-lg font-black text-xs shadow-md">+ 加入租借清單</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 class="text-lg font-black mb-4">3. 店家結帳資訊</h3>
+                <textarea id="cfg-bank" rows="3" class="input-field" placeholder="輸入銀行代碼、帳號與戶名"></textarea>
+            </div>
+
+            <button onclick="saveAllConfigs()" class="bg-blue-600 text-white w-full py-5 rounded-2xl font-black shadow-xl hover:bg-blue-700 transition-all text-lg">確認保存全局參數到雲端 ➜</button>
+        </div>
+
+        <!-- [活動庫模組] -->
+        <div id="view-events" class="hidden space-y-4">
             <div class="flex justify-between items-center px-1">
-                <h3 class="font-black text-slate-400 text-xs uppercase tracking-widest">Inventory List</h3>
-                <button onclick="openEditor(null)" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-black text-xs hover:bg-blue-700 transition-all shadow-lg">+ 新增活動</button>
+                <h3 class="font-black text-slate-400 text-xs uppercase tracking-widest text-lg">Inventory</h3>
+                <button onclick="alert('請在 Events 工作表直接新增')" class="bg-slate-900 text-white px-4 py-2 rounded-lg font-black text-xs">+ 新增活動</button>
             </div>
-            <div id="admin-event-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- JS 渲染 -->
-            </div>
+            <div id="admin-event-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
 
-        <!-- [2. CRM 會員模組 - 專業列表版] -->
+        <!-- [CRM 模組] -->
         <div id="view-crm" class="hidden space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-blue-500">
-                    <p class="text-[10px] font-black text-slate-400 uppercase">總會員數</p>
-                    <p id="stat-total" class="text-2xl font-black italic">0</p>
-                </div>
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-green-500">
-                    <p class="text-[10px] font-black text-slate-400 uppercase">學生身分</p>
-                    <p id="stat-students" class="text-2xl font-black italic">0</p>
-                </div>
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-amber-500">
-                    <p class="text-[10px] font-black text-slate-400 uppercase">一般/廠商/其他</p>
-                    <p id="stat-others" class="text-2xl font-black italic">0</p>
-                </div>
-            </div>
-
-            <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <div class="relative w-full md:w-96">
-                    <input type="text" id="crm-search" oninput="filterCRM()" placeholder="輸入姓名、身分、學校關鍵字搜尋..." class="input-field !pl-10">
-                    <span class="absolute left-3 top-2.5 opacity-30 text-sm">🔍</span>
-                </div>
-                <div class="text-[10px] font-black text-slate-400 uppercase">
-                    顯示符合條件的 <span id="crm-count" class="text-blue-600">0</span> 位成員
-                </div>
-            </div>
-
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>學員姓名</th>
-                            <th>身分別</th>
-                            <th>就讀學校 / 年級</th>
-                            <th>健康狀況</th>
-                            <th>更新日期</th>
-                            <th class="text-right">管理操作</th>
-                        </tr>
+                        <tr><th>姓名</th><th>身分</th><th>學校/年級</th><th>更新日期</th><th class="text-right">操作</th></tr>
                     </thead>
-                    <tbody id="crm-table-body">
-                        <!-- 由 JS 渲染資料行 -->
-                    </tbody>
+                    <tbody id="crm-table-body"></tbody>
                 </table>
             </div>
-        </div>
-
-        <!-- [3. 參數管理模組] -->
-        <div id="view-config" class="hidden space-y-6">
-            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h3 class="text-lg font-black mb-6 border-b pb-2">數據清單配置</h3>
-                <div class="space-y-8">
-                    <div>
-                        <label class="tag-label">課程分類標籤</label>
-                        <div id="category-list" class="flex flex-wrap gap-2 mb-4"></div>
-                        <div class="flex gap-2 max-w-sm">
-                            <input type="text" id="new-cat" class="input-field" placeholder="新增類別">
-                            <button onclick="addItem('cat')" class="bg-slate-900 text-white px-4 py-2 rounded-lg font-black text-xs">新增</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <button onclick="saveAllConfigs()" class="bg-blue-600 text-white w-full py-4 rounded-xl font-black shadow-lg hover:bg-blue-700 transition-all">確認保存所有雲端參數</button>
         </div>
     </div>
 
@@ -133,96 +108,85 @@
         let state = { events: [], students: [], config: { sportCategories: [], rentalItems: [] } };
 
         async function init() {
-            try {
-                const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
-                const r = await res.json();
-                state.events = r.data || [];
-                state.config.sportCategories = (r.config.sportCategories || "").split(',').filter(i => i);
-                renderEvents();
-            } catch(e) { console.error(e); }
-        }
-
-        // --- CRM 專業列表邏輯 ---
-        async function loadCRM() {
-            const tbody = document.getElementById('crm-table-body');
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-20 text-slate-400 italic">正在獲取大量會員數據中...</td></tr>';
+            const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
+            const r = await res.json();
+            state.events = r.data || [];
             
-            try {
-                const res = await fetch(`${PROXY_URL}?action=adminGetAllStudents`);
-                const r = await res.json();
-                state.students = r.data || [];
-                
-                // 計算統計數據
-                document.getElementById('stat-total').innerText = state.students.length;
-                document.getElementById('stat-students').innerText = state.students.filter(s => s.身分 === '學生').length;
-                document.getElementById('stat-others').innerText = state.students.filter(s => s.身分 !== '學生').length;
-                
-                renderCRM(state.students);
-            } catch(e) { 
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-20 text-red-400">數據讀取失敗</td></tr>';
-            }
-        }
-
-        function renderCRM(list) {
-            const tbody = document.getElementById('crm-table-body');
-            document.getElementById('crm-count').innerText = list.length;
+            // 解析參數
+            state.config.sportCategories = (r.config.sportCategories || "").split(',').filter(i => i);
+            state.config.rentalItems = JSON.parse(r.config.rentalItems || "[]");
+            document.getElementById('cfg-bank').value = r.config.bankInfo || "";
             
-            if (list.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-slate-400 italic">找不到符合條件的會員紀錄</td></tr>';
-                return;
+            renderConfigLists();
+            renderEvents();
+        }
+
+        function renderConfigLists() {
+            // 標籤渲染
+            document.getElementById('category-list').innerHTML = state.config.sportCategories.map((c, i) => `
+                <div class="tag-pill">
+                    ${c} <span onclick="removeItem('cat', ${i})" class="cursor-pointer opacity-40 hover:opacity-100">✕</span>
+                </div>`).join('') || '<p class="text-slate-300 text-xs italic">尚無標籤</p>';
+
+            // 租借渲染
+            document.getElementById('rental-list').innerHTML = state.config.rentalItems.map((item, i) => `
+                <div class="flex justify-between items-center p-3 border rounded-xl bg-slate-50 border-slate-100">
+                    <div class="font-black text-sm text-slate-700">${item.name} <span class="text-blue-600 ml-2 italic">$${item.price}</span></div>
+                    <button onclick="removeItem('rent', ${i})" class="text-red-400 font-black text-xs hover:text-red-600">刪除</button>
+                </div>`).join('') || '<p class="text-slate-300 text-xs italic">尚無租借品項</p>';
+        }
+
+        function addItem(type) {
+            if (type === 'cat') {
+                const val = document.getElementById('new-cat').value.trim();
+                if (val) state.config.sportCategories.push(val);
+                document.getElementById('new-cat').value = "";
+            } else {
+                const n = document.getElementById('rent-name').value.trim();
+                const p = document.getElementById('rent-price').value;
+                if (n && p) state.config.rentalItems.push({ name: n, price: Number(p) });
+                document.getElementById('rent-name').value = "";
+                document.getElementById('rent-price').value = "";
             }
-
-            tbody.innerHTML = list.map(s => {
-                let badgeClass = "bg-slate-100 text-slate-600";
-                if (s.身分 === "學生") badgeClass = "bg-green-100 text-green-700";
-                if (s.身分 === "辦課單位") badgeClass = "bg-purple-100 text-purple-700";
-                if (s.身分 === "廠商") badgeClass = "bg-amber-100 text-amber-700";
-
-                return `
-                <tr>
-                    <td>
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center font-black text-xs text-slate-500">${(s.姓名||"?").charAt(0)}</div>
-                            <span class="font-black text-slate-900">${s.姓名 || '未命名'}</span>
-                        </div>
-                    </td>
-                    <td><span class="crm-badge ${badgeClass}">${s.身分 || '成員'}</span></td>
-                    <td><p class="font-bold text-xs">${s.學校 || '-'}</p><p class="text-[10px] text-slate-400 font-bold">${s.年級 || '-'}</p></td>
-                    <td><p class="text-xs truncate max-w-[150px] font-bold text-slate-500">${s.健康狀況 || '良好'}</p></td>
-                    <td class="text-[10px] font-black text-slate-400 uppercase italic">${s.更新日期 || '-'}</td>
-                    <td class="text-right">
-                        <button onclick="window.location.href='register.html?edit=${s.學員ID}'" class="text-blue-600 font-black text-xs px-3 py-1.5 border border-blue-100 rounded-lg hover:bg-blue-50 transition-all">
-                            個資詳情
-                        </button>
-                    </td>
-                </tr>`;
-            }).join('');
+            renderConfigLists();
         }
 
-        function filterCRM() {
-            const query = document.getElementById('crm-search').value.toLowerCase();
-            const filtered = state.students.filter(s => 
-                (s.姓名 || "").toLowerCase().includes(query) || 
-                (s.身分 || "").toLowerCase().includes(query) ||
-                (s.學校 || "").toLowerCase().includes(query)
-            );
-            renderCRM(filtered);
+        function removeItem(type, idx) {
+            if (type === 'cat') state.config.sportCategories.splice(idx, 1);
+            else state.config.rentalItems.splice(idx, 1);
+            renderConfigLists();
         }
 
-        // --- 其餘活動庫渲染 (與原本一致) ---
+        async function saveAllConfigs() {
+            const payload = {
+                sportCategories: state.config.sportCategories.join(','),
+                rentalItems: JSON.stringify(state.config.rentalItems),
+                bankInfo: document.getElementById('cfg-bank').value
+            };
+            const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateConfig', payload }) });
+            if ((await res.json()).status === 'success') alert("✅ 參數設定已成功同步至雲端資料庫！");
+        }
+
         function renderEvents() {
             document.getElementById('admin-event-grid').innerHTML = state.events.map(ev => `
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="w-12 h-12 rounded-lg border overflow-hidden bg-slate-50">
-                            <img src="${ev['圖片URL'] || 'https://placehold.co/100x100'}" class="w-full h-full object-cover">
-                        </div>
-                        <span class="text-[10px] font-black px-2 py-1 rounded bg-slate-100 text-slate-500 uppercase">${ev['狀態']}</span>
-                    </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <h4 class="font-black text-sm mb-1">${ev['活動名稱']}</h4>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4">${ev['分類']}</p>
-                    <button onclick="alert('活動編輯開發中')" class="w-full py-2 border rounded-lg font-black text-[10px] text-blue-600 border-blue-100 hover:bg-blue-50">規格編輯</button>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-4">${ev['分類']} | ${ev['狀態']}</p>
+                    <button class="w-full py-2 border rounded-lg font-black text-[10px] text-blue-600">規格編輯</button>
                 </div>`).join('');
+        }
+
+        async function loadCRM() {
+            const res = await fetch(`${PROXY_URL}?action=adminGetAllStudents`);
+            const r = await res.json();
+            document.getElementById('crm-table-body').innerHTML = r.data.map(s => `
+                <tr>
+                    <td><span class="font-black">${s.姓名}</span></td>
+                    <td><span class="text-xs font-bold">${s.身分}</span></td>
+                    <td><p class="text-xs font-bold">${s.學校}</p><p class="text-[10px] text-slate-400">${s.年級}</p></td>
+                    <td><span class="text-[10px] font-bold text-slate-400">${s.更新日期}</span></td>
+                    <td class="text-right"><button onclick="window.location.href='register.html?edit=${s.學員ID}'" class="text-blue-600 font-black text-xs">詳情</button></td>
+                </tr>`).join('');
         }
 
         function switchTab(t) {
