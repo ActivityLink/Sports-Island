@@ -16,47 +16,30 @@
         .section-view { display: none; }
         .section-view.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
-        .diag-screen { position: fixed; inset: 0; background: #0f172a; color: white; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
     </style>
 </head>
 <body>
 
-    <div id="diag-screen" class="diag-screen">
-        <div class="bg-white text-slate-900 p-8 rounded-3xl max-w-md w-full shadow-2xl text-center">
-            <h2 class="text-xl font-black text-red-600 mb-4">API 連線異常</h2>
-            <p id="diag-msg" class="text-sm text-slate-500 mb-6">請確認後端部署與權限...</p>
-            <button onclick="location.reload()" class="w-full bg-[#1877f2] text-white py-4 rounded-2xl font-black">重新連線</button>
-        </div>
-    </div>
-
     <header id="main-header" class="bg-[#1877f2] text-white pt-4 pb-1 sticky top-0 z-50 shadow-md header-hidden">
         <div class="main-container flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <h1 class="text-xl font-black italic tracking-tighter uppercase">SPORTS ISLAND</h1>
-                <div id="user-chip" class="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full border border-white/10">
-                    <span id="line-name" class="text-[10px] font-black truncate max-w-[80px]">User</span>
-                </div>
-            </div>
+            <h1 class="text-xl font-black italic tracking-tighter uppercase" onclick="location.reload()">SPORTS ISLAND</h1>
             <nav class="flex gap-1">
                 <div onclick="switchTab('activity')" id="tab-activity" class="nav-tab active">活動預約</div>
                 <div onclick="switchTab('member')" id="tab-member" class="nav-tab">個人中心</div>
-                <div onclick="safeNavigate('admin.html')" id="tab-admin" class="nav-tab hidden text-amber-300">系統管理</div>
+                <!-- 權限連動按鈕：預設隱藏，由 JS 判斷後顯示 -->
+                <div onclick="window.location.href='admin.html'" id="tab-admin" class="nav-tab hidden text-amber-300 font-black">系統管理</div>
             </nav>
         </div>
     </header>
 
     <div id="view-loading" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center">
-        <div class="w-10 h-10 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 font-black text-slate-300 text-[10px] tracking-widest uppercase">Expert System Initializing</p>
+        <div class="w-12 h-12 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-6 font-black text-slate-300 text-[10px] tracking-widest uppercase">Expert System Initializing</p>
     </div>
 
     <main class="main-container py-8">
-        <div id="view-activity" class="section-view active">
-            <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 gap-6"></div>
-        </div>
-        <div id="view-member" class="section-view">
-            <div id="family-grid" class="space-y-4"></div>
-        </div>
+        <div id="view-activity" class="section-view active"><div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 gap-6"></div></div>
+        <div id="view-member" class="section-view"><div id="family-grid" class="space-y-4"></div></div>
     </main>
 
     <script>
@@ -64,63 +47,47 @@
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
         let state = { uid: null, events: [] };
 
-        function safeNavigate(t) {
-            if (window.location.protocol === 'blob:') return;
-            const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-            window.location.href = path + t;
-        }
-
         async function fetchApi(action) {
-            try {
-                const res = await fetch(`${PROXY_URL}?action=${action}&uid=${state.uid || ''}&_t=${Date.now()}`);
-                const text = await res.text();
-                if (text.trim().startsWith("<!DOCTYPE")) {
-                    document.getElementById('diag-screen').style.display = 'flex';
-                    document.getElementById('diag-msg').innerText = "後端回傳了網頁而非資料，請檢查 GAS 部署權限。";
-                    throw new Error("HTML_ERR");
-                }
-                return JSON.parse(text);
-            } catch (e) { throw e; }
+            const res = await fetch(`${PROXY_URL}?action=${action}&uid=${state.uid || ''}&_t=${Date.now()}`);
+            const text = await res.text();
+            if (text.trim().startsWith("<!DOCTYPE")) throw new Error("HTML_ERR");
+            return JSON.parse(text);
         }
 
         const App = {
             async init() {
                 try {
                     await liff.init({ liffId: LIFF_ID });
-                    if (!liff.isLoggedIn() && liff.isInClient()) { liff.login(); return; }
-                    const p = liff.isLoggedIn() ? await liff.getProfile() : { userId: "DEBUG_USER", displayName: "管理員模式" };
+                    if (!liff.isLoggedIn()) { liff.login(); return; }
+                    const p = await liff.getProfile();
                     state.uid = p.userId;
-                    document.getElementById('line-name').innerText = p.displayName;
                     
-                    // 檢查管理員權限入口 (網址含 ?action=admin)
-                    if (new URLSearchParams(window.location.search).get('action') === 'admin') {
-                        document.getElementById('tab-admin').classList.remove('hidden');
-                    }
-
                     const r = await fetchApi('checkUser');
-                    if (r.status === 'registered' || state.uid === "DEBUG_USER") {
+                    if (r.status === 'registered') {
                         document.getElementById('main-header').classList.remove('header-hidden');
+                        
+                        // ✨ 關鍵邏輯：如果後端回傳 role 是管理員，則顯示按鈕
+                        if (r.role === '管理員') {
+                            document.getElementById('tab-admin').classList.remove('hidden');
+                        }
+
                         document.getElementById('view-loading').style.display = 'none';
                         await loadCourses();
                     } else {
-                        safeNavigate('register.html');
+                        window.location.href = 'register.html';
                     }
-                } catch (e) {
-                    document.getElementById('view-loading').style.display = 'none';
-                }
+                } catch (e) { document.getElementById('view-loading').style.display = 'none'; }
             }
         };
 
         async function loadCourses() {
-            try {
-                const r = await fetchApi('getEvents');
-                state.events = r.data || [];
-                document.getElementById('event-list').innerHTML = state.events.map(ev => `
-                    <div class="bg-white rounded-3xl overflow-hidden shadow-sm border p-5 flex flex-col">
-                        <h3 class="font-black text-slate-800 text-lg mb-4">${ev.活動名稱}</h3>
-                        <button onclick="safeNavigate('booking.html?id=${ev.活動ID}')" class="bg-[#1877f2] text-white py-3 rounded-2xl text-xs font-black">立即預約 ➜</button>
-                    </div>`).join('');
-            } catch (e) {}
+            const r = await fetchApi('getEvents');
+            state.events = r.data || [];
+            document.getElementById('event-list').innerHTML = state.events.map(ev => `
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm border p-6 flex flex-col">
+                    <h3 class="font-black text-slate-800 text-lg mb-4 h-12 overflow-hidden">${ev.活動名稱}</h3>
+                    <button onclick="window.location.href='booking.html?id=${ev.活動ID}'" class="bg-slate-900 text-white py-3 rounded-2xl text-xs font-black uppercase italic tracking-widest">Reserve ➜</button>
+                </div>`).join('');
         }
 
         function switchTab(m) {
