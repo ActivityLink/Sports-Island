@@ -11,220 +11,189 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; color: #1c1e21; font-size: 15px; scroll-behavior: smooth; overflow-x: hidden; }
         .main-container { max-width: 960px; margin: 0 auto; padding: 0 12px; }
-        .content-card { background: white; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 12px; }
-        
-        /* 頂部導航列 */
+        .content-card { background: white; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 12px; border: 1px solid #e9eaed; }
         .nav-tab { flex: 1; text-align: center; padding: 12px 0; font-weight: 900; font-size: 13px; color: rgba(255,255,255,0.7); border-bottom: 3px solid transparent; cursor: pointer; transition: 0.2s; }
         .nav-tab.active { color: white !important; border-bottom-color: white !important; }
         .header-hidden { display: none !important; }
-        
-        /* 圓形頭像鎖定 */
-        .avatar-frame { width: 32px !important; height: 32px !important; border-radius: 50% !important; overflow: hidden !important; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center; }
+        .avatar-frame { width: 32px !important; height: 32px !important; border-radius: 50% !important; overflow: hidden; border: 2px solid rgba(255,255,255,0.5); flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center; }
         .line-avatar { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block; }
         .profile-chip { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); padding: 4px 10px 4px 4px; border-radius: 99px; }
-
         .section-view { display: none; }
         .section-view.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
-        
-        /* 標籤列 */
         .tag-pill { padding: 6px 16px; border-radius: 99px; background: white; border: 1px solid #dddfe2; font-size: 12px; font-weight: 900; cursor: pointer; color: #606770; transition: 0.2s; white-space: nowrap; }
         .tag-pill.active { background: #e7f3ff; color: #1877f2; border-color: #1877f2; }
-        
-        /* 預約紀錄卡片 */
-        .history-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 16px; position: relative; margin-bottom: 12px; }
-        .status-badge { font-size: 9px; font-weight: 900; padding: 2px 8px; border-radius: 99px; }
-        
         .btn-primary { background: #1877f2; color: white; padding: 14px; border-radius: 8px; font-weight: 900; width: 100%; text-align: center; cursor: pointer; border: none; }
         .btn-secondary { background: #f0f2f5; color: #606770; border: 1px solid #dddfe2; padding: 8px 16px; border-radius: 6px; font-weight: 900; font-size: 12px; }
-        
-        #msg-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10001; background: #1c1e21; color: white; padding: 10px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; display: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
-
-    <div id="msg-box"></div>
 
     <header id="main-header" class="bg-[#1877f2] text-white pt-3 pb-1 sticky top-0 z-50 shadow-sm header-hidden">
         <div class="main-container flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <h1 class="text-lg font-black italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">SPORTS ISLAND</h1>
                 <div class="profile-chip">
-                    <div class="avatar-frame"><img id="line-logo-display" src="" class="line-avatar"></div>
+                    <div class="avatar-frame"><img id="line-logo-display" src="" class="line-avatar" onerror="this.src='https://placehold.co/100x100?text=SI'"></div>
                     <span id="line-name-display" class="text-[10px] font-black truncate">...</span>
                 </div>
             </div>
             <nav id="top-nav" class="flex gap-1">
                 <div onclick="switchMainTab('activity')" id="tab-activity" class="nav-tab active px-4">活動專區</div>
                 <div onclick="switchMainTab('member')" id="tab-member" class="nav-tab px-4">個人頁面</div>
-                <div onclick="window.location.href='admin.html'" id="tab-admin" class="nav-tab hidden px-4">管理</div>
+                <div onclick="safeNavigate('admin.html')" id="tab-admin" class="nav-tab hidden px-4">管理</div>
             </nav>
         </div>
     </header>
 
     <div id="view-loading" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center">
         <div class="w-10 h-10 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
-        <p id="loading-status" class="mt-4 font-black text-gray-400 text-xs tracking-widest uppercase">Expert Syncing...</p>
+        <p class="mt-4 font-black text-gray-400 text-xs tracking-widest uppercase">Expert Syncing...</p>
     </div>
 
     <main class="main-container py-6">
-        
-        <!-- [1. 活動列表視圖] -->
         <div id="view-activity" class="section-view active">
-            <div class="rounded-xl overflow-hidden mb-6 shadow-sm border bg-white"><img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto max-h-[180px] object-cover"></div>
+            <div class="rounded-xl overflow-hidden mb-6 shadow-sm border bg-white">
+                <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto max-h-[200px] object-cover">
+            </div>
             <div class="flex flex-col gap-3 mb-8">
-                <input type="text" id="search-input" oninput="loadCourses()" placeholder="🔍 搜尋活動名稱..." class="w-full border-none shadow-sm p-3 rounded-lg outline-none bg-white font-bold">
+                <input type="text" id="search-input" oninput="loadCourses()" placeholder="🔍 搜尋活動名稱..." class="w-full border-none shadow-sm p-4 rounded-xl outline-none bg-white font-bold text-gray-700">
                 <div id="category-tags" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
             </div>
             <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- [2. 個人頁面視圖 - 會員中心與同步紀錄] -->
         <div id="view-member" class="section-view">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- 左側：家庭成員 -->
                 <div class="lg:col-span-7">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-black italic">家庭成員庫</h2>
-                        <button onclick="window.location.href='register.html?mode=add'" class="bg-[#1877f2] text-white px-3 py-1.5 rounded-md text-xs font-black hover:bg-blue-700">+ 新增家人</button>
+                        <button onclick="safeNavigate('register.html?mode=add')" class="bg-[#1877f2] text-white px-3 py-1.5 rounded-md text-xs font-black">+ 新增家人</button>
                     </div>
-                    <div id="family-grid" class="space-y-3">
-                        <p class="text-center py-10 text-gray-400 animate-pulse font-bold">正在抓取成員資料...</p>
-                    </div>
+                    <div id="family-grid" class="space-y-3"></div>
                 </div>
-                
-                <!-- 右側：同步預約紀錄 -->
                 <div class="lg:col-span-5">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-black italic">預約紀錄同步</h2>
-                        <button onclick="loadHistoryRecords()" class="text-[#1877f2] font-black text-[10px] border px-2 py-1 rounded">🔄 刷新</button>
-                    </div>
-                    <div id="history-container" class="space-y-3">
-                        <p class="text-center py-10 text-gray-400 italic">無報名紀錄</p>
-                    </div>
+                    <h2 class="text-xl font-black italic mb-6">報名紀錄同步</h2>
+                    <div id="history-container" class="space-y-3"></div>
                 </div>
             </div>
-        </div>
-
-        <!-- 活動詳情頁面 -->
-        <div id="view-activity-detail" class="section-view">
-            <button onclick="switchMainTab('activity')" class="mb-4 text-gray-500 font-black text-xs">⬅ 返回活動</button>
-            <div id="detail-content-area" class="content-card !p-0 overflow-hidden shadow-xl border"></div>
         </div>
     </main>
 
     <script>
         const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
-        let state = { uid: null, isRegistered: false, members: [], events: [], config: {}, selectedCategory: '全部' };
+        let state = { uid: null, members: [], events: [], config: {}, selectedCategory: '全部' };
+
+        function safeNavigate(t) {
+            if (window.location.protocol === 'blob:') { console.warn("[預覽環境阻斷跳轉] " + t); return; }
+            window.location.href = t;
+        }
 
         const App = {
             async init() {
                 try {
                     await liff.init({ liffId: LIFF_ID });
                     if (!liff.isLoggedIn()) { 
-                        if (!liff.isInClient()) { document.getElementById('view-loading').style.display = 'none'; this.loadCourses(); return; }
+                        if (!liff.isInClient()) { 
+                            state.uid = "GUEST_USER"; 
+                            await this.loadCourses();
+                            document.getElementById('view-loading').style.display = 'none';
+                            return; 
+                        }
                         liff.login(); return; 
                     }
                     const p = await liff.getProfile();
                     state.uid = p.userId;
                     document.getElementById('line-name-display').innerText = p.displayName;
                     document.getElementById('line-logo-display').src = p.pictureUrl || "";
-                    this.checkStatus();
-                } catch (e) { console.error(e); }
+                    await this.checkStatus();
+                } catch (e) { 
+                    console.error("Init Error:", e);
+                    document.getElementById('view-loading').style.display = 'none';
+                    await this.loadCourses();
+                }
             },
             async checkStatus() {
-                const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
-                const r = await res.json();
-                document.getElementById('view-loading').style.display = 'none';
-                document.getElementById('main-header').classList.remove('header-hidden');
-                
-                if (new URLSearchParams(window.location.search).get('action') === 'admin') 
-                    document.getElementById('tab-admin').classList.remove('hidden');
-                
-                if (r.status === 'registered') state.isRegistered = true;
-                this.loadCourses();
+                try {
+                    const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
+                    const r = await res.json();
+                    if (r.status === 'registered') {
+                        document.getElementById('main-header').classList.remove('header-hidden');
+                        if (new URLSearchParams(window.location.search).get('action') === 'admin') 
+                            document.getElementById('tab-admin').classList.remove('hidden');
+                        await this.loadCourses();
+                    } else {
+                        safeNavigate('register.html');
+                    }
+                } catch (e) {
+                    console.error("Check Error:", e);
+                    await this.loadCourses();
+                } finally {
+                    document.getElementById('view-loading').style.display = 'none';
+                }
             },
             async loadCourses() {
-                const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
-                const r = await res.json();
-                state.events = r.data || [];
-                state.config = r.config || {};
-                
-                // 渲染標籤
-                const cats = ['全部', ...(state.config.sportCategories || "").split(',')];
-                document.getElementById('category-tags').innerHTML = cats.map(c => `
-                    <div onclick="filterCat('${c.trim()}')" class="tag-pill ${state.selectedCategory === c.trim() ? 'active' : ''}">${c.trim()}</div>
-                `).join('');
+                const container = document.getElementById('event-list');
+                try {
+                    const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
+                    const r = await res.json();
+                    state.events = r.data || [];
+                    state.config = r.config || {};
+                    
+                    const cats = ['全部', ...(state.config.sportCategories || "").split(',').filter(i=>i)];
+                    document.getElementById('category-tags').innerHTML = cats.map(c => `
+                        <div onclick="filterCat('${c.trim()}')" class="tag-pill ${state.selectedCategory === c.trim() ? 'active' : ''}">${c.trim()}</div>
+                    `).join('');
 
-                const sVal = document.getElementById('search-input').value.toLowerCase();
-                const filtered = state.events.filter(ev => 
-                    (state.selectedCategory === '全部' || ev['分類'] === state.selectedCategory) && 
-                    ev['狀態'] === '上架' && (ev['活動名稱'].toLowerCase().includes(sVal))
-                );
+                    const sVal = document.getElementById('search-input').value.toLowerCase();
+                    const filtered = state.events.filter(ev => 
+                        (state.selectedCategory === '全部' || ev['分類'] === state.selectedCategory) && 
+                        ev['狀態'] === '上架' && (ev['活動名稱'].toLowerCase().includes(sVal))
+                    );
 
-                document.getElementById('event-list').innerHTML = filtered.map(ev => `
-                    <div class="content-card !p-0 overflow-hidden flex flex-col hover:shadow-lg transition-all group">
-                        <img src="${ev['圖片URL'] || 'https://placehold.co/600x400'}" class="w-full h-40 object-cover">
-                        <div class="p-4 flex-1 flex flex-col">
-                            <p class="text-[9px] font-black text-blue-600 uppercase mb-1">${ev['分類']}</p>
-                            <h3 class="card-title truncate mb-4 font-black text-sm">${ev['活動名稱']}</h3>
-                            <div class="mt-auto flex gap-2">
-                                <button onclick="showDetail('${ev['活動ID']}')" class="btn-secondary !flex-1 !py-1.5">詳情</button>
-                                <button onclick="window.location.href='booking.html?id=${ev['活動ID']}'" class="btn-primary !flex-1 !py-1.5 !text-[11px]">立即預約</button>
+                    container.innerHTML = filtered.map(ev => `
+                        <div class="content-card !p-0 overflow-hidden flex flex-col hover:shadow-md transition-all">
+                            <img src="${ev['圖片URL'] || 'https://placehold.co/600x400'}" class="w-full h-40 object-cover">
+                            <div class="p-4 flex-1 flex flex-col">
+                                <p class="text-[9px] font-black text-blue-600 uppercase mb-1">${ev['分類']}</p>
+                                <h3 class="font-black text-sm text-gray-800 truncate mb-4">${ev['活動名稱']}</h3>
+                                <button onclick="safeNavigate('booking.html?id=${ev['活動ID']}')" class="btn-primary !py-2 !text-xs italic uppercase">Book Now ➜</button>
                             </div>
-                        </div>
-                    </div>`).join('') || '<p class="col-span-full text-center py-20 text-gray-400">目前無活動上架</p>';
+                        </div>`).join('') || '<p class="col-span-full text-center py-20 text-gray-400">目前無活動上架</p>';
+                } catch (e) {
+                    container.innerHTML = '<p class="col-span-full text-center py-20 text-red-400">連線失敗，請檢查網路</p>';
+                }
             }
         };
 
         async function loadFamilyMembers() {
             const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
-            const r = await res.json();
-            state.members = r.data || [];
+            state.members = (await res.json()).data || [];
             document.getElementById('family-grid').innerHTML = state.members.map(m => `
                 <div class="content-card flex items-center gap-4 !py-3 hover:bg-gray-50 border border-transparent hover:border-gray-200">
                     <div class="avatar-frame !bg-[#e7f3ff] flex items-center justify-center font-black text-blue-600 text-lg">${(m.姓名||"?").charAt(0)}</div>
-                    <div class="flex-1">
-                        <h4 class="font-black text-sm text-gray-800">${m.姓名}</h4>
-                        <p class="text-[10px] text-gray-400 font-bold tracking-tight">${m.學校 || '未設定學校'} | ${m.身分 || '成員'}</p>
-                    </div>
-                    <button onclick="window.location.href='register.html?edit=${m.學員ID}'" class="text-gray-400 font-black text-[10px] border px-2 py-1 rounded">修改</button>
-                </div>`).join('') || '<div class="text-center py-10 text-gray-400">尚未新增任何家人</div>';
+                    <div class="flex-1"><h4 class="font-black text-sm text-gray-800">${m.姓名}</h4><p class="text-[10px] text-gray-400 font-bold">${m.學校 || '未設定'} | ${m.年級 || '-'}</p></div>
+                    <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-gray-400 font-black text-[10px] border px-2 py-1 rounded">修改</button>
+                </div>`).join('');
         }
 
         async function loadHistoryRecords() {
-            const container = document.getElementById('history-container');
-            container.innerHTML = '<p class="text-center py-10 animate-pulse">紀錄抓取中...</p>';
-            
             const res = await fetch(`${PROXY_URL}?action=getHistory&uid=${state.uid}`);
-            const r = await res.json();
-            const data = r.data || [];
-            
-            if (data.length === 0) {
-                container.innerHTML = '<p class="text-center py-10 text-gray-400 italic">尚無任何報名紀錄</p>';
-                return;
-            }
-
-            container.innerHTML = data.reverse().map(h => {
-                const ok = h.對帳狀態 === '報名成功';
-                return `
-                <div class="history-card">
-                    <div class="flex justify-between items-start mb-3">
-                        <span class="status-badge ${ok?'bg-green-100 text-green-600':'bg-orange-100 text-orange-600'}">
-                            ${h.對帳狀態 || '待對帳'}
-                        </span>
-                        <p class="text-[9px] font-black text-gray-400 uppercase italic">${h.報名時間.split(' ')[0]}</p>
+            const data = (await res.json()).data || [];
+            document.getElementById('history-container').innerHTML = data.reverse().map(h => `
+                <div class="content-card !py-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-black px-2 py-0.5 rounded ${h.對帳狀態==='報名成功'?'bg-green-100 text-green-600':'bg-orange-100 text-orange-600'}">${h.對帳狀態 || '待對帳'}</span>
+                        <p class="text-[9px] text-gray-400 font-bold">${h.報名時間.split(' ')[0]}</p>
                     </div>
-                    <h4 class="font-black text-sm text-slate-800 truncate mb-1">${h.活動名稱}</h4>
-                    <div class="flex justify-between items-center mt-4">
-                        <p class="text-[11px] font-black text-slate-500">${h.學員姓名}</p>
-                        <p class="text-[#1877f2] font-black italic text-sm">NT$ ${parseInt(h.應付金額).toLocaleString()}</p>
+                    <h4 class="font-black text-sm text-slate-800 truncate">${h.活動名稱}</h4>
+                    <div class="flex justify-between items-end mt-4">
+                        <p class="text-[11px] font-bold text-slate-500">${h.學員姓名}</p>
+                        <p class="text-[#1877f2] font-black italic text-lg">NT$ ${parseInt(h.應付金額).toLocaleString()}</p>
                     </div>
-                    ${h.備註 ? `<p class="text-[9px] text-gray-400 border-t mt-3 pt-2 font-bold">${h.備註}</p>` : ''}
-                </div>`;
-            }).join('');
+                </div>`).join('') || '<p class="text-center py-10 text-gray-400 italic">無報名紀錄</p>';
         }
 
         function filterCat(c) { state.selectedCategory = c; App.loadCourses(); }
@@ -237,22 +206,7 @@
             if (m === 'activity') App.loadCourses();
         }
         function switchView(v) { document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active')); document.getElementById('view-' + v)?.classList.add('active'); window.scrollTo(0,0); }
-        
-        function showDetail(id) {
-            const ev = state.events.find(e => String(e['活動ID']) === String(id));
-            if(!ev) return;
-            switchView('activity-detail');
-            document.getElementById('detail-content-area').innerHTML = `
-                <img src="${ev['圖片URL'] || 'https://placehold.co/800x400'}" class="w-full h-auto max-h-[250px] object-cover">
-                <div class="p-6">
-                    <h2 class="text-2xl font-black mb-4 italic">${ev['活動名稱']}</h2>
-                    <div class="text-gray-700 text-sm leading-relaxed mb-10 whitespace-pre-wrap font-bold">${ev['描述'] || '無詳細說明'}</div>
-                    <button onclick="window.location.href='booking.html?id=${ev['活動ID']}'" class="btn-primary shadow-xl italic text-lg uppercase tracking-tighter">立即預約報名 NT$ ${parseInt(ev['全日價']).toLocaleString()} ➜</button>
-                </div>`;
-        }
-
         window.onload = () => App.init();
-        function showMsg(t) { const b = document.getElementById('msg-box'); b.innerText = t; b.style.display='block'; setTimeout(()=>b.style.display='none', 3000); }
     </script>
 </body>
 </html>
