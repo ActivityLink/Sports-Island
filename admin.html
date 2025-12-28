@@ -8,172 +8,202 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; color: #1e293b; }
-        .main-container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
-        .admin-sub-tab { padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: 14px; color: #64748b; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-        .admin-sub-tab.active { background: #0f172a; color: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .table-container { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background-color: #f8fafc; padding: 14px 16px; font-size: 12px; font-weight: 900; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid #f1f5f9; color: #334155; }
-        tr:hover td { background-color: #f8fafc; }
-        .input-field { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; font-weight: 700; outline: none; background: #fff; appearance: none; transition: 0.2s; }
+        .main-container { max-width: 1000px; margin: 0 auto; padding: 24px 16px; }
+        .admin-sub-tab { padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: 13px; color: #64748b; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .admin-sub-tab.active { background: #0f172a; color: white; }
+        .input-field { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; font-weight: 700; outline: none; background: #fff; appearance: none; }
         .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        .tag-pill { display: inline-flex; align-items: center; gap: 8px; background: #eff6ff; color: #1d4ed8; padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 900; border: 1px solid #dbeafe; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .tag-label { color: #64748b; font-weight: 900; margin-bottom: 6px; display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* Modal 強化 */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 850px; border-radius: 28px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); margin-top: 20px; margin-bottom: 50px; }
-        .tag-label { color: #64748b; font-weight: 900; margin-bottom: 8px; display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .modal-content { background: white; width: 100%; max-width: 800px; border-radius: 28px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); margin-top: 20px; }
+        
+        .diag-screen { position: fixed; inset: 0; background: #0f172a; color: white; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
     </style>
 </head>
 <body>
+
+    <!-- 管理端連線診斷 -->
+    <div id="diag-screen" class="diag-screen">
+        <div class="bg-white text-slate-900 p-8 rounded-3xl max-w-md w-full shadow-2xl text-center">
+            <h2 class="text-xl font-black text-red-600 mb-4">管理端連線失效</h2>
+            <p id="diag-msg" class="text-sm text-slate-500 mb-6">讀取管理資料失敗，請確認後端 GAS 網址與權限。</p>
+            <button onclick="location.reload()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black">重新連線</button>
+        </div>
+    </div>
+
     <div class="main-container">
-        <!-- 標題列 -->
-        <div class="flex justify-between items-center mb-10 gap-4">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center shadow-xl">
-                    <span class="text-white font-black italic text-2xl">SI</span>
-                </div>
-                <h1 class="text-2xl font-black italic tracking-tighter uppercase text-slate-800">Admin Console</h1>
+        <div class="flex justify-between items-center mb-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg"><span class="text-white font-black italic">IS</span></div>
+                <h1 class="text-xl font-black italic tracking-tighter uppercase">Admin Console</h1>
             </div>
-            <button onclick="safeNavigate('index.html')" class="text-slate-500 font-black text-xs hover:text-slate-900 border-2 border-slate-200 px-6 py-2.5 rounded-xl bg-white shadow-sm transition-all">⬅ 返回前台</button>
+            <button onclick="window.location.href='index.html'" class="text-slate-500 font-bold text-xs hover:text-slate-900 border px-4 py-2 rounded-lg bg-white transition-all shadow-sm">⬅ 返回首頁</button>
         </div>
 
-        <!-- 導覽 -->
         <div class="flex gap-2 mb-8 bg-white p-2 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto no-scrollbar">
-            <button onclick="switchTab('config')" id="btn-config" class="admin-sub-tab active">參數管理 (標籤/租借庫)</button>
-            <button onclick="switchTab('events')" id="btn-events" class="admin-sub-tab">活動庫 (19欄)</button>
-            <button onclick="switchTab('crm')" id="btn-crm" class="admin-sub-tab">會員 CRM</button>
+            <button onclick="switchTab('events')" id="btn-events" class="admin-sub-tab active">活動規格 (19欄)</button>
+            <button onclick="switchTab('crm')" id="btn-crm" class="admin-sub-tab">會員 CRM (16欄)</button>
+            <button onclick="switchTab('config')" id="btn-config" class="admin-sub-tab">參數與標籤設定</button>
         </div>
 
-        <!-- [分頁 1：參數管理] -->
-        <div id="view-config" class="space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- 標籤 -->
-                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                    <h3 class="text-lg font-black mb-6 border-b pb-2 text-slate-800 italic uppercase">1. 課程類別標籤</h3>
-                    <div id="category-list" class="flex flex-wrap gap-2 mb-8 min-h-[40px]"></div>
-                    <div class="flex gap-3">
-                        <input type="text" id="new-cat" class="input-field" placeholder="新增標籤">
-                        <button onclick="addItem('cat')" class="bg-slate-900 text-white px-8 py-2 rounded-xl font-black text-xs shrink-0 hover:bg-black">+ 新增</button>
-                    </div>
-                </div>
-
-                <!-- 租借 -->
-                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                    <h3 class="text-lg font-black mb-6 border-b pb-2 text-blue-600 italic uppercase">2. 全域設備租借庫</h3>
-                    <div id="rental-list" class="space-y-2 mb-8 min-h-[40px]"></div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="text" id="rent-name" class="input-field" placeholder="品名">
-                        <input type="number" id="rent-price" class="input-field" placeholder="租金">
-                    </div>
-                    <button onclick="addItem('rent')" class="bg-blue-600 text-white w-full mt-3 py-4 rounded-xl font-black text-sm shadow-md hover:bg-blue-700 transition-all">+ 加入全局庫存</button>
-                </div>
+        <!-- [模組：活動管理] -->
+        <div id="view-events" class="space-y-4">
+            <div class="flex justify-between items-center px-1">
+                <h3 class="font-black text-slate-400 text-xs uppercase tracking-widest">Activity Inventory</h3>
+                <button onclick="openEditor(null)" class="bg-blue-600 text-white px-5 py-2 rounded-xl font-black text-xs shadow-lg">+ 新增活動</button>
             </div>
+            <div id="admin-event-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
 
+        <!-- [模組：CRM] -->
+        <div id="view-crm" class="hidden">
+            <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="p-4 text-xs font-black text-slate-400 uppercase">學員姓名</th>
+                            <th class="p-4 text-xs font-black text-slate-400 uppercase">學校 / 年級</th>
+                            <th class="p-4 text-right text-xs font-black text-slate-400 uppercase">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="crm-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- [模組：參數設定] -->
+        <div id="view-config" class="hidden space-y-6">
             <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                <h3 class="text-lg font-black mb-4 italic">3. 店家匯款帳號</h3>
-                <textarea id="cfg-bank" rows="4" class="input-field font-bold text-sm text-slate-600"></textarea>
+                <h3 class="text-lg font-black mb-6 border-b pb-2 text-slate-800 italic uppercase">標籤與設備管理</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label class="tag-label">課程分類標籤 (逗號隔開)</label>
+                        <textarea id="cfg-tags" rows="3" class="input-field font-bold text-sm"></textarea>
+                    </div>
+                    <div>
+                        <label class="tag-label">設備租借庫 (JSON 格式)</label>
+                        <textarea id="cfg-rental" rows="3" class="input-field font-mono text-[10px] text-slate-400"></textarea>
+                    </div>
+                </div>
+                <button onclick="saveAllConfigs()" class="w-full mt-8 bg-slate-900 text-white py-4 rounded-2xl font-black shadow-xl">保存全局參數 ➜</button>
             </div>
-
-            <button onclick="saveAllConfigs()" id="btn-save-config" class="bg-slate-900 text-white w-full py-5 rounded-2xl font-black shadow-2xl hover:bg-black transition-all text-lg">確認保存全局參數 ➜</button>
         </div>
+    </div>
 
-        <!-- [其餘分頁 隱藏處理] -->
-        <div id="view-events" class="hidden">載入中...</div>
-        <div id="view-crm" class="hidden">載入中...</div>
+    <!-- 19 欄位活動編輯器 -->
+    <div id="editor-modal" class="modal-overlay" onclick="if(event.target===this) closeEditor()">
+        <div class="modal-content">
+            <div class="flex justify-between items-start mb-8 border-b pb-4">
+                <div><h2 class="text-2xl font-black italic text-blue-600">規格編輯器</h2><p class="text-[10px] text-slate-400 font-bold uppercase mt-1">19 Fields Matrix</p></div>
+                <button onclick="closeEditor()" class="text-slate-300 hover:text-slate-600 text-2xl">✕</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto max-h-[60vh] px-1 no-scrollbar">
+                <div class="col-span-full"><label class="tag-label">活動名稱</label><input type="text" id="ed-name" class="input-field"></div>
+                <div><label class="tag-label">活動型態</label><select id="ed-type" class="input-field font-bold"><option value="單日型">單日型</option><option value="梯次型">梯次型</option><option value="常態型">常態型</option></select></div>
+                <div><label class="tag-label">分類</label><input type="text" id="ed-cat" class="input-field"></div>
+                <div><label class="tag-label">開始日期</label><input type="date" id="ed-start" class="input-field"></div>
+                <div><label class="tag-label">結束日期</label><input type="date" id="ed-end" class="input-field"></div>
+                <div><label class="tag-label">全日價格</label><input type="number" id="ed-price" class="input-field"></div>
+                <div><label class="tag-label text-red-500">全日請假扣額</label><input type="number" id="ed-deduct" class="input-field"></div>
+                <div><label class="tag-label">狀態</label><select id="ed-status" class="input-field font-bold"><option value="上架">上架</option><option value="下架">下架</option></select></div>
+                <div class="col-span-full"><label class="tag-label">描述</label><textarea id="ed-desc" rows="4" class="input-field"></textarea></div>
+            </div>
+            <button onclick="saveEvent()" id="btn-save-event" class="bg-blue-600 text-white w-full py-4 rounded-2xl font-black shadow-xl hover:bg-blue-700 transition-all mt-8">發布規格 ➜</button>
+        </div>
     </div>
 
     <script>
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
-        let state = { events: [], config: { sportCategories: [], rentalItems: [] } };
+        let state = { events: [], config: {}, currentEditId: null };
 
-        function safeNavigate(t) { if (window.location.protocol==='blob:'){ console.warn("Skip: "+t); return; } window.location.href=t; }
+        async function fetchApi(action) {
+            try {
+                const res = await fetch(`${PROXY_URL}?action=${action}&_t=${Date.now()}`);
+                const text = await res.text();
+                if (text.trim().startsWith("<!DOCTYPE")) {
+                    document.getElementById('diag-screen').style.display = 'flex';
+                    throw new Error("API_ERR");
+                }
+                return JSON.parse(text);
+            } catch (e) { throw e; }
+        }
 
         async function init() {
             try {
-                const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
-                const r = await res.json();
+                const r = await fetchApi('getEvents');
                 state.events = r.data || [];
+                state.config = r.config || {};
                 
-                // 解析配置，若為空則給預設值
-                const cfg = r.config || {};
-                state.config.sportCategories = (cfg.sportCategories || "直排輪,足球,籃球").split(',').filter(i => i.trim());
-                state.config.rentalItems = JSON.parse(cfg.rentalItems || "[]");
-                document.getElementById('cfg-bank').value = cfg.bankInfo || "";
-
-                renderConfigLists();
-            } catch(e) { console.error(e); }
+                document.getElementById('cfg-tags').value = state.config.sportCategories || "";
+                document.getElementById('cfg-rental').value = state.config.rentalItems || "[]";
+                
+                renderEvents();
+            } catch (e) { console.error(e); }
         }
 
-        function renderConfigLists() {
-            // 渲染標籤
-            document.getElementById('category-list').innerHTML = state.config.sportCategories.map((c, i) => `
-                <div class="tag-pill">${c} <span onclick="removeItem('cat', ${i})" class="cursor-pointer opacity-40 hover:opacity-100 font-bold">✕</span></div>`).join('');
-            
-            // 渲染租借
-            document.getElementById('rental-list').innerHTML = state.config.rentalItems.map((item, i) => `
-                <div class="flex justify-between items-center p-4 border rounded-2xl bg-slate-50 border-slate-100">
-                    <div class="font-black text-sm text-slate-700">${item.name} <span class="text-blue-600 ml-2 italic">$${item.price}</span></div>
-                    <button onclick="removeItem('rent', ${i})" class="text-red-400 font-black text-xs hover:text-red-600">刪除</button>
-                </div>`).join('') || '<p class="text-slate-300 text-xs italic">尚無預設租借品項</p>';
+        function renderEvents() {
+            document.getElementById('admin-event-grid').innerHTML = state.events.map(ev => `
+                <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                    <h4 class="font-black text-slate-800 text-base mb-1">${ev['活動名稱']}</h4>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">${ev['分類']} | ${ev['活動型態']}</p>
+                    <button onclick="openEditor('${ev['活動ID']}')" class="w-full py-3 bg-slate-50 text-slate-900 border border-slate-200 rounded-2xl font-black text-xs hover:bg-slate-900 hover:text-white transition-all">規格編輯</button>
+                </div>`).join('');
         }
 
-        function addItem(type) {
-            if (type === 'cat') {
-                const val = document.getElementById('new-cat').value.trim();
-                if (val) state.config.sportCategories.push(val);
-                document.getElementById('new-cat').value = "";
-            } else {
-                const n = document.getElementById('rent-name').value.trim();
-                const p = document.getElementById('rent-price').value;
-                if (n && p) state.config.rentalItems.push({ name: n, price: Number(p) });
-                document.getElementById('rent-name').value = "";
-                document.getElementById('rent-price').value = "";
-            }
-            renderConfigLists();
+        async function loadCRM() {
+            const r = await fetchApi('adminGetAllStudents');
+            document.getElementById('crm-table-body').innerHTML = (r.data || []).map(s => `
+                <tr class="border-b border-slate-50 hover:bg-slate-50/50">
+                    <td class="p-4"><span class="font-black text-slate-800">${s.姓名}</span></td>
+                    <td class="p-4"><p class="text-xs font-bold text-slate-500">${s.學校}</p><p class="text-[10px] text-slate-400">${s.年級}</p></td>
+                    <td class="p-4 text-right"><button class="text-blue-600 font-black text-xs">詳情</button></td>
+                </tr>`).join('');
         }
 
-        function removeItem(type, idx) {
-            if (type === 'cat') state.config.sportCategories.splice(idx, 1);
-            else state.config.rentalItems.splice(idx, 1);
-            renderConfigLists();
+        function openEditor(id) {
+            state.currentEditId = id;
+            const ev = state.events.find(e => String(e['活動ID']) === String(id)) || {};
+            document.getElementById('editor-modal').classList.add('active');
+            document.getElementById('ed-name').value = ev['活動名稱'] || "";
+            document.getElementById('ed-type').value = ev['活動型態'] || "單日型";
+            document.getElementById('ed-cat').value = ev['分類'] || "";
+            document.getElementById('ed-start').value = ev['開始日期'] || "";
+            document.getElementById('ed-end').value = ev['結束日期'] || "";
+            document.getElementById('ed-price').value = ev['全日價'] || 0;
+            document.getElementById('ed-deduct').value = ev['全日扣除'] || 0;
+            document.getElementById('ed-status').value = ev['狀態'] || "上架";
+            document.getElementById('ed-desc').value = ev['描述'] || "";
         }
 
-        async function saveAllConfigs() {
-            const btn = document.getElementById('btn-save-config');
-            btn.disabled = true; btn.innerText = "同步數據到雲端中...";
-            
-            const payload = { 
-                sportCategories: state.config.sportCategories.join(','), 
-                rentalItems: JSON.stringify(state.config.rentalItems), 
-                bankInfo: document.getElementById('cfg-bank').value 
+        function closeEditor() { document.getElementById('editor-modal').classList.remove('active'); }
+
+        async function saveEvent() {
+            const btn = document.getElementById('btn-save-event'); btn.disabled = true; btn.innerText = "正在發布...";
+            const payload = {
+                "活動ID": state.currentEditId || ("EVT-" + Date.now()),
+                "活動名稱": document.getElementById('ed-name').value,
+                "活動型態": document.getElementById('ed-type').value,
+                "分類": document.getElementById('ed-cat').value,
+                "開始日期": document.getElementById('ed-start').value,
+                "結束日期": document.getElementById('ed-end').value,
+                "全日價": document.getElementById('ed-price').value,
+                "全日扣除": document.getElementById('ed-deduct').value,
+                "狀態": document.getElementById('ed-status').value,
+                "描述": document.getElementById('ed-desc').value
             };
-            
-            try {
-                const res = await fetch(PROXY_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'updateConfig', payload }) 
-                });
-                const result = await res.json();
-                if (result.status === 'success') {
-                    alert("✅ 參數設定已成功永久儲存！");
-                    init(); // 重新整理確保同步成功
-                } else {
-                    alert("❌ 儲存失敗：" + (result.message || "未知錯誤"));
-                }
-            } catch (err) {
-                alert("❌ 連線失敗，請檢查網路或 Cloudflare Worker 設置");
-            } finally {
-                btn.disabled = false; btn.innerText = "確認保存全局參數 ➜";
-            }
+            await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateEvent', payload }) });
+            alert("✅ 活動規格已更新！"); closeEditor(); init(); btn.disabled = false; btn.innerText = "發布規格 ➜";
         }
 
         function switchTab(t) {
-            ['config', 'events', 'crm'].forEach(i => document.getElementById(`view-${i}`).classList.toggle('hidden', i !== t));
-            document.getElementById('btn-config').classList.toggle('active', t === 'config');
-            document.getElementById('btn-events').classList.toggle('active', t === 'events');
-            document.getElementById('btn-crm').classList.toggle('active', t === 'crm');
+            ['events', 'crm', 'config'].forEach(i => {
+                document.getElementById(`view-${i}`).classList.toggle('hidden', i !== t);
+                document.getElementById(`btn-${i}`).classList.toggle('active', i === t);
+            });
+            if (t === 'crm') loadCRM();
         }
 
         window.onload = init;
