@@ -3,100 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>活動預約報名 - 運動島</title>
+    <title>預約細節確認 - 運動島</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; color: #1e293b; }
-        .main-container { max-width: 600px; margin: 0 auto; padding: 24px 16px; }
-        .content-card { background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .main-container { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
+        .content-card { background: white; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 16px; border: 1px solid #f1f5f9; }
+        
+        /* 日曆卡片樣式 */
+        .calendar-day-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 8px; transition: 0.2s; }
+        .calendar-day-card.has-leave { border-color: #f87171; background-color: #fef2f2; }
+        
+        .leave-option { font-size: 11px; padding: 6px 4px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; text-align: center; font-weight: 700; color: #64748b; background: white; }
+        .leave-option.active { background: #3b82f6; border-color: #3b82f6; color: white; }
+        .leave-option.active.absent { background: #ef4444; border-color: #ef4444; }
+
+        .btn-primary { background: #3b82f6; color: white; padding: 16px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; border: none; }
         .section-view { display: none; }
-        .section-view.active { display: block; animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .date-chip { padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; text-align: center; font-size: 13px; font-weight: 700; transition: 0.2s; }
-        .date-chip.selected { background: #3b82f6; border-color: #3b82f6; color: white; }
-        
-        .input-field { width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; font-weight: 700; outline: none; background: #f8fafc; }
-        .input-field:focus { border-color: #3b82f6; background: #fff; }
-        
-        .btn-primary { background: #3b82f6; color: white; padding: 16px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; border: none; transition: 0.2s; }
-        .btn-primary:active { transform: scale(0.98); }
-        .btn-secondary { background: #fff; color: #64748b; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; }
+        .section-view.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <div class="main-container">
-        <!-- 0. 讀取中 -->
+        <!-- 0. 載入中 -->
         <div id="view-loading" class="text-center py-20 section-view active">
             <div class="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <p class="mt-4 font-black text-slate-400 text-xs tracking-widest uppercase">Initializing Wizard...</p>
+            <p class="mt-4 font-black text-slate-400 text-xs tracking-widest uppercase">Expert Logic Loading...</p>
         </div>
 
         <!-- 1. 選擇成員 -->
         <div id="view-member" class="section-view">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-black italic">1. 選擇成員</h2>
-                <button onclick="safeNavigate('index.html')" class="text-slate-400 text-xs font-bold">返回活動</button>
-            </div>
+            <h2 class="text-xl font-black mb-6 italic text-slate-800">STEP 1. 選擇參加成員</h2>
             <div id="member-list" class="grid gap-3"></div>
             <button onclick="safeNavigate('register.html?mode=add')" class="w-full mt-6 py-4 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 font-black text-sm hover:bg-white">+ 新增其他家人</button>
         </div>
 
-        <!-- 2. 規格與日期選擇 -->
-        <div id="view-options" class="section-view">
-            <button onclick="switchView('member')" class="mb-4 text-slate-400 font-bold text-xs">⬅ 上一步</button>
+        <!-- 2. 日曆請假與規格 -->
+        <div id="view-details" class="section-view">
+            <button onclick="switchView('member')" class="mb-4 text-slate-400 font-bold text-xs">⬅ 返回選擇成員</button>
             <div class="content-card">
-                <h2 class="text-xl font-black mb-6 border-b pb-4">2. 預約細節</h2>
+                <h2 id="event-title-display" class="text-xl font-black mb-1 text-blue-600">---</h2>
+                <p id="early-bird-tag" class="text-[10px] font-black text-green-600 uppercase mb-6 hidden">✨ 已啟動早鳥優惠計價</p>
                 
-                <!-- 全日/半日 -->
-                <div class="mb-6">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">預約時段</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div onclick="setDayType('全日')" id="type-full" class="date-chip selected">全日</div>
-                        <div onclick="setDayType('半日')" id="type-half" class="date-chip">半日</div>
+                <!-- 日曆請假區 -->
+                <div class="mb-8">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">請假安排 (勾選不出席的時段)</label>
+                    <div id="calendar-container" class="space-y-2">
+                        <!-- 由 JS 渲染日曆 -->
                     </div>
                 </div>
 
-                <!-- 梯次/日期 (日曆選擇模擬) -->
-                <div class="mb-6">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">日期選擇 (請勾選參加日期)</label>
-                    <div id="date-selector-grid" class="grid grid-cols-3 gap-2">
-                        <!-- 由 JS 渲染日期清單 -->
-                    </div>
-                    <p id="early-bird-hint" class="text-[10px] text-green-600 mt-2 font-bold hidden">✨ 已套用早鳥優惠價格</p>
-                </div>
-
-                <!-- 設備租借 (多選) -->
+                <!-- 設備租借區 -->
                 <div id="rental-section" class="mb-8 hidden">
-                    <label class="block text-[10px] font-black text-blue-500 uppercase mb-2">選購設備租借</label>
+                    <label class="block text-[10px] font-black text-blue-500 uppercase mb-3 tracking-widest">選購設備租借</label>
                     <div id="rental-options" class="space-y-2"></div>
                 </div>
 
-                <button onclick="switchView('checkout')" class="btn-primary">下一步：核對金額 ➜</button>
-            </div>
-        </div>
-
-        <!-- 3. 結帳付款 -->
-        <div id="view-checkout" class="section-view">
-            <button onclick="switchView('options')" class="mb-4 text-slate-400 font-bold text-xs">⬅ 上一步</button>
-            <div class="content-card">
-                <h2 class="text-xl font-black mb-6 border-b pb-4">3. 報名結帳</h2>
-                
-                <div class="space-y-4 mb-8">
-                    <div class="flex justify-between text-sm font-bold"><span>活動費用</span><span id="price-base">NT$ 0</span></div>
-                    <div id="rental-summary-row" class="flex justify-between text-sm font-bold text-blue-600 hidden"><span>設備租金</span><span id="price-rental">NT$ 0</span></div>
-                    <div class="flex justify-between text-xl font-black border-t pt-4"><span>應付總計</span><span id="price-total">NT$ 0</span></div>
+                <!-- 金額匯總 -->
+                <div class="bg-slate-900 text-white p-6 rounded-2xl mb-6 shadow-xl">
+                    <div class="flex justify-between text-xs opacity-60 mb-1"><span>原始總額</span><span id="price-original">NT$ 0</span></div>
+                    <div class="flex justify-between text-xs text-red-400 mb-1"><span>請假扣除</span><span id="price-deduction">- NT$ 0</span></div>
+                    <div class="flex justify-between text-xs text-blue-300 mb-4"><span>設備租借</span><span id="price-rent">NT$ 0</span></div>
+                    <div class="flex justify-between items-end border-t border-white/10 pt-4">
+                        <span class="font-black text-sm italic">應付總計 TOTAL</span>
+                        <span id="price-total" class="text-3xl font-black italic text-blue-400">NT$ 0</span>
+                    </div>
                 </div>
 
-                <div class="mb-8">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">匯款帳號後五碼</label>
-                    <input type="text" id="bank-5" class="input-field" maxlength="5" placeholder="填寫後五碼以便對帳">
+                <div class="mb-6">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">匯款後五碼</label>
+                    <input type="text" id="bank-5" class="w-full border rounded-xl p-4 font-black bg-slate-50 outline-none focus:bg-white focus:border-blue-500" maxlength="5" placeholder="00000">
                 </div>
 
-                <button onclick="submitOrder()" id="btn-submit" class="btn-primary shadow-xl italic uppercase tracking-tighter">Confirm Registration ➜</button>
+                <button onclick="submitBooking()" id="btn-submit" class="btn-primary shadow-lg uppercase italic tracking-tighter text-lg">Confirm Booking ➜</button>
             </div>
         </div>
     </div>
@@ -108,28 +91,10 @@
 
         let state = { 
             uid: null, event: null, members: [], config: {}, 
-            selectedMember: null, dayType: '全日', selectedDates: [], 
-            rentedItems: [], isEarlyBird: false 
+            selectedMember: null, leaves: {}, rentedItems: [], isEarlyBird: false 
         };
 
-        /**
-         * 處理安全導覽，確保在 blob: 環境下不會崩潰
-         */
-        function safeNavigate(target) {
-            // 如果是在 blob 預覽環境，無法執行網址跳轉，我們攔截它並記錄日誌
-            if (window.location.protocol === 'blob:') {
-                console.warn("[預覽模式導航攔截] 欲跳轉至: " + target);
-                return;
-            }
-            try {
-                // 真實環境下執行跳轉
-                window.location.href = target;
-            } catch (e) {
-                console.error("跳轉失敗:", e);
-                // 嘗試最後的退路
-                try { window.location.replace(target); } catch(i) {}
-            }
-        }
+        function safeNavigate(t) { if (window.location.protocol==='blob:'){ console.warn("Blob skip: "+t); return; } window.location.href=t; }
 
         async function init() {
             if (!eventId) { safeNavigate('index.html'); return; }
@@ -150,68 +115,85 @@
                 state.config = evData.config || {};
                 state.members = memData.data || [];
 
-                if (!state.event) { 
-                    alert("活動不存在"); 
-                    safeNavigate('index.html');
-                    return; 
-                }
-                
-                // 早鳥判斷
+                if (!state.event) { alert("活動不存在"); safeNavigate('index.html'); return; }
+
+                // 判定早鳥
                 const deadline = new Date(state.event['早鳥截止日期']);
                 state.isEarlyBird = !isNaN(deadline) && (new Date() <= deadline);
-                if(state.isEarlyBird) document.getElementById('early-bird-hint').classList.remove('hidden');
+                if(state.isEarlyBird) document.getElementById('early-bird-tag').classList.remove('hidden');
 
+                document.getElementById('event-title-display').innerText = state.event['活動名稱'];
+                
                 renderMembers();
-                renderDates();
+                renderCalendar();
                 renderRentalOptions();
                 switchView('member');
-            } catch (e) { console.error("初始化失敗:", e); }
+            } catch (e) { console.error(e); }
         }
 
         function renderMembers() {
             const container = document.getElementById('member-list');
             if(state.members.length === 0) { safeNavigate('register.html?mode=add'); return; }
             container.innerHTML = state.members.map(m => `
-                <div onclick="selectMember('${m.學員ID}')" class="bg-white p-4 rounded-xl border border-slate-200 cursor-pointer flex justify-between items-center hover:border-blue-500 transition-all">
+                <div onclick="selectMember('${m.學員ID}')" class="bg-white p-4 rounded-xl border border-slate-200 cursor-pointer flex justify-between items-center hover:shadow-md transition-all">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center font-black text-blue-600">${m.姓名 ? m.姓名.charAt(0) : '?'}</div>
-                        <div><p class="font-black text-sm">${m.姓名}</p><p class="text-[10px] text-slate-400 font-bold">${m.身分 || '成員'}</p></div>
+                        <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center font-black">${m.姓名.charAt(0)}</div>
+                        <p class="font-black text-sm">${m.姓名}</p>
                     </div>
-                    <div class="text-blue-500 font-black text-xs">選擇 ➜</div>
+                    <div class="text-blue-500 font-black text-xs italic">SELECT ➜</div>
                 </div>`).join('');
         }
 
-        function renderDates() {
-            const container = document.getElementById('date-selector-grid');
-            if (!state.event['開始日期'] || !state.event['結束日期']) return;
-            
+        function renderCalendar() {
+            const container = document.getElementById('calendar-container');
             const start = new Date(state.event['開始日期']);
             const end = new Date(state.event['結束日期']);
-            
-            if (state.event['開始日期'] === state.event['結束日期']) {
-                const dStr = state.event['開始日期'];
-                state.selectedDates = [dStr];
-                container.innerHTML = `<div class="date-chip selected">${dStr}</div>`;
-                return;
-            }
-
-            let html = "";
             let current = new Date(start);
+            let html = "";
+
             while (current <= end) {
                 const dStr = current.toISOString().split('T')[0];
-                html += `<div id="date-${dStr}" onclick="toggleDate('${dStr}')" class="date-chip">${dStr.substring(5)}</div>`;
+                state.leaves[dStr] = '出席'; // 預設全部出席
+                html += `
+                <div id="day-card-${dStr}" class="calendar-day-card">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-black text-xs text-slate-700">${dStr}</span>
+                        <span id="status-text-${dStr}" class="text-[10px] font-bold text-blue-500 uppercase">出席中</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1">
+                        <div onclick="setLeave('${dStr}', '出席')" id="opt-${dStr}-出席" class="leave-option active">出席</div>
+                        <div onclick="setLeave('${dStr}', '全日')" id="opt-${dStr}-全日" class="leave-option absent">全日假</div>
+                        <div onclick="setLeave('${dStr}', '上午')" id="opt-${dStr}-上午" class="leave-option absent">上午假</div>
+                        <div onclick="setLeave('${dStr}', '下午')" id="opt-${dStr}-下午" class="leave-option absent">下午假</div>
+                    </div>
+                </div>`;
                 current.setDate(current.getDate() + 1);
             }
             container.innerHTML = html;
         }
 
-        function toggleDate(d) {
-            const idx = state.selectedDates.indexOf(d);
-            if (idx > -1) state.selectedDates.splice(idx, 1);
-            else state.selectedDates.push(d);
+        function setLeave(date, type) {
+            state.leaves[date] = type;
             
-            const el = document.getElementById(`date-${d}`);
-            if (el) el.classList.toggle('selected');
+            // 更新 UI 狀態
+            const options = ['出席', '全日', '上午', '下午'];
+            options.forEach(opt => {
+                const el = document.getElementById(`opt-${date}-${opt}`);
+                el.classList.toggle('active', opt === type);
+            });
+
+            const card = document.getElementById(`day-card-${date}`);
+            const statusText = document.getElementById(`status-text-${date}`);
+            
+            if (type === '出席') {
+                card.classList.remove('has-leave');
+                statusText.innerText = "出席中";
+                statusText.className = "text-[10px] font-bold text-blue-500 uppercase";
+            } else {
+                card.classList.add('has-leave');
+                statusText.innerText = type + "請假";
+                statusText.className = "text-[10px] font-bold text-red-500 uppercase";
+            }
             calculatePrice();
         }
 
@@ -220,12 +202,12 @@
             if (items.length === 0) return;
             document.getElementById('rental-section').classList.remove('hidden');
             document.getElementById('rental-options').innerHTML = items.map((item, i) => `
-                <label class="flex items-center justify-between p-4 border rounded-xl bg-slate-50 cursor-pointer">
+                <label class="flex items-center justify-between p-4 border rounded-xl bg-slate-50 cursor-pointer hover:bg-blue-50 transition-all">
                     <div class="flex items-center gap-3">
                         <input type="checkbox" onchange="updateRental(${i}, this.checked)" class="w-5 h-5 accent-blue-600">
                         <span class="font-bold text-sm text-slate-700">${item.name}</span>
                     </div>
-                    <span class="font-black text-blue-600">$${item.price}</span>
+                    <span class="font-black text-blue-600 italic">$${item.price}</span>
                 </label>`).join('');
         }
 
@@ -236,74 +218,70 @@
             calculatePrice();
         }
 
-        function setDayType(t) {
-            state.dayType = t;
-            document.getElementById('type-full').classList.toggle('selected', t === '全日');
-            document.getElementById('type-half').classList.toggle('selected', t === '半日');
-            calculatePrice();
-        }
-
         function calculatePrice() {
-            if (!state.event) return;
-            let unitPrice = 0;
-            if (state.dayType === '全日') {
-                unitPrice = state.isEarlyBird ? Number(state.event['全日早鳥價'] || state.event['全日價']) : Number(state.event['全日價']);
-            } else {
-                unitPrice = state.isEarlyBird ? Number(state.event['半日早鳥價'] || state.event['半日價']) : Number(state.event['半日價']);
-            }
+            // 1. 決定單日基礎價 (早鳥判定)
+            const unitPrice = state.isEarlyBird ? Number(state.event['全日早鳥價'] || state.event['全日價']) : Number(state.event['全日價']);
+            const totalDays = Object.keys(state.leaves).length;
+            const originalTotal = unitPrice * totalDays;
 
-            const baseTotal = unitPrice * (state.selectedDates.length || 1);
+            // 2. 計算扣除額
+            let totalDeduction = 0;
+            const fullDeduct = Number(state.event['全日扣除'] || 0);
+            const halfDeduct = Number(state.event['半日扣除'] || 0);
+
+            Object.values(state.leaves).forEach(val => {
+                if (val === '全日') totalDeduction += fullDeduct;
+                if (val === '上午' || val === '下午') totalDeduction += halfDeduct;
+            });
+
+            // 3. 計算租借
             const rentalTotal = state.rentedItems.reduce((acc, it) => acc + Number(it.price), 0);
-            
-            state.finalTotal = baseTotal + rentalTotal;
-            
-            document.getElementById('price-base').innerText = `NT$ ${baseTotal.toLocaleString()}`;
-            document.getElementById('price-rental').innerText = `NT$ ${rentalTotal.toLocaleString()}`;
-            document.getElementById('rental-summary-row').classList.toggle('hidden', rentalTotal === 0);
+
+            state.finalTotal = originalTotal - totalDeduction + rentalTotal;
+            if (state.finalTotal < 0) state.finalTotal = 0;
+
+            document.getElementById('price-original').innerText = `NT$ ${originalTotal.toLocaleString()}`;
+            document.getElementById('price-deduction').innerText = `- NT$ ${totalDeduction.toLocaleString()}`;
+            document.getElementById('price-rent').innerText = `NT$ ${rentalTotal.toLocaleString()}`;
             document.getElementById('price-total').innerText = `NT$ ${state.finalTotal.toLocaleString()}`;
         }
 
-        function selectMember(mid) { state.selectedMember = state.members.find(m => String(m.學員ID) === String(mid)); switchView('options'); calculatePrice(); }
+        function selectMember(mid) { state.selectedMember = state.members.find(m => String(m.學員ID) === String(mid)); switchView('details'); calculatePrice(); }
 
-        async function submitOrder() {
+        async function submitBooking() {
             const b5 = document.getElementById('bank-5').value;
-            if (!b5 || b5.length < 5) return alert("請填寫匯款後五碼");
-            if (state.selectedDates.length === 0) return alert("請至少選擇一個日期");
+            if (b5.length < 5) return alert("請輸入正確的匯款後五碼");
 
             document.getElementById('btn-submit').disabled = true;
-            document.getElementById('btn-submit').innerText = "處理中...";
+            document.getElementById('btn-submit').innerText = "PUSHING TO CLOUD...";
+
+            // 整理請假備註
+            const leaveList = Object.entries(state.leaves)
+                .filter(([d, type]) => type !== '出席')
+                .map(([d, type]) => `${d}(${type})`)
+                .join(', ');
 
             const payload = {
                 student: state.selectedMember,
                 eventId: state.event['活動ID'],
                 eventName: state.event['活動名稱'],
-                type: state.dayType,
-                session: state.selectedDates.join(', '),
+                type: '日曆預約',
+                session: leaveList || '全勤參加',
                 amount: state.finalTotal,
                 bankLast5: b5,
                 rentedItems: state.rentedItems.map(it => it.name)
             };
 
-            try {
-                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
-                const result = await res.json();
-                if (result.status === 'success') {
-                    alert("🎉 預約成功！");
-                    safeNavigate('index.html');
-                } else {
-                    throw new Error("伺服器回傳失敗");
-                }
-            } catch (err) {
-                alert("報名失敗，請連繫店家");
-                document.getElementById('btn-submit').disabled = false;
-                document.getElementById('btn-submit').innerText = "Confirm Registration ➜";
+            const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
+            if ((await res.json()).status === 'success') {
+                alert("🎉 預約完成！請靜候店家核帳通知。");
+                safeNavigate('index.html');
             }
         }
 
         function switchView(v) {
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
-            const target = document.getElementById('view-' + v);
-            if (target) target.classList.add('active');
+            document.getElementById('view-' + v).classList.add('active');
             window.scrollTo(0,0);
         }
 
