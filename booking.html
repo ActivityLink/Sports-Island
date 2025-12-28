@@ -24,9 +24,31 @@
         .leave-menu { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 32px 32px 0 0; padding: 32px; z-index: 1001; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .leave-menu.active { transform: translateY(0); }
         .overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(2px); z-index: 1000; display: none; }
+        
+        /* 錯誤偵錯面板 */
+        .error-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); color: white; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+        .error-card { background: white; color: #1e293b; border-radius: 32px; padding: 40px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
+
+    <!-- 連線異常診斷畫面 -->
+    <div id="error-screen" class="error-overlay">
+        <div class="error-card">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center font-black text-3xl mx-auto mb-6">!</div>
+            <h2 class="text-2xl font-black text-slate-800 mb-2">伺服器回應逾時</h2>
+            <p id="error-msg" class="text-sm text-slate-500 mb-8 leading-relaxed">後端系統（Google）反應過久，導致連線中斷 (Error 524)。這通常是暫時性的。</p>
+            <div class="bg-slate-50 p-4 rounded-2xl text-left mb-8">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">建議操作</p>
+                <ul class="text-xs text-slate-600 space-y-1 list-disc list-inside">
+                    <li>點擊下方按鈕重新嘗試連線</li>
+                    <li>檢查 Google 試算表是否開啟過多分頁</li>
+                    <li>稍候幾分鐘再試一次</li>
+                </ul>
+            </div>
+            <button onclick="location.reload()" class="w-full bg-[#1877f2] text-white py-4 rounded-2xl font-black shadow-lg">重新嘗試連線</button>
+        </div>
+    </div>
 
     <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center">
         <div class="w-10 h-10 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
@@ -112,14 +134,41 @@
                 const url = new URL(target, window.location.href);
                 window.location.href = url.href;
             } catch (e) {
-                // 退回舊有相對路徑處理邏輯
                 const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
                 window.location.href = path + target;
             }
         }
 
+        /**
+         * 強化版 JSON 請求：處理 524 逾時與 HTML 回應
+         */
+        async function safeFetchJson(url) {
+            try {
+                const res = await fetch(url);
+                const text = await res.text();
+                
+                // 檢查是否為 HTML 報錯內容
+                if (text.includes("error code: 524") || text.trim().startsWith("<!DOCTYPE")) {
+                    console.error("Server Error Response:", text);
+                    throw new Error("SERVER_TIMEOUT_OR_HTML");
+                }
+                
+                try {
+                    return JSON.parse(text);
+                } catch (parseErr) {
+                    console.error("JSON Parse Fail:", text);
+                    throw new Error("INVALID_JSON_FORMAT");
+                }
+            } catch (err) {
+                document.getElementById('error-screen').style.display = 'flex';
+                if (err.message === "SERVER_TIMEOUT_OR_HTML") {
+                    document.getElementById('error-msg').innerText = "伺服器回應逾時 (Error 524)。這代表後端 Google Apps Script 執行過久，請重新整理試試看。";
+                }
+                throw err;
+            }
+        }
+
         async function init() {
-            // 修復點 1：徹底重置狀態，防止金額累加
             state.leaves = {};
             state.rentedItems = [];
             state.finalAmount = 0;
@@ -130,13 +179,14 @@
                 const p = liff.isLoggedIn() ? await liff.getProfile() : { userId: "DEBUG_USER" };
                 state.uid = p.userId;
 
-                const [evRes, memRes] = await Promise.all([
-                    fetch(`${PROXY_URL}?action=getEvents`),
-                    fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`)
+                // 使用強化後的 safeFetchJson
+                const [evData, memData] = await Promise.all([
+                    safeFetchJson(`${PROXY_URL}?action=getEvents`),
+                    safeFetchJson(`${PROXY_URL}?action=getFamily&uid=${state.uid}`)
                 ]);
-                const evData = await evRes.json();
+
                 state.event = evData.data.find(e => String(e['活動ID']) === String(eventId));
-                state.members = (await memRes.json()).data || [];
+                state.members = memData.data || [];
                 state.allRentalDb = JSON.parse(evData.config.rentalItems || "[]");
 
                 if (!state.event) { 
@@ -150,7 +200,7 @@
                 renderRentalOptions(); 
                 switchView('member');
             } catch (e) { 
-                console.error(e); 
+                console.error("Init Error:", e);
             } finally {
                 document.getElementById('view-loading').style.display = 'none';
             }
@@ -158,7 +208,6 @@
 
         function renderCalendar() {
             const container = document.getElementById('cal-body');
-            // 修復點 4：日曆精準讀取活動開始日期
             const start = new Date(state.event['開始日期']);
             const end = new Date(state.event['結束日期']);
             const classDays = (state.event['梯次資料'] || "").split(',').map(Number);
@@ -166,7 +215,6 @@
 
             document.getElementById('calendar-month-label').innerText = `${start.getFullYear()}年 ${start.getMonth()+1}月`;
             
-            // 計算當月第一天是星期幾來產生偏移
             const calendarStartView = new Date(start.getFullYear(), start.getMonth(), 1);
             const firstDayOffset = calendarStartView.getDay();
             
@@ -196,7 +244,7 @@
             if(items.length === 0) return;
             document.getElementById('rental-card').classList.remove('hidden');
             document.getElementById('rental-options-list').innerHTML = items.map(it => `
-                <label class="flex justify-between p-4 border rounded-2xl bg-slate-50 items-center">
+                <label class="flex justify-between p-4 border rounded-2xl bg-slate-50 items-center cursor-pointer">
                     <div class="flex gap-3"><input type="checkbox" onchange="updateRental('${it.name}', ${it.price}, this.checked)" class="w-6 h-6 accent-blue-600"><span class="font-black">${it.name}</span></div>
                     <span class="font-black text-blue-600">$${it.price}</span>
                 </label>`).join('');
@@ -282,7 +330,11 @@
 
             try {
                 const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
-                const result = await res.json();
+                const text = await res.text();
+                
+                if (text.includes("error code: 524") || text.trim().startsWith("<!DOCTYPE")) throw new Error("POST_TIMEOUT");
+                
+                const result = JSON.parse(text);
                 if(result.status === 'success') { 
                     alert("🎉 預約成功！報名資料已存入雲端。"); 
                     safeNavigate('index.html'); 
@@ -292,7 +344,7 @@
                     btn.innerText = "CONFIRM ➜";
                 }
             } catch (e) {
-                alert("網路連線異常，請稍後再試");
+                alert("網路連線異常或伺服器逾時，請稍後再試。");
                 btn.disabled = false;
                 btn.innerText = "CONFIRM ➜";
             }
