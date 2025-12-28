@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>成員資料庫 - 運動島</title>
+    <title>成員資料錄入 - 運動島</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -29,14 +29,14 @@
             <p class="mt-4 font-black text-gray-400 text-xs tracking-widest uppercase italic">身分驗證中...</p>
         </div>
 
-        <!-- 選擇身分 (僅全新用戶第一次註冊顯示) -->
+        <!-- 選擇身分 (僅全新帳號第一次註冊顯示) -->
         <div id="view-choice" class="section-view">
             <div class="content-card text-center">
-                <h1 class="text-2xl font-black mb-4">加入運動島</h1>
-                <p class="text-gray-500 mb-10 font-bold text-sm">請先選擇身分以開始註冊流程</p>
+                <h1 class="text-2xl font-black mb-2">加入運動島</h1>
+                <p class="text-gray-500 mb-10 font-bold text-sm">請先選擇您的註冊類型</p>
                 <div class="space-y-4">
-                    <button onclick="selectRole('本人')" class="btn-primary">🙋‍♂️ 我是學員本人 (學生/成人)</button>
-                    <button onclick="selectRole('家長')" class="btn-primary bg-[#42b72a]">👪 幫家人報名 (配偶/長輩/孩子)</button>
+                    <button onclick="selectRole('本人')" class="btn-primary">🙋‍♂️ 我是學員本人 (自用帳號)</button>
+                    <button onclick="selectRole('家長')" class="btn-primary bg-[#42b72a]">👪 幫家人報名 (家長/管理員)</button>
                 </div>
             </div>
         </div>
@@ -44,27 +44,38 @@
         <!-- 16 欄位全功能表單 -->
         <div id="view-form" class="section-view">
             <div class="content-card">
-                <h2 id="form-title" class="text-xl font-black mb-8 border-b pb-4 text-[#1877f2]">成員詳細資料登錄 (全功能)</h2>
+                <h2 id="form-title" class="text-xl font-black mb-8 border-b pb-4 text-[#1877f2]">成員詳細資料錄入</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="col-span-full"><label class="tag-label">真實姓名</label><input type="text" id="stu-name" class="input-giant" placeholder="請輸入證件姓名"></div>
+                    <div class="col-span-full"><label class="tag-label">真實姓名</label><input type="text" id="stu-name" class="input-giant" placeholder="請輸入姓名"></div>
                     <div><label class="tag-label">生日</label><input type="date" id="stu-birthday" class="input-giant"></div>
                     <div><label class="tag-label">身分證字號</label><input type="text" id="stu-id" class="input-giant uppercase" placeholder="A123456789"></div>
                     <div><label class="tag-label">性別</label><select id="stu-gender" class="input-giant font-bold"><option value="男">男</option><option value="女">女</option></select></div>
+                    
+                    <!-- 修正：身分別選項 (對應 G 欄位) -->
+                    <div class="col-span-full">
+                        <label class="tag-label text-blue-600">身分別</label>
+                        <select id="stu-identity" class="input-giant font-bold border-[#1877f2] bg-blue-50">
+                            <option value="學生">學生</option>
+                            <option value="一般人士">一般人士</option>
+                            <option value="辦課單位">辦課單位</option>
+                            <option value="廠商">廠商</option>
+                        </select>
+                    </div>
+
                     <div class="grid grid-cols-3 gap-2 col-span-full">
                         <div><label class="tag-label !text-[9px]">身高 cm</label><input type="number" id="stu-height" class="input-giant" placeholder="0"></div>
                         <div><label class="tag-label !text-[9px]">體重 kg</label><input type="number" id="stu-weight" class="input-giant" placeholder="0"></div>
                         <div><label class="tag-label !text-[9px]">腳長 cm</label><input type="number" id="stu-foot" class="input-giant" placeholder="0"></div>
                     </div>
-                    <div><label class="tag-label">就讀學校/單位</label><input type="text" id="stu-school" class="input-giant" placeholder="無則免填"></div>
-                    <div><label class="tag-label">年級/職稱</label><input type="text" id="stu-grade" class="input-giant" placeholder="例如：三年級"></div>
-                    <div class="col-span-full"><label class="tag-label">健康狀況說明 (如氣喘、藥物過敏)</label><textarea id="stu-health" rows="2" class="input-giant !h-auto" placeholder="若完全正常請寫「無」"></textarea></div>
-                    <div class="col-span-full"><label class="tag-label">感興趣運動項目</label><input type="text" id="stu-interests" class="input-giant" placeholder="如：籃球、游泳"></div>
+                    <div><label class="tag-label">就讀學校/單位</label><input type="text" id="stu-school" class="input-giant"></div>
+                    <div><label class="tag-label">年級/職稱</label><input type="text" id="stu-grade" class="input-giant" onfocus="detectGrade()"></div>
+                    <div class="col-span-full"><label class="tag-label">健康狀況說明</label><textarea id="stu-health" rows="2" class="input-giant !h-auto" placeholder="過敏、受傷史等"></textarea></div>
+                    <div class="col-span-full"><label class="tag-label">感興趣項目</label><input type="text" id="stu-interests" class="input-giant" placeholder="例如：溜冰、游泳"></div>
                 </div>
-                <button onclick="submitForm()" id="btn-save" class="btn-primary mt-12 shadow-lg">確認儲存並同步雲端 ➜</button>
-                <button onclick="window.location.href='index.html'" class="w-full mt-4 text-gray-400 font-bold text-xs text-center uppercase">取消返回首頁</button>
+                <button onclick="submitForm()" id="btn-save" class="btn-primary mt-12 shadow-lg">確認儲存並更新 ➜</button>
+                <button onclick="window.location.href='index.html'" class="w-full mt-4 text-gray-400 font-bold text-xs text-center uppercase">取消返回</button>
             </div>
         </div>
-
     </div>
 
     <script>
@@ -83,15 +94,12 @@
                 userUid = p.userId;
                 
                 if (editStuId) {
-                    // 1. 編輯模式：抓取資料
                     loadStuData(editStuId);
                 } else if (isAddMode) {
-                    // 2. 新增模式：直接顯表單 (已是會員)
                     document.getElementById('view-loading').style.display = 'none';
                     document.getElementById('view-form').classList.add('active');
-                    document.getElementById('form-title').innerText = "新增家庭成員";
+                    document.getElementById('form-title').innerText = "新增成員資料";
                 } else {
-                    // 3. 初始註冊：檢查是否已有帳號
                     const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${userUid}`);
                     const r = await res.json();
                     document.getElementById('view-loading').style.display = 'none';
@@ -118,6 +126,7 @@
                 document.getElementById('stu-id').value = s.身分證字號 || "";
                 document.getElementById('stu-birthday').value = s.生日 || "";
                 document.getElementById('stu-gender').value = s.性別 || "男";
+                document.getElementById('stu-identity').value = s.身分 || "學生";
                 document.getElementById('stu-height').value = s.身高 || 0;
                 document.getElementById('stu-weight').value = s.體重 || 0;
                 document.getElementById('stu-foot').value = s.腳長 || 0;
@@ -128,27 +137,31 @@
             }
         }
 
+        function detectGrade() {
+            const b = document.getElementById('stu-birthday').value; if(!b) return;
+            const age = new Date().getFullYear() - new Date(b).getFullYear();
+            if(!document.getElementById('stu-grade').value) {
+                document.getElementById('stu-grade').value = age > 6 ? `${age-6}年級` : "幼兒園";
+            }
+        }
+
         async function submitForm() {
             const payload = {
                 id: editStuId, parentUid: userUid, name: document.getElementById('stu-name').value,
                 birthday: document.getElementById('stu-birthday').value, idNumber: document.getElementById('stu-id').value,
-                gender: document.getElementById('stu-gender').value, height: document.getElementById('stu-height').value,
-                weight: document.getElementById('stu-weight').value, footSize: document.getElementById('stu-foot').value,
-                school: document.getElementById('stu-school').value, grade: document.getElementById('stu-grade').value,
-                health: document.getElementById('stu-health').value, interests: document.getElementById('stu-interests').value,
-                identity: '成員', diet: '葷食'
+                gender: document.getElementById('stu-gender').value, identity: document.getElementById('stu-identity').value,
+                height: document.getElementById('stu-height').value, weight: document.getElementById('stu-weight').value,
+                footSize: document.getElementById('stu-foot').value, school: document.getElementById('stu-school').value,
+                grade: document.getElementById('stu-grade').value, health: document.getElementById('stu-health').value,
+                interests: document.getElementById('stu-interests').value, diet: '葷食'
             };
             if (!payload.name) { alert("請填寫姓名"); return; }
             document.getElementById('btn-save').disabled = true;
-            
-            // 第一次註冊才需要建立主帳號
             if (!editStuId && !isAddMode) {
                 await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'registerUser', payload: { uid: userUid, name: payload.name, phone: 'Member', type: window.selectedRole } }) });
             }
-            
             const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'addStudent', payload }) });
-            const r = await res.json();
-            if (r.status === 'success') { window.location.href = 'index.html'; }
+            if ((await res.json()).status === 'success') { window.location.href = 'index.html'; }
         }
         window.onload = init;
     </script>
