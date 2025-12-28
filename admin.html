@@ -8,123 +8,197 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1c1e21; }
-        .main-container { max-width: 960px; margin: 0 auto; padding: 24px 12px; }
+        .main-container { max-width: 1000px; margin: 0 auto; padding: 24px 12px; }
         .content-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 16px; }
-        .admin-sub-tab { padding: 12px 24px; border-radius: 8px; font-weight: 900; color: #64748b; cursor: pointer; }
+        .admin-sub-tab { padding: 12px 24px; border-radius: 8px; font-weight: 900; color: #64748b; cursor: pointer; transition: 0.2s; white-space: nowrap; }
         .admin-sub-tab.active { background: #1877f2; color: white; }
         .input-field { width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; font-weight: 700; outline: none; background: #f1f5f9; }
-        .tag-label { color: #64748b; font-weight: 900; margin-bottom: 6px; display: block; font-size: 12px; }
+        .tag-label { color: #64748b; font-weight: 900; margin-bottom: 6px; display: block; font-size: 12px; text-transform: uppercase; }
         .btn-action { padding: 8px 16px; border-radius: 6px; font-weight: 900; font-size: 12px; cursor: pointer; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
     <div class="main-container">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-black italic">ADMIN CONSOLE</h1>
-            <button onclick="window.location.href='index.html'" class="text-gray-400 font-bold text-sm">⬅ 前台</button>
+            <h1 class="text-2xl font-black italic tracking-tighter">ADMIN CONSOLE</h1>
+            <button onclick="window.location.href='index.html'" class="text-gray-400 font-bold text-xs">⬅ 返回前台</button>
         </div>
 
-        <div class="flex gap-2 mb-8 bg-white p-2 rounded-xl shadow-sm">
-            <button onclick="switchTab('config')" id="btn-config" class="admin-sub-tab active">參數管理 (新增項目)</button>
-            <button onclick="switchTab('events')" id="btn-events" class="admin-sub-tab">活動庫</button>
+        <div class="flex gap-2 mb-8 bg-white p-2 rounded-xl shadow-sm overflow-x-auto no-scrollbar">
+            <button onclick="switchTab('events')" id="btn-events" class="admin-sub-tab active">活動庫 (19欄)</button>
+            <button onclick="switchTab('config')" id="btn-config" class="admin-sub-tab">參數與租借管理</button>
+            <button onclick="switchTab('crm')" id="btn-crm" class="admin-sub-tab">CRM會員</button>
         </div>
 
-        <!-- 參數設定模組 -->
-        <div id="view-config" class="space-y-6">
+        <!-- 活動庫模組 (開通中) -->
+        <div id="view-events" class="space-y-4">
+            <div class="flex justify-between items-center px-2">
+                <h3 class="font-black text-gray-400 text-xs uppercase">Inventory List</h3>
+                <button onclick="openEditor(null)" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-black text-xs">+ 新增活動</button>
+            </div>
+            <div id="admin-event-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 由 JS 渲染 -->
+            </div>
+        </div>
+
+        <!-- 參數管理模組 (支援多項目) -->
+        <div id="view-config" class="hidden space-y-6">
             <div class="content-card">
-                <h3 class="text-lg font-black mb-6 border-b pb-2">1. 課程類別標籤</h3>
+                <h3 class="text-lg font-black mb-6 border-b pb-2">1. 課程分類標籤</h3>
                 <div id="category-list" class="flex flex-wrap gap-2 mb-4"></div>
                 <div class="flex gap-2">
-                    <input type="text" id="new-cat" class="input-field" placeholder="新增標籤名稱">
-                    <button onclick="addItem('cat')" class="btn-action bg-blue-600 text-white w-24">+ 新增</button>
+                    <input type="text" id="new-cat" class="input-field" placeholder="新增標籤(如:籃球)">
+                    <button onclick="addItem('cat')" class="btn-action bg-blue-600 text-white w-24">新增</button>
                 </div>
             </div>
 
             <div class="content-card">
-                <h3 class="text-lg font-black mb-6 border-b pb-2 text-blue-600">2. 設備租借項目管理</h3>
+                <h3 class="text-lg font-black mb-6 border-b pb-2 text-blue-600">2. 設備租借項目清單</h3>
                 <div id="rental-list" class="space-y-2 mb-4"></div>
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="text" id="rent-name" class="input-field" placeholder="項目名稱(如:溜冰鞋)">
+                    <input type="text" id="rent-name" class="input-field" placeholder="品名">
                     <input type="number" id="rent-price" class="input-field" placeholder="單價">
                 </div>
-                <button onclick="addItem('rent')" class="btn-action bg-blue-600 text-white w-full mt-2">+ 加入租借清單</button>
+                <button onclick="addItem('rent')" class="btn-action bg-blue-600 text-white w-full mt-2">+ 加入清單</button>
             </div>
 
             <div class="content-card">
-                <h3 class="text-lg font-black mb-6 border-b pb-2">3. 結帳資訊</h3>
-                <textarea id="cfg-bank" rows="3" class="input-field" placeholder="輸入銀行資訊"></textarea>
+                <h3 class="text-lg font-black mb-4">3. 店家匯款資訊</h3>
+                <textarea id="cfg-bank" rows="3" class="input-field"></textarea>
             </div>
 
-            <button onclick="saveAllConfigs()" class="bg-gray-900 text-white w-full py-4 rounded-xl font-black shadow-lg">確認保存所有雲端參數</button>
+            <button onclick="saveAllConfigs()" class="bg-gray-900 text-white w-full py-4 rounded-xl font-black shadow-lg">確認保存全局參數</button>
         </div>
 
-        <div id="view-events" class="hidden">載入中...</div>
+        <div id="view-crm" class="hidden text-center py-20 text-gray-400 italic">CRM 功能載入中...</div>
+    </div>
+
+    <!-- 19 欄位編輯器 Modal -->
+    <div id="editor-modal" class="fixed inset-0 bg-white z-[5000] hidden overflow-y-auto p-6">
+        <div class="max-w-4xl mx-auto bg-white p-8 rounded-[32px] border shadow-2xl">
+            <h2 class="text-xl font-black mb-8 italic border-b pb-4 text-[#1877f2]">Inventory Specification (19 Fields)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="col-span-full"><label class="tag-label">活動名稱</label><input type="text" id="ed-name" class="input-field"></div>
+                <div><label class="tag-label">分類</label><input type="text" id="ed-cat" class="input-field"></div>
+                <div><label class="tag-label">價格 (全日)</label><input type="number" id="ed-price" class="input-field"></div>
+                <div><label class="tag-label text-red-500">請假扣額 (全)</label><input type="number" id="ed-deduct" class="input-field"></div>
+                <div><label class="tag-label">總名額</label><input type="number" id="ed-quota" class="input-field"></div>
+                <div><label class="tag-label">狀態</label><select id="ed-status" class="input-field font-bold"><option value="上架">上架</option><option value="下架">下架</option></select></div>
+                <div class="col-span-full"><label class="tag-label">圖片URL</label><input type="text" id="ed-img" class="input-field"></div>
+                <div class="col-span-full"><label class="tag-label">活動詳情描述</label><textarea id="ed-desc" rows="6" class="input-field"></textarea></div>
+            </div>
+            <button onclick="saveEvent()" class="bg-blue-600 text-white w-full mt-10 py-4 rounded-xl font-black shadow-lg">發布至雲端 ➜</button>
+            <button onclick="document.getElementById('editor-modal').classList.add('hidden')" class="w-full mt-4 text-gray-400 font-bold text-xs">取消</button>
+        </div>
     </div>
 
     <script>
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
-        let config = { sportCategories: [], rentalItems: [] };
+        let state = { events: [], config: { sportCategories: [], rentalItems: [] } };
 
         async function init() {
-            const res = await fetch(`${PROXY_URL}?action=getEvents`);
+            const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
             const r = await res.json();
-            config.sportCategories = (r.config.sportCategories || "").split(',').filter(i => i);
-            config.rentalItems = JSON.parse(r.config.rentalItems || "[]");
+            state.events = r.data || [];
+            state.config.sportCategories = (r.config.sportCategories || "").split(',').filter(i => i);
+            state.config.rentalItems = JSON.parse(r.config.rentalItems || "[]");
             document.getElementById('cfg-bank').value = r.config.bankInfo || "";
-            renderLists();
+            
+            renderEvents();
+            renderConfigLists();
         }
 
-        function renderLists() {
-            // 渲染標籤
-            document.getElementById('category-list').innerHTML = config.sportCategories.map((c, i) => `
+        function renderEvents() {
+            document.getElementById('admin-event-grid').innerHTML = state.events.map(ev => `
+                <div class="content-card flex justify-between items-center !py-4 hover:bg-slate-50 transition-all">
+                    <div>
+                        <h4 class="font-black text-sm">${ev['活動名稱']}</h4>
+                        <p class="text-[9px] text-gray-400 uppercase font-bold">${ev['分類']} | ${ev['狀態']}</p>
+                    </div>
+                    <button onclick="openEditor('${ev['活動ID']}')" class="text-[#1877f2] font-black text-[10px] border px-3 py-1 rounded-md">規格編輯</button>
+                </div>`).join('');
+        }
+
+        function openEditor(id) {
+            state.currentEditId = id;
+            const ev = state.events.find(e => String(e['活動ID']) === String(id)) || {};
+            document.getElementById('editor-modal').classList.remove('hidden');
+            document.getElementById('ed-name').value = ev['活動名稱'] || "";
+            document.getElementById('ed-cat').value = ev['分類'] || "";
+            document.getElementById('ed-price').value = ev['全日價'] || 0;
+            document.getElementById('ed-deduct').value = ev['全日扣除'] || 0;
+            document.getElementById('ed-quota').value = ev['總名額'] || 0;
+            document.getElementById('ed-status').value = ev['狀態'] || "上架";
+            document.getElementById('ed-img').value = ev['圖片URL'] || "";
+            document.getElementById('ed-desc').value = ev['描述'] || "";
+        }
+
+        async function saveEvent() {
+            const payload = {
+                "活動ID": state.currentEditId || ("EVT-" + Date.now()),
+                "活動名稱": document.getElementById('ed-name').value,
+                "分類": document.getElementById('ed-cat').value,
+                "全日價": document.getElementById('ed-price').value,
+                "全日扣除": document.getElementById('ed-deduct').value,
+                "總名額": document.getElementById('ed-quota').value,
+                "狀態": document.getElementById('ed-status').value,
+                "圖片URL": document.getElementById('ed-img').value,
+                "描述": document.getElementById('ed-desc').value
+            };
+            const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateEvent', payload }) });
+            if ((await res.json()).status === 'success') { alert("✅ 活動已更新"); document.getElementById('editor-modal').classList.add('hidden'); init(); }
+        }
+
+        function renderConfigLists() {
+            document.getElementById('category-list').innerHTML = state.config.sportCategories.map((c, i) => `
                 <div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-bold text-xs flex items-center gap-2">
                     ${c} <span onclick="removeItem('cat', ${i})" class="cursor-pointer opacity-50">✕</span>
                 </div>`).join('');
-
-            // 渲染租借
-            document.getElementById('rental-list').innerHTML = config.rentalItems.map((item, i) => `
+            document.getElementById('rental-list').innerHTML = state.config.rentalItems.map((item, i) => `
                 <div class="flex justify-between items-center p-3 border rounded-lg bg-gray-50">
                     <div class="font-black text-sm">${item.name} <span class="text-blue-600 ml-2">$${item.price}</span></div>
-                    <button onclick="removeItem('rent', ${i})" class="text-red-400 font-bold">刪除</button>
-                </div>`).join('');
+                    <button onclick="removeItem('rent', ${i})" class="text-red-400 font-bold text-xs">刪除</button>
+                </div>`).join('') || '<p class="text-gray-400 text-[10px] text-center italic">尚無租借品項</p>';
         }
 
         function addItem(type) {
             if (type === 'cat') {
                 const val = document.getElementById('new-cat').value;
-                if (val) config.sportCategories.push(val);
+                if (val) state.config.sportCategories.push(val);
                 document.getElementById('new-cat').value = "";
             } else {
                 const n = document.getElementById('rent-name').value;
                 const p = document.getElementById('rent-price').value;
-                if (n && p) config.rentalItems.push({ name: n, price: Number(p) });
+                if (n && p) state.config.rentalItems.push({ name: n, price: Number(p) });
                 document.getElementById('rent-name').value = "";
                 document.getElementById('rent-price').value = "";
             }
-            renderLists();
+            renderConfigLists();
         }
 
         function removeItem(type, idx) {
-            if (type === 'cat') config.sportCategories.splice(idx, 1);
-            else config.rentalItems.splice(idx, 1);
-            renderLists();
+            if (type === 'cat') state.config.sportCategories.splice(idx, 1);
+            else state.config.rentalItems.splice(idx, 1);
+            renderConfigLists();
         }
 
         async function saveAllConfigs() {
             const payload = {
-                sportCategories: config.sportCategories.join(','),
-                rentalItems: JSON.stringify(config.rentalItems),
+                sportCategories: state.config.sportCategories.join(','),
+                rentalItems: JSON.stringify(state.config.rentalItems),
                 bankInfo: document.getElementById('cfg-bank').value
             };
             await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateConfig', payload }) });
-            alert("✅ 參數已成功同步至雲端");
+            alert("✅ 系統參數已同步");
         }
 
         function switchTab(t) {
-            document.getElementById('view-config').classList.toggle('hidden', t !== 'config');
-            document.getElementById('view-events').classList.toggle('hidden', t !== 'events');
-            document.getElementById('btn-config').classList.toggle('active', t === 'config');
-            document.getElementById('btn-events').classList.toggle('active', t === 'events');
+            ['events', 'config', 'crm'].forEach(i => {
+                document.getElementById(`view-${i}`).classList.toggle('hidden', i !== t);
+                document.getElementById(`btn-${i}`).classList.toggle('active', i === t);
+            });
+            if(t === 'events') renderEvents();
         }
 
         window.onload = init;
