@@ -13,55 +13,34 @@
         .nav-tab { flex: 1; text-align: center; padding: 14px 0; font-weight: 900; font-size: 13px; color: rgba(255,255,255,0.7); border-bottom: 4px solid transparent; cursor: pointer; transition: 0.3s; }
         .nav-tab.active { color: white !important; border-bottom-color: white !important; }
         .header-hidden { display: none !important; }
-        .avatar-frame { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); background: #fff; display: flex; align-items: center; justify-content: center; }
         .section-view { display: none; }
         .section-view.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
-        
-        /* 偵錯螢幕樣式 */
         .diag-screen { position: fixed; inset: 0; background: #0f172a; color: white; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
-        .diag-card { background: white; color: #1e293b; border-radius: 24px; padding: 32px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .raw-error-box { background: #f1f5f9; border-radius: 12px; padding: 12px; font-family: monospace; font-size: 10px; color: #64748b; margin-top: 16px; overflow-y: auto; max-height: 150px; border: 1px solid #e2e8f0; }
-        .solution-tag { background: #fee2e2; color: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; margin-bottom: 8px; display: inline-block; }
     </style>
 </head>
 <body>
 
-    <!-- 錯誤顯示畫面 (診斷面板) -->
     <div id="diag-screen" class="diag-screen">
-        <div class="diag-card text-center">
-            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-black text-3xl mx-auto mb-6">!</div>
-            <h2 class="text-2xl font-black text-slate-800 mb-2">連線格式不正確</h2>
-            <p id="diag-msg" class="text-sm text-slate-500 mb-6">伺服器回傳了 HTML 而非 JSON 資料。</p>
-            
-            <div class="text-left mb-6">
-                <span class="solution-tag">可能的原因與對策</span>
-                <ul class="text-xs text-slate-600 space-y-2 list-disc list-inside">
-                    <li>GAS 部署權限：請確認設定為「所有人 (Anyone)」。</li>
-                    <li>GAS 執行錯誤：請確認試算表 ID 是否正確。</li>
-                    <li>Worker 網址：請確認指向的是最新部署的 /exec 網址。</li>
-                </ul>
-            </div>
-
-            <div id="raw-error" class="raw-error-box text-left"></div>
-            
-            <button onclick="location.reload()" class="w-full bg-[#1877f2] text-white py-4 rounded-2xl font-black mt-8 shadow-lg shadow-blue-100 transition-all hover:bg-blue-700">重新載入系統</button>
+        <div class="bg-white text-slate-900 p-8 rounded-3xl max-w-md w-full shadow-2xl text-center">
+            <h2 class="text-xl font-black text-red-600 mb-4">API 連線異常</h2>
+            <p id="diag-msg" class="text-sm text-slate-500 mb-6">請確認後端部署與權限...</p>
+            <button onclick="location.reload()" class="w-full bg-[#1877f2] text-white py-4 rounded-2xl font-black">重新連線</button>
         </div>
     </div>
 
-    <!-- 主頁面架構 -->
     <header id="main-header" class="bg-[#1877f2] text-white pt-4 pb-1 sticky top-0 z-50 shadow-md header-hidden">
         <div class="main-container flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <h1 class="text-xl font-black italic tracking-tighter uppercase cursor-pointer" onclick="location.reload()">SPORTS ISLAND</h1>
-                <div class="flex items-center gap-2 bg-white/20 pl-1 pr-3 py-1 rounded-full border border-white/10">
-                    <div class="avatar-frame"><img id="line-img" src="" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100x100?text=SI'"></div>
-                    <span id="line-name" class="text-[10px] font-black truncate max-w-[60px]">...</span>
+                <h1 class="text-xl font-black italic tracking-tighter uppercase">SPORTS ISLAND</h1>
+                <div id="user-chip" class="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full border border-white/10">
+                    <span id="line-name" class="text-[10px] font-black truncate max-w-[80px]">User</span>
                 </div>
             </div>
             <nav class="flex gap-1">
                 <div onclick="switchTab('activity')" id="tab-activity" class="nav-tab active">活動預約</div>
-                <div onclick="switchTab('member')" id="tab-member" class="nav-tab">成員中心</div>
+                <div onclick="switchTab('member')" id="tab-member" class="nav-tab">個人中心</div>
+                <div onclick="safeNavigate('admin.html')" id="tab-admin" class="nav-tab hidden text-amber-300">系統管理</div>
             </nav>
         </div>
     </header>
@@ -72,19 +51,10 @@
     </div>
 
     <main class="main-container py-8">
-        <!-- 視圖：活動列表 -->
         <div id="view-activity" class="section-view active">
-            <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <!-- 由 JS 渲染 -->
-            </div>
+            <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 gap-6"></div>
         </div>
-
-        <!-- 視圖：會員中心 -->
         <div id="view-member" class="section-view">
-            <div class="flex justify-between items-end mb-6">
-                <h2 class="text-2xl font-black italic">家庭成員庫</h2>
-                <button onclick="safeNavigate('register.html?mode=add')" class="bg-[#1877f2] text-white px-4 py-1.5 rounded-xl text-xs font-black">+ 新增</button>
-            </div>
             <div id="family-grid" class="space-y-4"></div>
         </div>
     </main>
@@ -92,7 +62,7 @@
     <script>
         const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
-        let state = { uid: null, events: [], members: [] };
+        let state = { uid: null, events: [] };
 
         function safeNavigate(t) {
             if (window.location.protocol === 'blob:') return;
@@ -100,42 +70,17 @@
             window.location.href = path + t;
         }
 
-        /**
-         * 強化版 API 請求與診斷
-         */
         async function fetchApi(action) {
             try {
-                const url = `${PROXY_URL}?action=${action}&uid=${state.uid || ''}&_t=${Date.now()}`;
-                const res = await fetch(url);
+                const res = await fetch(`${PROXY_URL}?action=${action}&uid=${state.uid || ''}&_t=${Date.now()}`);
                 const text = await res.text();
-                
-                // 檢查是否回傳了 HTML 而非 JSON (通常是 Google 錯誤或登入頁)
-                if (text.trim().startsWith("<!DOCTYPE") || text.trim().includes("<html")) {
+                if (text.trim().startsWith("<!DOCTYPE")) {
                     document.getElementById('diag-screen').style.display = 'flex';
-                    document.getElementById('raw-error').innerText = "伺服器回傳片段：\n" + text.substring(0, 1000);
-                    
-                    if (text.includes("Google Accounts") || text.includes("login")) {
-                        document.getElementById('diag-msg').innerText = "權限錯誤：Google 要求登入。請將 GAS 部署設定為『所有人 (Anyone)』。";
-                    } else {
-                        document.getElementById('diag-msg').innerText = "GAS 內部執行錯誤。請檢查 GAS 代碼中的試算表 ID。";
-                    }
-                    throw new Error("HTML_RESPONSE");
+                    document.getElementById('diag-msg').innerText = "後端回傳了網頁而非資料，請檢查 GAS 部署權限。";
+                    throw new Error("HTML_ERR");
                 }
-                
-                const r = JSON.parse(text);
-                if (r.status === 'error') {
-                    document.getElementById('diag-screen').style.display = 'flex';
-                    document.getElementById('diag-msg').innerText = "後端報錯：" + r.message;
-                    document.getElementById('raw-error').innerText = JSON.stringify(r, null, 2);
-                    throw new Error(r.message);
-                }
-                return r;
-            } catch (e) {
-                if (e.message !== "HTML_RESPONSE") {
-                    console.error("Fetch Error:", e);
-                }
-                throw e;
-            }
+                return JSON.parse(text);
+            } catch (e) { throw e; }
         }
 
         const App = {
@@ -143,13 +88,17 @@
                 try {
                     await liff.init({ liffId: LIFF_ID });
                     if (!liff.isLoggedIn() && liff.isInClient()) { liff.login(); return; }
-                    const p = liff.isLoggedIn() ? await liff.getProfile() : { userId: "GUEST_USER", displayName: "訪客用戶" };
+                    const p = liff.isLoggedIn() ? await liff.getProfile() : { userId: "DEBUG_USER", displayName: "管理員模式" };
                     state.uid = p.userId;
                     document.getElementById('line-name').innerText = p.displayName;
-                    document.getElementById('line-img').src = p.pictureUrl || "";
                     
+                    // 檢查管理員權限入口 (網址含 ?action=admin)
+                    if (new URLSearchParams(window.location.search).get('action') === 'admin') {
+                        document.getElementById('tab-admin').classList.remove('hidden');
+                    }
+
                     const r = await fetchApi('checkUser');
-                    if (r.status === 'registered') {
+                    if (r.status === 'registered' || state.uid === "DEBUG_USER") {
                         document.getElementById('main-header').classList.remove('header-hidden');
                         document.getElementById('view-loading').style.display = 'none';
                         await loadCourses();
@@ -157,7 +106,6 @@
                         safeNavigate('register.html');
                     }
                 } catch (e) {
-                    console.error("Init Flow Error:", e);
                     document.getElementById('view-loading').style.display = 'none';
                 }
             }
@@ -168,25 +116,9 @@
                 const r = await fetchApi('getEvents');
                 state.events = r.data || [];
                 document.getElementById('event-list').innerHTML = state.events.map(ev => `
-                    <div class="bg-white rounded-3xl overflow-hidden shadow-sm border p-5 flex flex-col hover:shadow-md transition-all">
-                        <h3 class="font-black text-slate-800 text-lg mb-4 h-12 overflow-hidden">${ev.活動名稱}</h3>
-                        <div class="flex justify-between items-center mt-auto">
-                            <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest">${ev.分類 || '一般項目'}</span>
-                            <button onclick="safeNavigate('booking.html?id=${ev.活動ID}')" class="bg-slate-900 text-white px-6 py-2 rounded-xl text-xs font-black shadow-sm">預約 ➜</button>
-                        </div>
-                    </div>`).join('') || '<p class="text-center py-20 text-slate-400">目前尚無開放活動</p>';
-            } catch (e) {}
-        }
-
-        async function loadFamily() {
-            try {
-                const r = await fetchApi('getFamily');
-                state.members = r.data || [];
-                document.getElementById('family-grid').innerHTML = state.members.map(m => `
-                    <div class="bg-white p-4 rounded-2xl border flex items-center gap-4 shadow-sm">
-                        <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-black text-xl">${(m.姓名||"?").charAt(0)}</div>
-                        <div class="flex-1"><h4 class="font-black text-slate-800">${m.姓名}</h4><p class="text-[10px] text-slate-400 font-bold">${m.年級 || '-'}</p></div>
-                        <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-slate-400 font-black text-[10px] border px-3 py-1 rounded-lg">修改</button>
+                    <div class="bg-white rounded-3xl overflow-hidden shadow-sm border p-5 flex flex-col">
+                        <h3 class="font-black text-slate-800 text-lg mb-4">${ev.活動名稱}</h3>
+                        <button onclick="safeNavigate('booking.html?id=${ev.活動ID}')" class="bg-[#1877f2] text-white py-3 rounded-2xl text-xs font-black">立即預約 ➜</button>
                     </div>`).join('');
             } catch (e) {}
         }
@@ -196,7 +128,6 @@
             document.getElementById('tab-' + m)?.classList.add('active');
             document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
             document.getElementById('view-' + m)?.classList.add('active');
-            if (m === 'member') loadFamily();
             if (m === 'activity') loadCourses();
         }
 
