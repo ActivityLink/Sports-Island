@@ -3,175 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>預約確認 - 運動島</title>
+    <title>預約確認 - 運動島 Flagship</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f4f7fa; color: #1e293b; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
         .main-container { max-width: 600px; margin: 0 auto; padding: 16px; padding-bottom: 140px; }
-        .content-card { background: white; border-radius: 28px; box-shadow: 0 4px 25px rgba(0,0,0,0.04); padding: 24px; margin-bottom: 16px; border: 1px solid #edf2f7; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-        .cal-header { text-align: center; font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; padding-bottom: 8px; }
-        .cal-day { aspect-ratio: 1; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; cursor: pointer; border: 2px solid transparent; }
-        .status-attending { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
-        .status-absent-full { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
-        .status-absent-half { background: #fff7ed; color: #ea580c; border-color: #ffedd5; }
-        .status-disabled { background: #f8fafc; opacity: 0.2; cursor: default; pointer-events: none; }
-        .status-label { font-size: 8px; margin-top: 2px; font-weight: 800; }
-        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; padding: 20px 24px; box-shadow: 0 -10px 30px rgba(0,0,0,0.08); z-index: 100; }
-        .btn-checkout { background: #2563eb; color: white; padding: 14px 32px; border-radius: 16px; font-weight: 900; }
-        .leave-menu { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 32px 32px 0 0; padding: 32px; z-index: 1001; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .leave-menu.active { transform: translateY(0); }
-        .overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(2px); z-index: 1000; display: none; }
+        .content-card { background: white; border-radius: 32px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.04); padding: 28px; margin-bottom: 20px; border: 1px solid #f1f5f9; }
         
-        /* 錯誤偵錯面板 */
-        .error-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); color: white; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
-        .error-card { background: white; color: #1e293b; border-radius: 32px; padding: 40px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        /* 智慧日曆樣式 */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+        .cal-header { text-align: center; font-size: 11px; font-weight: 900; color: #94a3b8; text-transform: uppercase; padding-bottom: 12px; }
+        .cal-day { aspect-ratio: 1; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .status-attending { background: #eef2ff; color: #4f46e5; border-color: #e0e7ff; }
+        .status-absent-full { background: #fef2f2; color: #ef4444; border-color: #fee2e2; }
+        .status-absent-half { background: #fffbeb; color: #d97706; border-color: #fef3c7; }
+        .status-disabled { background: #f8fafc; color: #e2e8f0; opacity: 0.3; cursor: default; pointer-events: none; }
+        .status-label { font-size: 9px; margin-top: 2px; font-weight: 900; }
+
+        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #f1f5f9; padding: 24px; box-shadow: 0 -20px 40px rgba(0,0,0,0.05); z-index: 100; }
+        .btn-checkout { background: #4f46e5; color: white; padding: 14px 40px; border-radius: 20px; font-weight: 900; box-shadow: 0 10px 20px -5px rgba(79,70,229,0.4); }
+        
+        .leave-menu { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 40px 40px 0 0; padding: 40px; z-index: 1001; transform: translateY(100%); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 -20px 50px rgba(0,0,0,0.15); }
+        .leave-menu.active { transform: translateY(0); }
+        .overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 1000; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- 連線異常診斷畫面 -->
-    <div id="error-screen" class="error-overlay">
-        <div class="error-card">
-            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center font-black text-3xl mx-auto mb-6">!</div>
-            <h2 class="text-2xl font-black text-slate-800 mb-2">伺服器回應逾時</h2>
-            <p id="error-msg" class="text-sm text-slate-500 mb-8 leading-relaxed">後端系統（Google）反應過久，導致連線中斷 (Error 524)。這通常是暫時性的。</p>
-            <div class="bg-slate-50 p-4 rounded-2xl text-left mb-8">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">建議操作</p>
-                <ul class="text-xs text-slate-600 space-y-1 list-disc list-inside">
-                    <li>點擊下方按鈕重新嘗試連線</li>
-                    <li>檢查 Google 試算表是否開啟過多分頁</li>
-                    <li>稍候幾分鐘再試一次</li>
-                </ul>
-            </div>
-            <button onclick="location.reload()" class="w-full bg-[#1877f2] text-white py-4 rounded-2xl font-black shadow-lg">重新嘗試連線</button>
-        </div>
+    <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center">
+        <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-6 font-black text-slate-400 text-xs tracking-widest uppercase">Expert Syncing...</p>
     </div>
 
-    <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center">
-        <div class="w-10 h-10 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 font-black text-gray-400 text-xs tracking-widest uppercase">Expert Syncing...</p>
+    <!-- 錯誤診斷面板 -->
+    <div id="error-screen" class="fixed inset-0 bg-white z-[3000] hidden flex-col items-center justify-center p-8 text-center">
+        <div class="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center text-4xl mb-6">!</div>
+        <h2 class="text-2xl font-black mb-2">連線發生異常 (524)</h2>
+        <p id="error-msg" class="text-sm text-slate-400 mb-8 leading-relaxed">伺服器回應逾時。這代表後端執行過久，通常重試即可修復。</p>
+        <button onclick="location.reload()" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black shadow-xl">重新嘗試連線</button>
     </div>
 
     <div class="main-container">
+        <!-- 步驟 1: 選擇成員 -->
         <div id="view-member" class="hidden">
-            <h2 class="text-2xl font-black mb-8 italic">1. 選擇成員</h2>
-            <div id="member-list" class="space-y-3"></div>
-            <button onclick="safeNavigate('register.html?mode=add')" class="w-full mt-6 py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-black">+ 新增成員</button>
+            <div class="flex justify-between items-center mb-10">
+                <h2 class="text-3xl font-black italic tracking-tighter text-slate-800">1. 選擇預約成員</h2>
+                <button onclick="safeNavigate('index.html')" class="text-slate-400 font-black text-xs uppercase">Cancel</button>
+            </div>
+            <div id="member-list" class="space-y-4"></div>
+            <button onclick="safeNavigate('register.html?mode=add')" class="w-full mt-10 py-5 border-2 border-dashed border-slate-200 rounded-3xl text-slate-400 font-black flex items-center justify-center gap-2 hover:bg-white transition-all">+ 新增家庭成員</button>
         </div>
 
+        <!-- 步驟 2: 安排詳情 -->
         <div id="view-details" class="hidden">
-            <button onclick="switchView('member')" class="mb-4 text-slate-400 font-bold text-xs">⬅ 上一步</button>
+            <button onclick="switchView('member')" class="mb-6 text-slate-400 font-black text-[10px] flex items-center gap-2 uppercase">⬅ Back to Members</button>
+            
             <div class="content-card">
-                <h2 id="event-name-display" class="text-xl font-black text-blue-600 mb-6 italic">---</h2>
-                <div class="flex justify-between items-end mb-4">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">請假安排 (預設全出席)</label>
-                    <span id="calendar-month-label" class="font-black text-sm">---</span>
+                <h2 id="event-name-display" class="text-2xl font-black text-indigo-600 mb-8 italic tracking-tight">---</h2>
+                
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">請假安排 (預設全勤)</label>
+                        <p class="text-[10px] text-indigo-400 font-bold mt-1 italic">點擊日期可修改出席狀態</p>
+                    </div>
+                    <span id="calendar-month-label" class="font-black text-sm text-slate-700">---</span>
                 </div>
-                <div class="calendar-grid mb-2">
+
+                <div class="calendar-grid mb-4">
                     <div class="cal-header">日</div><div class="cal-header">一</div><div class="cal-header">二</div><div class="cal-header">三</div><div class="cal-header">四</div><div class="cal-header">五</div><div class="cal-header">六</div>
                 </div>
                 <div id="cal-body" class="calendar-grid"></div>
             </div>
+
+            <!-- 設備選購 -->
             <div id="rental-card" class="content-card hidden">
-                <label class="block text-[10px] font-black text-blue-500 uppercase mb-4 tracking-widest">設備租借選項</label>
-                <div id="rental-options-list" class="space-y-2"></div>
+                <label class="block text-[10px] font-black text-indigo-500 uppercase mb-6 tracking-widest">課程適用設備租借</label>
+                <div id="rental-options-list" class="space-y-3"></div>
             </div>
         </div>
 
+        <!-- 步驟 3: 結帳 -->
         <div id="view-checkout" class="hidden">
             <div class="content-card">
-                <h2 class="text-xl font-black mb-8 border-b pb-4">報名結帳摘要</h2>
-                <div class="space-y-4 mb-10">
-                    <div class="flex justify-between text-xs font-bold text-slate-400"><span>基礎原價</span><span id="final-base">NT$ 0</span></div>
-                    <div class="flex justify-between text-xs font-bold text-red-500"><span>請假扣除</span><span id="final-deduct">- NT$ 0</span></div>
-                    <div class="flex justify-between items-end border-t pt-4">
-                        <span class="font-black text-sm italic">應付總計</span>
-                        <span id="final-total" class="text-3xl font-black italic text-blue-600">NT$ 0</span>
+                <h2 class="text-2xl font-black mb-10 border-b pb-6 italic">報名結帳清單</h2>
+                <div class="space-y-5 mb-12">
+                    <div class="flex justify-between text-xs font-black text-slate-400 uppercase tracking-widest"><span>基礎學費 (全勤)</span><span id="final-base">NT$ 0</span></div>
+                    <div class="flex justify-between text-xs font-black text-red-500 uppercase tracking-widest"><span>缺席/請假扣額</span><span id="final-deduct">- NT$ 0</span></div>
+                    <div class="flex justify-between items-end border-t pt-8">
+                        <span class="font-black text-sm italic text-slate-800">最終應付金額</span>
+                        <span id="final-total" class="text-4xl font-black italic text-indigo-600 tracking-tighter">NT$ 0</span>
                     </div>
                 </div>
-                <label class="tag-label text-[10px] font-black text-gray-400 uppercase">匯款後五碼</label>
-                <input type="text" id="bank-5" class="w-full border-2 rounded-xl p-4 font-black bg-slate-50 mb-8" maxlength="5" placeholder="00000">
-                <button onclick="submitFinalBooking()" id="btn-submit" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black shadow-xl italic">CONFIRM ➜</button>
+
+                <div class="mb-10">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">匯款帳號後五碼</label>
+                    <input type="text" id="bank-5" class="w-full border-2 border-slate-100 rounded-2xl p-5 font-black bg-slate-50 text-xl tracking-[0.5em] outline-none focus:border-indigo-600 focus:bg-white transition-all" maxlength="5" placeholder="00000">
+                </div>
+
+                <button onclick="submitFinalBooking()" id="btn-submit" class="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black shadow-2xl hover:bg-black transition-all text-lg italic tracking-tighter">CONFIRM RESERVATION ➜</button>
             </div>
         </div>
     </div>
 
+    <!-- 底部浮動欄 -->
     <div id="checkout-bar" class="sticky-footer flex items-center justify-between hidden">
-        <div><p class="text-[10px] font-black text-slate-400 uppercase">預計總額</p><p id="floating-total" class="text-2xl font-black italic text-blue-600">NT$ 0</p></div>
-        <button onclick="switchView('checkout')" class="btn-checkout">下一步 ➜</button>
+        <div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Est. Amount</p>
+            <p id="floating-total" class="text-2xl font-black italic text-indigo-600">NT$ 0</p>
+        </div>
+        <button onclick="switchView('checkout')" class="btn-checkout italic font-black uppercase tracking-tighter">Next Step ➜</button>
     </div>
 
+    <!-- 請假彈窗 -->
     <div id="overlay" class="overlay" onclick="closeLeaveMenu()"></div>
     <div id="leave-menu" class="leave-menu">
-        <h3 id="menu-date-title" class="text-lg font-black mb-8 italic text-slate-800">狀態修改</h3>
-        <div class="grid grid-cols-2 gap-4 mb-8">
-            <button onclick="updateDayStatus('出席')" class="p-5 border-2 rounded-2xl font-black text-sm">恢復上課</button>
-            <button onclick="updateDayStatus('全日')" class="p-5 border-2 border-red-100 bg-red-50 text-red-600 rounded-2xl font-black text-sm">全日請假</button>
-            <button onclick="updateDayStatus('上午')" class="p-5 border-2 border-orange-100 bg-orange-50 text-orange-600 rounded-2xl font-black text-sm">上午請假</button>
-            <button onclick="updateDayStatus('下午')" class="p-5 border-2 border-orange-100 bg-orange-50 text-orange-600 rounded-2xl font-black text-sm">下午請假</button>
+        <h3 id="menu-date-title" class="text-xl font-black mb-10 italic text-slate-800">修改出席狀態</h3>
+        <div class="grid grid-cols-2 gap-4 mb-10">
+            <button onclick="updateDayStatus('出席')" class="p-6 border-2 border-slate-100 rounded-3xl font-black text-sm hover:bg-indigo-50 hover:border-indigo-200 transition-all">恢復正常出席</button>
+            <button onclick="updateDayStatus('全日')" class="p-6 border-2 border-red-50 bg-red-50 text-red-600 rounded-3xl font-black text-sm">全日請假</button>
+            <button onclick="updateDayStatus('上午')" class="p-6 border-2 border-amber-50 bg-amber-50 text-amber-600 rounded-3xl font-black text-sm">上午請假</button>
+            <button onclick="updateDayStatus('下午')" class="p-6 border-2 border-amber-50 bg-amber-50 text-amber-600 rounded-3xl font-black text-sm">下午請假</button>
         </div>
-        <button onclick="closeLeaveMenu()" class="w-full py-2 text-slate-400 font-bold">取消</button>
+        <button onclick="closeLeaveMenu()" class="w-full py-4 text-slate-400 font-black text-xs uppercase tracking-widest">Close</button>
     </div>
 
     <script>
         const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
         const eventId = new URLSearchParams(window.location.search).get('id');
-        let state = { uid: null, event: null, members: [], leaves: {}, rentedItems: [], currentFocusDate: null };
+        
+        let state = { uid: null, event: null, members: [], leaves: {}, rentedItems: [], selectedMember: null, currentFocusDate: null, finalAmount: 0 };
 
-        /**
-         * 穩健導航：解決 Location: 'index.html' is not a valid URL 報錯
-         */
-        function safeNavigate(target) {
-            if (window.location.protocol === 'blob:') {
-                console.warn("[預覽環境阻斷跳轉] " + target);
-                return;
-            }
-            try {
-                const url = new URL(target, window.location.href);
-                window.location.href = url.href;
-            } catch (e) {
-                const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-                window.location.href = path + target;
-            }
+        function safeNavigate(t) {
+            if (window.location.protocol === 'blob:') return;
+            const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+            window.location.href = path + t;
         }
 
         /**
-         * 強化版 JSON 請求：處理 524 逾時與 HTML 回應
+         * 強化型 API 請求
          */
-        async function safeFetchJson(url) {
+        async function fetchApi(action, params = "") {
+            const url = `${PROXY_URL}?action=${action}${params}&_t=${Date.now()}`;
             try {
                 const res = await fetch(url);
                 const text = await res.text();
-                
-                // 檢查是否為 HTML 報錯內容
-                if (text.includes("error code: 524") || text.trim().startsWith("<!DOCTYPE")) {
-                    console.error("Server Error Response:", text);
-                    throw new Error("SERVER_TIMEOUT_OR_HTML");
-                }
-                
-                try {
-                    return JSON.parse(text);
-                } catch (parseErr) {
-                    console.error("JSON Parse Fail:", text);
-                    throw new Error("INVALID_JSON_FORMAT");
-                }
-            } catch (err) {
-                document.getElementById('error-screen').style.display = 'flex';
-                if (err.message === "SERVER_TIMEOUT_OR_HTML") {
-                    document.getElementById('error-msg').innerText = "伺服器回應逾時 (Error 524)。這代表後端 Google Apps Script 執行過久，請重新整理試試看。";
-                }
-                throw err;
+                if (text.includes("error code: 524") || text.trim().startsWith("<!DOCTYPE")) throw new Error("SERVER_TIMEOUT");
+                const r = JSON.parse(text);
+                if (r.status === 'error') throw new Error(r.message);
+                return r;
+            } catch (e) {
+                document.getElementById('error-screen').classList.remove('hidden');
+                throw e;
             }
         }
 
         async function init() {
+            // 徹底重置所有狀態 (解決累積金額問題)
             state.leaves = {};
             state.rentedItems = [];
             state.finalAmount = 0;
+
+            if (!eventId) { safeNavigate('index.html'); return; }
 
             try {
                 await liff.init({ liffId: LIFF_ID });
@@ -179,54 +174,51 @@
                 const p = liff.isLoggedIn() ? await liff.getProfile() : { userId: "DEBUG_USER" };
                 state.uid = p.userId;
 
-                // 使用強化後的 safeFetchJson
                 const [evData, memData] = await Promise.all([
-                    safeFetchJson(`${PROXY_URL}?action=getEvents`),
-                    safeFetchJson(`${PROXY_URL}?action=getFamily&uid=${state.uid}`)
+                    fetchApi('getEvents'),
+                    fetchApi('getFamily', `&uid=${state.uid}`)
                 ]);
 
                 state.event = evData.data.find(e => String(e['活動ID']) === String(eventId));
                 state.members = memData.data || [];
                 state.allRentalDb = JSON.parse(evData.config.rentalItems || "[]");
 
-                if (!state.event) { 
-                    safeNavigate('index.html'); 
-                    return; 
-                }
+                if (!state.event) { safeNavigate('index.html'); return; }
                 
                 document.getElementById('event-name-display').innerText = state.event['活動名稱'];
                 renderMembers(); 
                 renderCalendar(); 
                 renderRentalOptions(); 
                 switchView('member');
-            } catch (e) { 
-                console.error("Init Error:", e);
-            } finally {
-                document.getElementById('view-loading').style.display = 'none';
-            }
+            } catch (e) { console.error("Init Flow Fail", e); }
+            finally { document.getElementById('view-loading').style.display = 'none'; }
         }
 
         function renderCalendar() {
             const container = document.getElementById('cal-body');
-            const start = new Date(state.event['開始日期']);
-            const end = new Date(state.event['結束日期']);
-            const classDays = (state.event['梯次資料'] || "").split(',').map(Number);
+            const startStr = state.event['開始日期'].replace(/\//g, '-');
+            const endStr = state.event['結束日期'].replace(/\//g, '-');
+            
+            const start = new Date(startStr);
+            const end = new Date(endStr);
             const isRegular = state.event['活動型態'] === '常態型';
+            const classDays = (state.event['梯次資料'] || "").split(',').map(Number);
 
+            // 修復點：日曆月份鎖定活動開始月份
             document.getElementById('calendar-month-label').innerText = `${start.getFullYear()}年 ${start.getMonth()+1}月`;
             
-            const calendarStartView = new Date(start.getFullYear(), start.getMonth(), 1);
-            const firstDayOffset = calendarStartView.getDay();
+            const firstDayOfMonth = new Date(start.getFullYear(), start.getMonth(), 1);
+            const offset = firstDayOfMonth.getDay();
             
             let html = "";
-            for (let i = 0; i < firstDayOffset; i++) html += `<div class="cal-day status-disabled"></div>`;
+            for (let i = 0; i < offset; i++) html += `<div class="cal-day status-disabled"></div>`;
 
             let current = new Date(start);
             while (current <= end) {
                 const dStr = current.toISOString().split('T')[0];
                 const active = isRegular ? classDays.includes(current.getDay()) : true;
                 
-                if(active && !state.leaves[dStr]) state.leaves[dStr] = '出席';
+                if (active && !state.leaves[dStr]) state.leaves[dStr] = '出席';
                 
                 html += `
                 <div id="day-${dStr}" onclick="${active ? `openLeaveMenu('${dStr}')` : ''}" class="cal-day ${active ? 'status-attending' : 'status-disabled'}">
@@ -244,9 +236,9 @@
             if(items.length === 0) return;
             document.getElementById('rental-card').classList.remove('hidden');
             document.getElementById('rental-options-list').innerHTML = items.map(it => `
-                <label class="flex justify-between p-4 border rounded-2xl bg-slate-50 items-center cursor-pointer">
-                    <div class="flex gap-3"><input type="checkbox" onchange="updateRental('${it.name}', ${it.price}, this.checked)" class="w-6 h-6 accent-blue-600"><span class="font-black">${it.name}</span></div>
-                    <span class="font-black text-blue-600">$${it.price}</span>
+                <label class="flex justify-between p-5 border-2 border-slate-50 bg-slate-50 rounded-3xl items-center cursor-pointer hover:border-indigo-200 transition-all">
+                    <div class="flex items-center gap-4"><input type="checkbox" onchange="updateRental('${it.name}', ${it.price}, this.checked)" class="w-6 h-6 accent-indigo-600"><span class="font-black text-slate-700">${it.name}</span></div>
+                    <span class="font-black text-indigo-600 italic">+$${it.price}</span>
                 </label>`).join('');
         }
 
@@ -261,9 +253,7 @@
                 if(v === '全日') deduct += Number(state.event['全日扣除'] || 0);
                 if(v === '上午' || v === '下午') deduct += Number(state.event['半日扣除'] || 0);
             });
-            const rent = state.rentedItems.reduce((a, b) => a + b.p, 0);
-            const total = base - deduct + rent;
-            
+            const total = base - deduct + state.rentedItems.reduce((a, b) => a + b.p, 0);
             document.getElementById('floating-total').innerText = `NT$ ${total.toLocaleString()}`;
             document.getElementById('final-base').innerText = `NT$ ${base.toLocaleString()}`;
             document.getElementById('final-deduct').innerText = `- NT$ ${deduct.toLocaleString()}`;
@@ -271,83 +261,44 @@
             state.finalAmount = total;
         }
 
-        function openLeaveMenu(d) { 
-            state.currentFocusDate = d; 
-            document.getElementById('menu-date-title').innerText = `${d} 狀態修改`; 
-            document.getElementById('overlay').style.display='block'; 
-            document.getElementById('leave-menu').classList.add('active'); 
-        }
-        
-        function closeLeaveMenu() { 
-            document.getElementById('overlay').style.display='none'; 
-            document.getElementById('leave-menu').classList.remove('active'); 
-        }
-        
+        function openLeaveMenu(d) { state.currentFocusDate = d; document.getElementById('menu-date-title').innerText = `${d} 狀態修改`; document.getElementById('overlay').style.display='block'; document.getElementById('leave-menu').classList.add('active'); }
+        function closeLeaveMenu() { document.getElementById('overlay').style.display='none'; document.getElementById('leave-menu').classList.remove('active'); }
         function updateDayStatus(s) {
             state.leaves[state.currentFocusDate] = s;
             const el = document.getElementById(`day-${state.currentFocusDate}`);
             const lb = document.getElementById(`lb-${state.currentFocusDate}`);
             el.className = `cal-day ${s==='出席'?'status-attending':(s==='全日'?'status-absent-full':'status-absent-half')}`;
             lb.innerText = s==='出席'?'出席':s+'假';
-            calculate(); 
-            closeLeaveMenu();
+            calculate(); closeLeaveMenu();
         }
 
         function renderMembers() { 
             document.getElementById('member-list').innerHTML = state.members.map(m => `
-                <div onclick="selectMember('${m.學員ID}')" class="bg-white p-6 rounded-3xl border flex justify-between items-center transition-all cursor-pointer hover:shadow-md">
-                    <p class="font-black text-slate-800 text-lg">${m.姓名}</p>
-                    <span class="text-blue-600 font-black text-sm italic tracking-widest">SELECT ➜</span>
-                </div>`).join(''); 
+                <div onclick="selectMember('${m.學員ID}')" class="bg-white p-7 rounded-[2rem] border-2 border-transparent shadow-sm flex justify-between items-center transition-all cursor-pointer hover:border-indigo-500 hover:shadow-xl group">
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black italic text-2xl shadow-inner group-hover:bg-indigo-600 group-hover:text-white transition-all">${m.姓名.charAt(0)}</div>
+                        <div><p class="font-black text-slate-800 text-lg">${m.姓名}</p><p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${m.學校} ${m.年級}</p></div>
+                    </div>
+                    <span class="text-indigo-600 font-black text-sm italic">SELECT ➜</span>
+                </div>`).join('') || '<div class="text-center py-10 text-slate-400 font-bold italic">請先點擊下方按鈕新增成員個資</div>'; 
         }
         
         function selectMember(id) { state.selectedMember = state.members.find(m => String(m.學員ID) === id); switchView('details'); }
-        
-        function switchView(v) {
-            ['member', 'details', 'checkout'].forEach(i => document.getElementById('view-' + i).classList.toggle('hidden', i !== v));
-            document.getElementById('checkout-bar').classList.toggle('hidden', v !== 'details');
-            window.scrollTo(0,0);
-        }
+        function switchView(v) { ['member', 'details', 'checkout'].forEach(i => document.getElementById('view-' + i).classList.toggle('hidden', i !== v)); document.getElementById('checkout-bar').classList.toggle('hidden', v !== 'details'); window.scrollTo(0,0); }
 
         async function submitFinalBooking() {
             const b5 = document.getElementById('bank-5').value;
-            if(b5.length < 5) return alert("請輸入完整匯款後五碼");
-            
-            const btn = document.getElementById('btn-submit'); 
-            btn.disabled = true; 
-            btn.innerText = "Syncing with Cloud...";
+            if(b5.length < 5) return alert("請輸入匯款帳號後五碼");
+            const btn = document.getElementById('btn-submit'); btn.disabled = true; btn.innerText = "Processing Data...";
             
             const leaves = Object.entries(state.leaves).filter(e => e[1] !== '出席').map(e => `${e[0]}(${e[1]}假)`).join(', ');
-            const payload = { 
-                student: state.selectedMember, 
-                eventId: state.event['活動ID'], 
-                eventName: state.event['活動名稱'], 
-                amount: state.finalAmount, 
-                bankLast5: b5, 
-                rentedItems: state.rentedItems.map(i=>i.n), 
-                selectedDates: leaves || '全勤參加' 
-            };
-
+            const payload = { student: state.selectedMember, eventId: state.event['活動ID'], eventName: state.event['活動名稱'], amount: state.finalAmount, bankLast5: b5, rentedItems: state.rentedItems.map(i=>i.n), selectedDates: leaves || '全勤參加' };
+            
             try {
                 const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
-                const text = await res.text();
-                
-                if (text.includes("error code: 524") || text.trim().startsWith("<!DOCTYPE")) throw new Error("POST_TIMEOUT");
-                
-                const result = JSON.parse(text);
-                if(result.status === 'success') { 
-                    alert("🎉 預約成功！報名資料已存入雲端。"); 
-                    safeNavigate('index.html'); 
-                } else {
-                    alert("儲存失敗：" + result.message);
-                    btn.disabled = false;
-                    btn.innerText = "CONFIRM ➜";
-                }
-            } catch (e) {
-                alert("網路連線異常或伺服器逾時，請稍後再試。");
-                btn.disabled = false;
-                btn.innerText = "CONFIRM ➜";
-            }
+                const r = await res.json();
+                if(r.status === 'success') { alert("🎉 預約成功！報名資料已寫入雲端庫。"); safeNavigate('index.html'); }
+            } catch (e) { alert("連線超時，請重新提交"); btn.disabled = false; btn.innerText = "CONFIRM ➜"; }
         }
         window.onload = init;
     </script>
