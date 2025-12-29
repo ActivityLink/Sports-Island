@@ -3,43 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>運動島 SPORTS ISLAND - 活動專區</title>
+    <title>運動島 SPORTS ISLAND</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; color: #1c1e21; font-size: 16px; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
-        .main-container { max-width: 960px; margin: 0 auto; padding: 0 16px; }
-        .content-card { background: white; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 24px; margin-bottom: 20px; border: 1px solid #e9eaed; }
+        .main-container { max-width: 900px; margin: 0 auto; padding: 0 16px; }
         
+        /* 導覽列：活力藍風格 */
         .nav-tab { flex: 1; text-align: center; padding: 18px 0; font-weight: 700; font-size: 16px; color: rgba(255,255,255,0.7); border-bottom: 4px solid transparent; cursor: pointer; transition: 0.2s; }
         .nav-tab.active { color: white !important; border-bottom-color: #fbbf24 !important; }
         
         .section-view { display: none; }
         .section-view.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
         
-        .tag-pill { padding: 10px 24px; border-radius: 99px; background: white; border: 1px solid #dddfe2; font-size: 15px; font-weight: 700; cursor: pointer; color: #606770; transition: 0.2s; }
-        .tag-pill.active { background: #e7f3ff; color: #1877f2; border-color: #1877f2; }
+        /* 活力藍按鈕 */
+        .btn-blue { background: #1877f2; color: white; padding: 16px; border-radius: 12px; font-weight: 700; width: 100%; text-align: center; cursor: pointer; border: none; font-size: 16px; transition: 0.2s; }
+        .btn-blue:active { opacity: 0.8; transform: scale(0.98); background: #166fe5; }
         
-        /* 品牌活力藍按鈕 */
-        .btn-primary { background: #1877f2; color: white; padding: 16px; border-radius: 14px; font-weight: 700; width: 100%; text-align: center; cursor: pointer; border: none; font-size: 16px; transition: 0.2s; }
-        .btn-primary:active { opacity: 0.8; transform: scale(0.98); }
+        /* 首頁公告區：黃色警示風格 */
+        .announcement-card { background: #fff9e6; border-left: 6px solid #ffba08; border-radius: 16px; padding: 20px; margin-bottom: 30px; display: none; box-shadow: 0 4px 15px rgba(255,186,8,0.1); }
         
-        /* 公告欄樣式 */
-        .announcement-card { background: #fff9e6; border-left: 6px solid #ffba08; border-radius: 16px; padding: 20px; margin-bottom: 32px; display: none; box-shadow: 0 4px 10px rgba(255,186,8,0.1); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-
-        /* 管理中心清單項 */
-        .config-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 16px; border-radius: 14px; margin-bottom: 10px; border: 1px solid #e2e8f0; }
-        .tag-pill-admin { background: #e7f3ff; color: #1877f2; padding: 8px 18px; border-radius: 99px; font-weight: 700; display: flex; align-items: center; gap: 8px; border: 1px solid #dbeafe; }
+        /* 管理中心清單 */
+        .config-item-row { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 14px 18px; border-radius: 14px; margin-bottom: 10px; border: 1px solid #e2e8f0; }
         .input-field { width: 100%; border: 1px solid #dddfe2; border-radius: 12px; padding: 14px; font-weight: 500; outline: none; background: #fff; transition: 0.2s; font-size: 16px; }
         .input-field:focus { border-color: #1877f2; box-shadow: 0 0 0 4px rgba(24, 119, 242, 0.1); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
-    <header id="main-header" class="bg-[#1e293b] text-white pt-4 pb-1 sticky top-0 z-50 shadow-md hidden">
+    <!-- 頂部深色導航列 -->
+    <header id="main-header" class="bg-[#1e293b] text-white pt-4 pb-1 sticky top-0 z-50 shadow-lg hidden">
         <div class="main-container flex justify-between items-center">
             <h1 class="text-xl font-black italic tracking-tighter uppercase cursor-pointer text-[#1877f2]" onclick="location.reload()">SPORTS ISLAND</h1>
             <nav class="flex gap-2">
@@ -50,9 +47,10 @@
         </div>
     </header>
 
-    <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center text-center">
+    <!-- 載入動畫 -->
+    <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center">
         <div class="w-12 h-12 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 font-bold text-slate-400 text-sm tracking-widest uppercase">系統讀取中...</p>
+        <p class="mt-4 font-bold text-slate-400 text-sm tracking-widest uppercase">系統同步中...</p>
     </div>
 
     <main class="main-container py-6">
@@ -63,74 +61,77 @@
                 <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto max-h-[280px] object-cover">
             </div>
 
-            <!-- ✨ 公告區：由參數設定控制 -->
+            <!-- ✨ 公告區：完成實作 -->
             <div id="announcement-area" class="announcement-card">
                 <div class="flex items-start gap-4">
                     <span class="text-2xl">📢</span>
                     <div>
-                        <h4 class="font-bold text-amber-900 text-sm uppercase tracking-widest mb-1 text-left">重要公告 NOTICE</h4>
-                        <p id="announcement-text" class="text-amber-800 text-base font-medium leading-relaxed text-left"></p>
+                        <h4 class="font-black text-amber-900 text-sm uppercase tracking-widest mb-1 text-left">重要公告 NOTICE</h4>
+                        <p id="announcement-text" class="text-amber-800 text-base font-bold leading-relaxed text-left"></p>
                     </div>
                 </div>
             </div>
             
-            <div class="flex flex-col gap-4 mb-10">
-                <input type="text" id="search-input" oninput="loadCourses()" placeholder="🔍 搜尋課程名稱..." class="w-full border-none shadow-sm p-5 rounded-2xl outline-none bg-white font-bold text-gray-700">
-                <div id="category-tags" class="flex gap-3 overflow-x-auto no-scrollbar pb-2"></div>
-            </div>
-
             <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
         </div>
 
-        <!-- [視圖 2: 管理中心] -->
+        <!-- [視圖 2: 管理中心 - 裝備租用與公告設定] -->
         <div id="view-admin" class="section-view">
             <div class="flex gap-2 mb-10 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
                 <button onclick="AdminService.switchModule('events')" id="adm-m-events" class="flex-1 py-3 rounded-xl font-bold text-sm bg-[#1877f2] text-white">活動庫</button>
                 <button onclick="AdminService.switchModule('config')" id="adm-m-config" class="flex-1 py-3 rounded-xl font-bold text-sm text-gray-500">參數設定</button>
             </div>
             
-            <div id="adm-view-events" class="grid grid-cols-1 gap-3"></div>
+            <div id="adm-view-events" class="space-y-3">
+                <!-- 活動快速清單 -->
+                <div id="admin-event-grid" class="grid grid-cols-1 gap-3"></div>
+            </div>
 
             <div id="adm-view-config" class="hidden space-y-8">
-                <div class="content-card">
-                    <h3 class="font-black text-xl text-slate-800 mb-8 border-b pb-4">系統參數中心</h3>
+                <div class="bg-white p-8 rounded-[2rem] border shadow-sm">
+                    <h3 class="font-black text-xl text-slate-800 mb-10 border-b pb-6 uppercase">系統全域設定中心</h3>
                     
-                    <!-- ✨ 公告輸入 -->
-                    <div class="mb-10">
-                        <label class="block text-sm font-bold text-amber-600 mb-3 uppercase tracking-widest">1. 首頁公告內容 (若清空則不顯示)</label>
-                        <textarea id="cfg-announcement" rows="4" class="input-field border-2 border-amber-100 bg-amber-50 font-bold text-amber-900 focus:bg-white" placeholder="例如：1/26~1/30 寒假休館公告..."></textarea>
-                    </div>
-
-                    <!-- 分類管理 -->
-                    <div class="mb-10">
-                        <label class="block text-sm font-bold text-indigo-600 mb-3 uppercase tracking-widest">2. 分類標籤管理</label>
-                        <div id="admin-tag-list" class="flex flex-wrap gap-3 mb-6 min-h-[40px]"></div>
-                        <div class="flex gap-3">
-                            <input type="text" id="new-tag-input" class="input-field" placeholder="新增標籤">
-                            <button onclick="AdminService.addItem('tag')" class="bg-slate-800 text-white px-8 rounded-2xl font-bold">新增</button>
-                        </div>
-                    </div>
-
-                    <!-- ✨ 視覺化設備管理 (保證不壞掉) -->
+                    <!-- ✨ 公告區設定 -->
                     <div class="mb-12">
-                        <label class="block text-sm font-bold text-blue-600 mb-3 uppercase tracking-widest">3. 全域設備租借庫管理</label>
-                        <div id="admin-rent-list" class="space-y-3 mb-6 min-h-[50px]"></div>
-                        <div class="grid grid-cols-2 gap-3 mb-3">
-                            <input type="text" id="new-rent-name" class="input-field" placeholder="設備名稱">
-                            <input type="number" id="new-rent-price" class="input-field" placeholder="租金">
-                        </div>
-                        <button onclick="AdminService.addItem('rent')" class="w-full bg-slate-100 text-slate-600 py-4 rounded-2xl font-bold border-2 border-dashed border-slate-300">+ 加入清單</button>
+                        <label class="block text-sm font-black text-amber-600 mb-3 uppercase">首頁重要公告內容</label>
+                        <textarea id="cfg-announcement" rows="4" class="input-field border-2 border-amber-100 bg-amber-50 focus:bg-white text-amber-900 font-bold" placeholder="輸入休館通知、假期公告等資訊..."></textarea>
+                        <p class="text-[11px] text-slate-400 mt-2 italic">* 內容若為空，首頁會自動隱藏公告欄</p>
                     </div>
 
-                    <button onclick="AdminService.saveConfig()" class="btn-primary shadow-xl">同步所有設定至雲端 ➜</button>
+                    <!-- ✨ 裝備租用設定：正名並修復 -->
+                    <div class="mb-12">
+                        <label class="block text-sm font-black text-blue-600 mb-4 uppercase">裝備租用設定</label>
+                        <div id="admin-rent-list" class="space-y-3 mb-6 min-h-[40px]"></div>
+                        
+                        <div class="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200">
+                            <p class="text-xs font-bold text-slate-400 mb-4">新增租用項目：</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">裝備名稱</label><input type="text" id="new-rent-name" class="input-field" placeholder="例如：直排輪全套"></div>
+                                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">租金金額</label><input type="number" id="new-rent-price" class="input-field" placeholder="金額"></div>
+                            </div>
+                            <button onclick="AdminService.addItem('rent')" class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-sm">+ 加入裝備清單</button>
+                        </div>
+                    </div>
+
+                    <!-- 標籤管理 -->
+                    <div class="mb-12">
+                        <label class="block text-sm font-black text-indigo-600 mb-3 uppercase">活動分類標籤管理</label>
+                        <div id="admin-tag-list" class="flex flex-wrap gap-2 mb-4"></div>
+                        <div class="flex gap-2">
+                            <input type="text" id="new-tag-input" class="input-field" placeholder="新標籤名稱">
+                            <button onclick="AdminService.addItem('tag')" class="bg-slate-200 text-slate-600 px-8 rounded-xl font-bold">新增</button>
+                        </div>
+                    </div>
+
+                    <button onclick="AdminService.saveConfig()" class="btn-blue shadow-2xl mt-10">同步保存所有設定至雲端 ➜</button>
                 </div>
             </div>
         </div>
 
         <!-- [視圖 3: 我的專區] -->
         <div id="view-member" class="section-view">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold italic">我的家庭成員</h2>
+            <div class="flex justify-between items-center mb-8 px-2">
+                <h2 class="text-2xl font-black italic">我的家庭成員</h2>
                 <button onclick="safeNavigate('register.html?mode=add')" class="bg-[#1877f2] text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg">+ 新增</button>
             </div>
             <div id="family-grid" class="space-y-4"></div>
@@ -163,9 +164,7 @@
                     const r = await res.json();
                     if (r.status === 'registered') {
                         document.getElementById('main-header').classList.remove('hidden');
-                        if (r.role === '管理員' || new URLSearchParams(window.location.search).get('action') === 'admin') {
-                            document.getElementById('tab-admin').classList.remove('hidden');
-                        }
+                        if (r.role === '管理員') document.getElementById('tab-admin').classList.remove('hidden');
                         this.finishLoading();
                     } else { safeNavigate('register.html'); }
                 } catch(e) { this.finishLoading(); }
@@ -177,21 +176,21 @@
         };
 
         async function loadCourses() {
-            const container = document.getElementById('event-list');
             try {
                 const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
                 const r = await res.json();
                 state.events = r.data || [];
-                
-                // 解析 Config
                 const config = r.config || {};
-                state.config.sportCategories = (config.sportCategories || "足球,籃球,直排輪").split(',').filter(i => i.trim());
+                
+                // 核心數據解析與鎖定
+                state.config.sportCategories = (config.sportCategories || "足球,籃球").split(',').filter(i => i.trim());
                 try { 
                     state.config.rentalItems = JSON.parse(config.rentalItems || "[]"); 
+                    if(!Array.isArray(state.config.rentalItems)) state.config.rentalItems = [];
                 } catch(e) { state.config.rentalItems = []; }
                 state.config.announcement = config.announcement || "";
 
-                // ✨ 首頁公告區渲染
+                // ✨ 首頁公告渲染
                 const annArea = document.getElementById('announcement-area');
                 if (state.config.announcement.trim()) {
                     document.getElementById('announcement-text').innerText = state.config.announcement;
@@ -200,37 +199,27 @@
                     annArea.style.display = 'none';
                 }
 
-                // 渲染分類標籤
-                const cats = ['全部', ...state.config.sportCategories];
-                document.getElementById('category-tags').innerHTML = cats.map(c => `
-                    <div onclick="filterCat('${c}')" class="tag-pill ${state.selectedCategory === c ? 'active' : ''}">${c}</div>
-                `).join('');
-
-                const sVal = document.getElementById('search-input').value.toLowerCase();
-                const filtered = state.events.filter(ev => 
-                    (state.selectedCategory === '全部' || ev['分類'] === state.selectedCategory) && 
-                    ev['狀態'] === '上架' && ev['活動名稱'].toLowerCase().includes(sVal)
-                );
-
-                container.innerHTML = filtered.map(ev => `
-                    <div class="content-card !p-0 overflow-hidden flex flex-col hover:shadow-xl transition-all border-none">
-                        <div class="relative">
-                            <img src="${ev['圖片URL'] || 'https://placehold.co/600x400?text=SPORTS'}" class="w-full h-48 object-cover">
-                            <span class="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-[#1877f2] shadow-sm">${ev['分類']}</span>
+                // 渲染課程卡片
+                document.getElementById('event-list').innerHTML = state.events.filter(ev => ev['狀態'] === '上架').map(ev => `
+                    <div class="bg-white rounded-[2rem] overflow-hidden shadow-sm flex flex-col hover:shadow-xl transition-all">
+                        <div class="relative h-44 overflow-hidden border-b">
+                            <img src="${ev['圖片URL'] || 'https://placehold.co/600x400'}" class="w-full h-full object-cover">
+                            <span class="absolute top-4 left-4 bg-white/95 px-3 py-1 rounded-full text-xs font-black text-[#1877f2] shadow-sm">${ev['分類']}</span>
                         </div>
-                        <div class="p-8 flex-1 flex flex-col">
-                            <h3 class="font-bold text-xl text-gray-800 mb-1 leading-tight h-14 overflow-hidden">${ev['活動名稱']}</h3>
-                            <p class="text-xs text-gray-400 font-bold mb-6 italic">${ev['開始日期'].substring(0,16)} ~ ${ev['結束日期'].substring(0,16)}</p>
-                            <div class="flex justify-between items-center bg-gray-50 px-6 py-4 rounded-3xl mb-8 border border-gray-100 shadow-inner">
-                                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">費用</span>
-                                <span class="text-2xl font-black italic text-[#1877f2]">NT$ ${parseInt(ev['全日價'] || 0).toLocaleString()}</span>
+                        <div class="p-6 flex-1 flex flex-col">
+                            <h3 class="font-black text-xl text-slate-800 mb-1 leading-tight h-14 overflow-hidden">${ev['活動名稱']}</h3>
+                            <p class="text-xs text-slate-400 font-bold mb-6 italic">${ev['開始日期'].substring(0,16)} ~ ${ev['結束日期'].substring(0,16)}</p>
+                            <div class="flex justify-between items-center bg-slate-50 px-4 py-3 rounded-2xl mb-6 border border-slate-100">
+                                <span class="text-xs font-bold text-slate-400">學費總額</span>
+                                <span class="text-xl font-black italic text-[#1877f2]">NT$ ${parseInt(ev['全日價'] || 0).toLocaleString()}</span>
                             </div>
-                            <button onclick="safeNavigate('booking.html?id=${ev['活動ID']}')" class="btn-primary mt-auto">立即預約報名 ➜</button>
+                            <button onclick="safeNavigate('booking.html?id=${ev['活動ID']}')" class="btn-blue mt-auto">立即預約報名 ➜</button>
                         </div>
-                    </div>`).join('') || '<p class="col-span-full text-center py-20 text-gray-400 italic font-bold">目前無活動上架</p>';
-            } catch (e) { container.innerHTML = '<p class="text-center py-20 text-red-400">連線失敗</p>'; }
+                    </div>`).join('') || '<p class="col-span-full text-center py-20 text-gray-400 font-bold italic">目前無活動上架</p>';
+            } catch (e) { console.error(e); }
         }
 
+        /* --- 管理中心模組：鎖定邏輯防止壞掉 --- */
         const AdminService = {
             switchModule(m) {
                 ['events', 'config'].forEach(i => {
@@ -241,24 +230,33 @@
                 if (m === 'events') this.renderEvents();
             },
             renderConfigUI() {
+                // 1. 同步公告文字
                 document.getElementById('cfg-announcement').value = state.config.announcement;
-                document.getElementById('admin-tag-list').innerHTML = state.config.sportCategories.map((t, i) => `
-                    <div class="tag-pill-admin">${t} <span onclick="AdminService.removeItem('tag', ${i})" class="cursor-pointer font-black ml-2 opacity-50">✕</span></div>
-                `).join('');
+                
+                // 2. 渲染裝備租用設定 (視覺化清單)
                 document.getElementById('admin-rent-list').innerHTML = state.config.rentalItems.map((item, i) => `
-                    <div class="config-item">
-                        <div><p class="font-bold text-slate-800">${item.name}</p><p class="text-xs text-blue-500 font-black">$${item.price}</p></div>
-                        <button onclick="AdminService.removeItem('rent', ${i})" class="text-red-500 font-bold text-sm">移除</button>
-                    </div>
-                `).join('') || '<p class="text-slate-300 italic text-center py-6 text-sm">租用庫清單為空</p>';
+                    <div class="config-item-row">
+                        <div class="flex flex-col">
+                            <span class="font-black text-slate-800 text-base">${item.name}</span>
+                            <span class="text-xs text-blue-500 font-black italic">$${item.price}</span>
+                        </div>
+                        <button onclick="AdminService.removeItem('rent', ${i})" class="text-red-500 font-bold text-sm hover:underline">移除</button>
+                    </div>`).join('') || '<p class="text-slate-300 italic text-center py-6 text-sm">裝備清單目前為空</p>';
+                
+                // 3. 渲染標籤
+                document.getElementById('admin-tag-list').innerHTML = state.config.sportCategories.map((t, i) => `
+                    <div class="bg-blue-50 text-[#1877f2] px-4 py-2 rounded-full text-sm font-bold border border-blue-100 flex items-center gap-2">
+                        ${t} <span onclick="AdminService.removeItem('tag', ${i})" class="cursor-pointer font-black ml-2 opacity-50 hover:opacity-100">✕</span>
+                    </div>`).join('');
             },
             addItem(type) {
                 if (type === 'tag') {
                     const val = document.getElementById('new-tag-input').value.trim();
-                    if (val) { state.config.sportCategories.push(val); document.getElementById('new-tag-input').value = ""; }
+                    if (val && !state.config.sportCategories.includes(val)) { state.config.sportCategories.push(val); document.getElementById('new-tag-input').value = ""; }
                 } else {
                     const name = document.getElementById('new-rent-name').value.trim(), price = document.getElementById('new-rent-price').value;
                     if (name && price) { state.config.rentalItems.push({ name, price: Number(price) }); document.getElementById('new-rent-name').value = ""; document.getElementById('new-rent-price').value = ""; }
+                    else { alert("請填寫裝備名稱與租金"); }
                 }
                 this.renderConfigUI();
             },
@@ -269,25 +267,24 @@
             },
             renderEvents() {
                 document.getElementById('admin-event-grid').innerHTML = state.events.map(ev => `
-                    <div class="content-card flex items-center gap-4 !p-4">
-                        <div class="w-12 h-12 rounded-lg bg-slate-100 flex-shrink-0"><img src="${ev['圖片URL']}" class="w-full h-full object-cover rounded-lg"></div>
-                        <div class="flex-1"><h4 class="font-bold text-sm text-slate-800 leading-tight">${ev['活動名稱']}</h4><p class="text-[10px] text-slate-400 mt-1 uppercase">${ev['分類']} | ${ev['活動型態']}</p></div>
+                    <div class="bg-white p-4 rounded-xl border flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-slate-100 flex-shrink-0 overflow-hidden"><img src="${ev['圖片URL']}" class="w-full h-full object-cover"></div>
+                        <div class="flex-1"><h4 class="font-bold text-sm leading-tight">${ev['活動名稱']}</h4><p class="text-[10px] text-slate-400 font-bold mt-1 uppercase">${ev['分類']} | ${ev['活動型態']}</p></div>
                         <span class="text-[10px] font-bold px-2 py-1 rounded-full ${ev['狀態']==='上架'?'bg-green-50 text-green-600':'bg-slate-100 text-slate-400'}">${ev['狀態']}</span>
                     </div>`).join('');
             },
             async saveConfig() {
-                const btn = event.target; btn.disabled = true; btn.innerText = "正在儲存...";
+                const btn = event.target; btn.disabled = true; btn.innerText = "同步至雲端中...";
                 const payload = { 
                     announcement: document.getElementById('cfg-announcement').value,
                     sportCategories: state.config.sportCategories.join(','),
                     rentalItems: JSON.stringify(state.config.rentalItems)
                 };
                 const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateConfig', payload }) });
-                if ((await res.json()).status === 'success') { alert("🎉 已成功儲存！頁面將重新整理。"); location.reload(); }
+                if ((await res.json()).status === 'success') { alert("🎉 設定與公告已同步！系統即將重新整理。"); location.reload(); }
             }
         };
 
-        function filterCat(c) { state.selectedCategory = c; loadCourses(); }
         function switchMainTab(m) {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + m)?.classList.add('active');
@@ -297,22 +294,17 @@
             if (m === 'admin') AdminService.switchModule('events');
         }
 
-        function switchView(v) { 
-            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active')); 
-            const target = document.getElementById('view-' + v);
-            if (target) target.classList.add('active');
-            window.scrollTo(0,0); 
-        }
+        function switchView(v) { document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active')); document.getElementById('view-' + v)?.classList.add('active'); window.scrollTo(0,0); }
 
         async function loadFamilyMembers() {
             const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
             const data = (await res.json()).data || [];
             document.getElementById('family-grid').innerHTML = data.map(m => `
-                <div class="content-card flex items-center gap-6 !py-5 hover:border-[#1877f2] transition-all">
+                <div class="bg-white p-6 rounded-3xl border shadow-sm flex items-center gap-6 hover:border-[#1877f2] transition-all">
                     <div class="w-16 h-16 bg-blue-50 text-[#1877f2] rounded-2xl flex items-center justify-center font-black italic text-3xl shadow-inner">${(m.姓名||"?").charAt(0)}</div>
-                    <div class="flex-1"><h4 class="font-bold text-xl text-slate-800">${m.姓名}</h4><p class="text-sm text-gray-400 font-bold mt-1 uppercase">${m.學校} | ${m.年級}</p></div>
-                    <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-[#1877f2] font-bold text-sm border-b-2 border-transparent hover:border-[#1877f2] transition-all">編輯</button>
-                </div>`).join('') || '<p class="text-center text-gray-400 py-10 font-bold italic">尚無資料</p>';
+                    <div class="flex-1"><h4 class="font-black text-xl text-slate-800">${m.姓名}</h4><p class="text-sm text-gray-400 font-bold mt-1 uppercase">${m.學校} | ${m.年級}</p></div>
+                    <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-[#1877f2] font-black text-sm border-b-2 border-blue-100">編輯</button>
+                </div>`).join('');
         }
 
         window.onload = () => App.init();
