@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>規格專家 - 運動島</title>
+    <title>規格專家管理 - 運動島</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; font-size: 16px; }
         .main-container { max-width: 1000px; margin: 0 auto; padding: 24px 16px; }
-        .input-field { width: 100%; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; font-weight: 500; outline: none; background: #fff; font-size: 16px; transition: 0.2s; }
+        .input-field { width: 100%; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; font-weight: 500; outline: none; background: #fff; font-size: 16px; transition: 0.2s; }
         .input-field:focus { border-color: #1877f2; box-shadow: 0 0 0 4px rgba(24, 119, 242, 0.1); }
-        .type-pill { flex: 1; text-align: center; padding: 12px; border-radius: 14px; background: #f1f5f9; color: #64748b; font-weight: 700; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+        .type-pill { flex: 1; text-align: center; padding: 14px; border-radius: 16px; background: #f1f5f9; color: #64748b; font-weight: 700; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
         .type-pill.active { background: #eef2ff; color: #1877f2; border-color: #1877f2; }
-        .tag-label { display: block; font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 8px; margin-top: 16px; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto; }
+        .tag-label { display: block; font-size: 13px; font-weight: 900; color: #64748b; margin-bottom: 8px; margin-top: 16px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: white; width: 100%; max-width: 850px; border-radius: 32px; padding: 40px; margin-bottom: 50px; position: relative; }
         .session-row { background: #f8fafc; border-radius: 20px; padding: 20px; margin-bottom: 12px; border: 1px solid #e2e8f0; }
-        .eq-chip { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 10px 16px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; font-weight: 700; }
+        .eq-chip { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 10px 16px; border-radius: 12px; cursor: pointer; font-weight: 700; border: 1.5px solid transparent; }
         .eq-chip:has(input:checked) { background: #e7f3ff; color: #1877f2; border-color: #1877f2; }
     </style>
 </head>
@@ -28,23 +28,27 @@
     <div class="main-container">
         <div class="flex justify-between items-center mb-10">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg"><span class="text-white font-black italic text-2xl">SI</span></div>
-                <div><h1 class="text-xl font-black italic">規格專家管理端</h1><p class="text-xs text-slate-400 font-bold uppercase">Spec & Scale Console</p></div>
+                <div class="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center shadow-xl"><span class="text-white font-black italic text-2xl">SI</span></div>
+                <div><h1 class="text-xl font-black italic">活動規格專家端</h1><p class="text-xs text-slate-400 font-bold uppercase">Standardized Activity Architect</p></div>
             </div>
-            <button onclick="EventManager.openEditor(null)" class="bg-[#1877f2] text-white px-8 py-3 rounded-xl font-bold shadow-lg">+ 建立新課程規格</button>
+            <div class="flex gap-3">
+                <button onclick="window.location.href='index.html'" class="text-slate-400 font-bold text-sm px-5 py-2.5 border rounded-xl bg-white shadow-sm">返回首頁</button>
+                <button onclick="EventManager.openEditor(null)" class="bg-[#1877f2] text-white px-8 py-3 rounded-xl font-bold shadow-lg">+ 新增課程規格</button>
+            </div>
         </div>
-        <div id="admin-event-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        <div id="admin-event-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
     </div>
 
-    <!-- 19 欄位專用規格編輯器 -->
+    <!-- 19 欄位專用旗艦編輯器 -->
     <div id="editor-modal" class="modal-overlay" onclick="if(event.target===this) EventManager.closeEditor()">
         <div class="modal-content">
-            <h2 class="text-2xl font-black italic text-[#1877f2] mb-8 border-b pb-4">課程規格配置 (含早鳥方案)</h2>
+            <h2 class="text-3xl font-black italic text-[#1877f2] mb-10 border-b pb-6">專業課程配置 Matrix</h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto max-h-[70vh] px-2 no-scrollbar">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto max-h-[70vh] px-2 no-scrollbar">
+                <!-- 營運模式決定介面 -->
                 <div class="col-span-full">
-                    <label class="tag-label !mt-0">1. 選定活動營運模式</label>
-                    <div class="flex gap-3 mt-2">
+                    <label class="tag-label !mt-0">選定營運模式 (將自動過濾無關欄位)</label>
+                    <div class="flex gap-4 mt-2">
                         <div onclick="EventManager.setType('單日型')" id="btn-type-single" class="type-pill active">單日體驗</div>
                         <div onclick="EventManager.setType('梯次型')" id="btn-type-batch" class="type-pill">多梯次營隊</div>
                         <div onclick="EventManager.setType('常態型')" id="btn-type-term" class="type-pill">學期常態課</div>
@@ -55,16 +59,16 @@
                 <div><label class="tag-label">分類標籤</label><select id="ed-cat" class="input-field font-bold"></select></div>
                 <div><label class="tag-label">主視覺圖片 URL</label><input type="text" id="ed-img" class="input-field"></div>
 
-                <!-- 梯次型專用區 -->
-                <div id="area-batch" class="col-span-full bg-blue-50/50 p-6 rounded-3xl border-2 border-dashed border-blue-200 hidden">
-                    <div class="flex justify-between items-center mb-4"><span class="font-bold text-[#1877f2]">梯次清單設定</span><button onclick="EventManager.appendSession()" class="bg-[#1877f2] text-white px-4 py-1.5 rounded-lg text-xs font-bold">+ 新增梯次</button></div>
+                <!-- 梯次配置區 -->
+                <div id="area-batch" class="col-span-full bg-blue-50/50 p-8 rounded-[2.5rem] border-2 border-dashed border-blue-200 hidden">
+                    <div class="flex justify-between items-center mb-6"><span class="font-black text-[#1877f2]">梯次時間清單設定</span><button onclick="EventManager.appendSession()" class="bg-[#1877f2] text-white px-5 py-2 rounded-xl text-sm font-bold shadow-md">+ 新增梯次</button></div>
                     <div id="session-list-container"></div>
                 </div>
 
-                <!-- 學期常態型專用區 -->
-                <div id="area-term" class="col-span-full bg-emerald-50/50 p-6 rounded-3xl border-2 border-dashed border-emerald-200 hidden">
-                    <label class="tag-label !mt-0 text-emerald-700">固定上課日設定</label>
-                    <div class="grid grid-cols-4 gap-2 mb-6">
+                <!-- 常態型配置區 -->
+                <div id="area-term" class="col-span-full bg-emerald-50/50 p-8 rounded-[2.5rem] border-2 border-dashed border-emerald-200 hidden">
+                    <label class="tag-label !mt-0 text-emerald-700">固定上課星期設定</label>
+                    <div class="grid grid-cols-4 gap-3 mb-8">
                         <label class="flex items-center gap-2 font-bold"><input type="checkbox" class="wk-day" value="1"> 週一</label>
                         <label class="flex items-center gap-2 font-bold"><input type="checkbox" class="wk-day" value="2"> 週二</label>
                         <label class="flex items-center gap-2 font-bold"><input type="checkbox" class="wk-day" value="3"> 週三</label>
@@ -73,42 +77,35 @@
                         <label class="flex items-center gap-2 font-bold"><input type="checkbox" class="wk-day" value="6"> 週六</label>
                         <label class="flex items-center gap-2 font-bold"><input type="checkbox" class="wk-day" value="0"> 週日</label>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="tag-label text-red-500 !mt-0">單日請假扣額 (全日)</label><input type="number" id="ed-deduct" class="input-field" value="0"></div>
-                        <div><label class="tag-label text-orange-500 !mt-0">單日請假扣額 (半日)</label><input type="number" id="ed-deduct-half" class="input-field" value="0"></div>
-                    </div>
-                </div>
-
-                <!-- ✨ 早鳥價欄位區 -->
-                <div class="col-span-full bg-amber-50 p-6 rounded-3xl border-2 border-amber-200 border-dotted">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="tag-label !mt-0 text-amber-700">✨ 早鳥優惠標價</label>
-                            <input type="number" id="ed-early-price" class="input-field border-amber-200" placeholder="低於基礎學費">
-                        </div>
-                        <div>
-                            <label class="tag-label !mt-0 text-amber-700">⌛ 早鳥截止時間 (含時間)</label>
-                            <input type="datetime-local" id="ed-early-date" class="input-field border-amber-200">
-                        </div>
+                        <div><label class="tag-label text-red-500 !mt-0">請假扣抵 (全日)</label><input type="number" id="ed-deduct" class="input-field" value="0"></div>
+                        <div><label class="tag-label text-orange-500 !mt-0">請假扣抵 (半日)</label><input type="number" id="ed-deduct-half" class="input-field" value="0"></div>
                     </div>
                 </div>
 
-                <!-- 通用價格與日期 -->
+                <!-- 早鳥優惠區 -->
+                <div class="col-span-full bg-amber-50 p-8 rounded-[2.5rem] border-2 border-amber-200 border-dotted">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label class="tag-label !mt-0 text-amber-700">✨ 早鳥優惠標價</label><input type="number" id="ed-early-price" class="input-field border-amber-200" placeholder="留空則無優惠"></div>
+                        <div><label class="tag-label !mt-0 text-amber-700">⌛ 早鳥截止時間</label><input type="datetime-local" id="ed-early-date" class="input-field border-amber-200"></div>
+                    </div>
+                </div>
+
+                <!-- 通用設定 -->
                 <div><label class="tag-label">活動開始日期</label><input type="date" id="ed-start" class="input-field"></div>
                 <div><label class="tag-label">活動結束日期</label><input type="date" id="ed-end" class="input-field"></div>
-                <div><label class="tag-label text-[#1877f2]">基礎學費 (原價)</label><input type="number" id="ed-price" class="input-field" value="0"></div>
+                <div><label class="tag-label text-[#1877f2]">基礎學費總額 (原價)</label><input type="number" id="ed-price" class="input-field" value="0"></div>
                 <div><label class="tag-label text-blue-400">招收總名額</label><input type="number" id="ed-quota" class="input-field" value="0"></div>
 
-                <!-- 裝備租用區 -->
                 <div class="col-span-full">
-                    <label class="tag-label">本活動適用之裝備租用</label>
+                    <label class="tag-label">開放租用裝備 (由參數區導入)</label>
                     <div id="activity-eq-options" class="flex flex-wrap gap-2"></div>
                 </div>
                 
-                <div class="col-span-full"><label class="tag-label">詳細活動內容描述</label><textarea id="ed-desc" rows="4" class="input-field"></textarea></div>
+                <div class="col-span-full"><label class="tag-label">詳細活動內容</label><textarea id="ed-desc" rows="5" class="input-field"></textarea></div>
             </div>
             
-            <button onclick="EventManager.save()" id="btn-save" class="bg-[#1877f2] text-white w-full py-5 rounded-2xl font-black mt-10 shadow-2xl text-lg">發布規格至雲端 ➜</button>
+            <button onclick="EventManager.save()" id="btn-save" class="bg-[#1877f2] text-white w-full py-5 rounded-2xl font-black mt-10 shadow-2xl text-xl italic uppercase">同步發布至運動島資料庫 ➜</button>
         </div>
     </div>
 
@@ -128,12 +125,12 @@
         const EventManager = {
             renderGrid() {
                 document.getElementById('admin-event-grid').innerHTML = state.events.map(ev => `
-                    <div class="bg-white p-6 rounded-3xl border shadow-sm flex gap-5 items-center hover:border-[#1877f2] transition-all">
-                        <img src="${ev['圖片URL'] || 'https://placehold.co/200x200'}" class="w-20 h-20 rounded-2xl object-cover bg-slate-100">
+                    <div class="bg-white p-7 rounded-[2.5rem] border shadow-sm flex gap-6 items-center hover:border-[#1877f2] transition-all">
+                        <img src="${ev['圖片URL'] || 'https://placehold.co/200x200'}" class="w-24 h-24 rounded-3xl object-cover bg-slate-100 shadow-inner">
                         <div class="flex-1">
-                            <span class="text-[10px] font-black px-2 py-0.5 rounded bg-blue-50 text-[#1877f2] uppercase">${ev['活動型態']}</span>
-                            <h4 class="font-black text-lg text-slate-800 leading-tight mt-1">${ev['活動名稱']}</h4>
-                            <button onclick="EventManager.openEditor('${ev['活動ID']}')" class="text-[#1877f2] font-bold text-sm mt-3 border-b-2 border-blue-50">編輯規格</button>
+                            <span class="text-[10px] font-black px-2.5 py-1 rounded-full bg-blue-50 text-[#1877f2] uppercase tracking-tighter">${ev['活動型態']}</span>
+                            <h4 class="font-black text-xl text-slate-800 leading-tight mt-2">${ev['活動名稱']}</h4>
+                            <button onclick="EventManager.openEditor('${ev['活動ID']}')" class="text-[#1877f2] font-black text-sm mt-4 border-b-2 border-blue-50 hover:border-blue-500 transition-all">編輯規格 Matrix</button>
                         </div>
                     </div>`).join('');
             },
@@ -147,8 +144,8 @@
                 const container = document.getElementById('session-list-container');
                 const count = container.children.length + 1;
                 const div = document.createElement('div'); div.className = "session-row";
-                div.innerHTML = `<div class="flex justify-between mb-4"><span class="font-bold text-sm">梯次配置</span><button onclick="this.closest('.session-row').remove()" class="text-red-400 text-xs font-bold">移除</button></div>
-                    <input type="text" class="input-field session-n mb-4" value="${obj.n || '第'+count+'梯次'}" placeholder="名稱">
+                div.innerHTML = `<div class="flex justify-between mb-4"><span class="font-bold text-sm text-slate-400">#${count} 梯次明細</span><button onclick="this.closest('.session-row').remove()" class="text-red-400 text-xs font-bold uppercase">移除</button></div>
+                    <input type="text" class="input-field session-n mb-4" value="${obj.n || '第'+count+'梯次'}" placeholder="例如：第一梯次 (寒假上午班)">
                     <div class="grid grid-cols-2 gap-4"><input type="datetime-local" class="input-field session-s" value="${obj.s}"><input type="datetime-local" class="input-field session-e" value="${obj.e}"></div>`;
                 container.appendChild(div);
             },
@@ -159,11 +156,11 @@
                 document.getElementById('session-list-container').innerHTML = "";
                 document.getElementById('ed-cat').innerHTML = state.config.sportCategories.map(c => `<option value="${c}">${c}</option>`).join('');
                 
-                // 租用設備
+                // 裝備租用勾選邏輯
                 const activeEq = (ev['內容媒體'] || "").split(',').filter(i=>i);
                 document.getElementById('activity-eq-options').innerHTML = state.config.rentalItems.map(it => `
                     <label class="eq-chip"><input type="checkbox" class="act-eq" value="${it.name}" ${activeEq.includes(it.name)?'checked':''}> ${it.name}</label>
-                `).join('');
+                `).join('') || '<p class="text-slate-300 italic">請先至參數區新增租用裝備</p>';
 
                 document.getElementById('ed-name').value = ev['活動名稱'] || "";
                 document.getElementById('ed-cat').value = ev['分類'] || "";
@@ -175,8 +172,6 @@
                 document.getElementById('ed-img').value = ev['圖片URL'] || "";
                 document.getElementById('ed-desc').value = ev['描述'] || "";
                 document.getElementById('ed-quota').value = ev['總名額'] || 0;
-                
-                // ✨ 載入早鳥資訊
                 document.getElementById('ed-early-price').value = ev['全日早鳥價'] || "";
                 document.getElementById('ed-early-date').value = ev['早鳥截止日期'] ? ev['早鳥截止日期'].substring(0,16) : "";
                 
@@ -189,10 +184,15 @@
             },
             closeEditor() { document.getElementById('editor-modal').classList.remove('active'); },
             async save() {
-                const btn = document.getElementById('btn-save'); btn.disabled = true; btn.innerText = "同步中...";
-                let sessionData = state.currentType === '梯次型' ? JSON.stringify(Array.from(document.querySelectorAll('.session-row')).map(r => ({
-                    n: r.querySelector('.session-n').value, s: r.querySelector('.session-s').value, e: r.querySelector('.session-e').value
-                }))) : (state.currentType === '常態型' ? Array.from(document.querySelectorAll('.wk-day:checked')).map(el => el.value).join(',') : "");
+                const btn = document.getElementById('btn-save'); btn.disabled = true; btn.innerText = "正在加密同步至雲端...";
+                let sessionData = "";
+                if(state.currentType === '梯次型') {
+                    sessionData = JSON.stringify(Array.from(document.querySelectorAll('.session-row')).map(r => ({
+                        n: r.querySelector('.session-n').value, s: r.querySelector('.session-s').value, e: r.querySelector('.session-e').value
+                    })));
+                } else if(state.currentType === '常態型') {
+                    sessionData = Array.from(document.querySelectorAll('.wk-day:checked')).map(el => el.value).join(',');
+                }
 
                 const payload = { 
                     "活動ID": state.currentEditId || ("EVT-" + Date.now()), "活動型態": state.currentType, "活動名稱": document.getElementById('ed-name').value, 
@@ -201,12 +201,12 @@
                     "全日扣除": document.getElementById('ed-deduct').value, "半日扣除": document.getElementById('ed-deduct-half').value,
                     "圖片URL": document.getElementById('ed-img').value, "狀態": "上架", "總名額": document.getElementById('ed-quota').value, 
                     "內容媒體": Array.from(document.querySelectorAll('.act-eq:checked')).map(el => el.value).join(','),
-                    "描述": document.getElementById('ed-desc').value,
-                    "全日早鳥價": document.getElementById('ed-early-price').value,
-                    "早鳥截止日期": document.getElementById('ed-early-date').value
+                    "描述": document.getElementById('ed-desc').value, "全日早鳥價": document.getElementById('ed-early-price').value, "早鳥截止日期": document.getElementById('ed-early-date').value
                 };
-                await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateEvent', payload }) });
-                alert("✅ 規格(含早鳥)已發布成功！"); location.reload();
+
+                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateEvent', payload }) });
+                if((await res.json()).status === 'success') { alert("🎉 專業活動規格已成功存檔！"); location.reload(); }
+                else { alert("連線失敗"); btn.disabled = false; }
             }
         };
         window.onload = init;
