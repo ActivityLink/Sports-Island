@@ -35,7 +35,6 @@
         .modal-overlay.active { display: flex; }
         .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 28px; padding: 32px; position: relative; max-height: 85vh; overflow-y: auto; }
         
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -110,25 +109,39 @@
                 </div>
             </div>
 
-            <!-- 功能按鈕區 -->
+            <!-- 功能按鈕區：完整管理功能入口 -->
             <div class="space-y-4">
+                <!-- 1. 報名審核 (報名人資訊) -->
                 <button onclick="safeNavigate('admin_list.html')" class="w-full admin-card flex items-center justify-between group hover:border-[#1877f2] transition-all">
                     <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 bg-blue-50 text-[#1877f2] rounded-2xl flex items-center justify-center text-2xl">📋</div>
+                        <div class="w-14 h-14 bg-blue-50 text-[#1877f2] rounded-2xl flex items-center justify-center text-2xl shadow-inner">📋</div>
                         <div class="text-left">
-                            <h4 class="font-black text-lg text-slate-800 leading-tight">預約名單審核</h4>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Booking List Audit</p>
+                            <h4 class="font-black text-lg text-slate-800 leading-tight">報名審核清單</h4>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Booking List & Audit</p>
                         </div>
                     </div>
                     <span class="text-slate-300 group-hover:text-[#1877f2] transition-colors">➜</span>
                 </button>
 
+                <!-- 2. 全體會員名冊 -->
+                <button onclick="safeNavigate('admin_members.html')" class="w-full admin-card flex items-center justify-between group hover:border-emerald-500 transition-all border-l-4 border-l-emerald-500">
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl shadow-inner">👤</div>
+                        <div class="text-left">
+                            <h4 class="font-black text-lg text-slate-800 leading-tight">全體會員名冊</h4>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Member Registry Management</p>
+                        </div>
+                    </div>
+                    <span class="text-slate-300 group-hover:text-emerald-500 transition-colors">➜</span>
+                </button>
+
+                <!-- 3. 系統核心參數 (參數區) -->
                 <button onclick="safeNavigate('admin_config.html')" class="w-full admin-card flex items-center justify-between group hover:border-amber-500 transition-all border-dashed border-2 border-amber-100">
                     <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl">⚙️</div>
+                        <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl shadow-inner">⚙️</div>
                         <div class="text-left">
-                            <h4 class="font-black text-lg text-slate-800 leading-tight">系統核心設定</h4>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">System Configuration</p>
+                            <h4 class="font-black text-lg text-slate-800 leading-tight">系統核心參數</h4>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">System Configuration (參數區)</p>
                         </div>
                     </div>
                     <span class="text-slate-300 group-hover:text-amber-500 transition-colors">➜</span>
@@ -161,7 +174,6 @@
             window.location.href = t; 
         }
 
-        // 超時重試顯示
         const retryTimer = setTimeout(() => {
             if (document.getElementById('view-loading').style.display !== 'none') {
                 document.getElementById('btn-retry').classList.remove('hidden');
@@ -172,23 +184,17 @@
             async init() {
                 try {
                     await liff.init({ liffId: LIFF_ID });
-                    
                     if (!liff.isLoggedIn() && liff.isInClient()) {
                         liff.login();
                         return;
                     }
-                    
                     let profile = { userId: "DEBUG_USER" };
-                    if (liff.isLoggedIn()) {
-                        profile = await liff.getProfile();
-                    }
-                    
+                    if (liff.isLoggedIn()) profile = await liff.getProfile();
                     state.uid = profile.userId;
                     await this.loadInitialData();
-
                 } catch (e) { 
                     console.error("LIFF Init Error:", e);
-                    await this.loadInitialData(); // 即使失敗也嘗試讀取活動 (供一般瀏覽器測試)
+                    await this.loadInitialData();
                 }
             },
 
@@ -196,25 +202,20 @@
                 try {
                     const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
                     const r = await res.json();
-                    
                     if (r.status === 'registered') {
                         state.role = r.role;
                         document.getElementById('main-header').classList.remove('hidden');
-                        
-                        // 身分自動分流
                         if (state.role === '管理員') {
                             document.getElementById('tab-admin').classList.remove('hidden');
                             switchMainTab('admin'); 
                         } else {
                             switchMainTab('activity');
                         }
-                        
                         await loadCourses();
                     } else if (r.status === 'not_found' && state.uid !== 'DEBUG_USER') {
                         safeNavigate('register.html');
                         return;
                     } else {
-                        // 偵錯/訪客模式
                         document.getElementById('main-header').classList.remove('hidden');
                         switchMainTab('activity');
                         await loadCourses();
@@ -234,14 +235,10 @@
                 const r = await res.json();
                 state.events = r.data || [];
                 state.config = r.config || {};
-
-                // 處理首頁公告
                 if (state.config.announcement) {
                     document.getElementById('announcement-text').innerText = state.config.announcement;
                     document.getElementById('announcement-area').style.display = 'block';
                 }
-
-                // 渲染活動列表
                 document.getElementById('event-list').innerHTML = state.events.filter(ev => ev['狀態'] === '上架').map(ev => `
                     <div class="bg-white rounded-[2rem] overflow-hidden shadow-sm flex flex-col hover:shadow-xl transition-all border border-white">
                         <div class="relative h-48 overflow-hidden border-b border-gray-50">
@@ -267,20 +264,14 @@
         }
 
         function switchMainTab(m) {
-            // 切換導覽標籤
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             const currentTab = document.getElementById('tab-' + m);
             if (currentTab) currentTab.classList.add('active');
-            
-            // 切換區塊視圖
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
             const v = document.getElementById('view-' + m);
             if (v) v.classList.add('active');
-            
-            // 視圖特定載入邏輯
             if (m === 'member') loadFamilyMembers();
             if (m === 'admin') loadAdminStats();
-            
             window.scrollTo(0,0);
         }
 
