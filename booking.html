@@ -3,238 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>預約確認 - 運動島 Flagship</title>
+    <title>預約報名 - 運動島</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
         .main-container { max-width: 600px; margin: 0 auto; padding: 16px; padding-bottom: 140px; }
+        
         .content-card { background: white; border-radius: 32px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.04); padding: 28px; margin-bottom: 20px; border: 1px solid #f1f5f9; }
         
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .cal-header { text-align: center; font-size: 11px; font-weight: 900; color: #94a3b8; padding-bottom: 12px; }
-        .cal-day { aspect-ratio: 1; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
-        .status-attending { background: #eef2ff; color: #1877f2; border-color: #e0e7ff; }
-        .status-absent-full { background: #fef2f2; color: #ef4444; border-color: #fee2e2; }
-        .status-disabled { background: #f8fafc; color: #e2e8f0; opacity: 0.3; pointer-events: none; }
-        .status-label { font-size: 9px; margin-top: 2px; font-weight: 900; }
-
-        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #f1f5f9; padding: 24px; box-shadow: 0 -20px 40px rgba(0,0,0,0.05); z-index: 100; }
-        .btn-blue { background: #1877f2; color: white; padding: 14px 40px; border-radius: 20px; font-weight: 900; box-shadow: 0 10px 20px -5px rgba(24,119,242,0.4); }
+        /* 專用清單樣式 (規格化) */
+        .batch-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 20px; border-radius: 20px; border: 2px solid transparent; cursor: pointer; transition: 0.3s; }
+        .batch-item:hover { background: #f1f5f9; }
+        .batch-item.active { border-color: #1877f2; background: #eef2ff; box-shadow: 0 8px 20px -5px rgba(24,119,242,0.15); }
         
-        .leave-menu { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 40px 40px 0 0; padding: 40px; z-index: 1001; transform: translateY(100%); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 -20px 50px rgba(0,0,0,0.15); }
-        .leave-menu.active { transform: translateY(0); }
-        .overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 1000; display: none; }
+        .btn-blue { background: #1877f2; color: white; padding: 18px 40px; border-radius: 20px; font-weight: 900; width: 100%; text-align: center; font-size: 18px; box-shadow: 0 10px 20px -5px rgba(24,119,242,0.3); transition: 0.2s; }
+        .btn-blue:active { transform: scale(0.96); opacity: 0.9; }
+        .btn-blue:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
+
+        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-top: 1px solid #f1f5f9; padding: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); z-index: 100; }
+        
+        .step-indicator { display: flex; gap: 8px; margin-bottom: 24px; }
+        .step-dot { height: 6px; flex: 1; border-radius: 10px; background: #e2e8f0; transition: 0.4s; }
+        .step-dot.active { background: #1877f2; }
+
+        .loading-ring { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #1877f2; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
+    <!-- 全域載入遮罩 -->
     <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center">
-        <div class="w-12 h-12 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-6 font-bold text-slate-400 text-sm tracking-widest uppercase">系統讀取中...</p>
+        <div class="loading-ring"></div>
+        <p class="mt-6 font-black text-slate-400 text-sm tracking-widest uppercase italic">運動島數據對接中...</p>
     </div>
 
     <div class="main-container">
-        <!-- 步驟 1: 選擇成員 -->
-        <div id="view-member" class="hidden text-center">
-            <h2 class="text-3xl font-black mb-10 italic tracking-tighter text-slate-800">1. 選擇預約學員</h2>
+        <!-- 步驟指示器 -->
+        <div class="step-indicator">
+            <div id="step-1" class="step-dot active"></div>
+            <div id="step-2" class="step-dot"></div>
+            <div id="step-3" class="step-dot"></div>
+        </div>
+
+        <!-- 步驟 1: 選擇學員 (規格化入口) -->
+        <div id="view-member" class="hidden">
+            <h2 class="text-3xl font-black mb-2 italic tracking-tight text-slate-800">選擇預約學員</h2>
+            <p class="text-sm text-slate-400 font-bold mb-10 uppercase tracking-widest italic">Choose Student Profile</p>
             <div id="member-list" class="space-y-4"></div>
-            <button onclick="safeNavigate('register.html?mode=add')" class="w-full mt-10 py-5 border-2 border-dashed border-slate-200 rounded-3xl text-slate-400 font-bold">+ 新增成員個資</button>
+            <button onclick="safeNavigate('register.html?mode=add')" class="w-full mt-10 py-6 border-2 border-dashed border-slate-200 rounded-[2rem] text-slate-400 font-black hover:bg-white hover:border-slate-300 transition-all">+ 新增家庭成員個資</button>
         </div>
 
-        <!-- 步驟 2: 行程安排 -->
+        <!-- 步驟 2: 專用報名介面 (動態渲染) -->
         <div id="view-details" class="hidden">
-            <button onclick="switchView('member')" class="mb-6 text-slate-400 font-bold text-sm uppercase flex items-center gap-2">⬅ 返回選擇學員</button>
             <div class="content-card">
-                <h2 id="event-name-display" class="text-2xl font-bold text-[#1877f2] mb-10 italic">---</h2>
-                <div class="flex justify-between items-end mb-6">
+                <div class="flex justify-between items-start mb-6">
                     <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">行程安排</label>
-                        <p class="text-sm font-bold text-blue-400 mt-1 italic">請點選不出席的當日修改設定</p>
+                        <h2 id="event-name" class="text-2xl font-black text-slate-800 italic leading-tight">---</h2>
+                        <span id="event-type-badge" class="inline-block mt-2 text-[10px] font-black bg-[#1877f2] text-white px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm">---</span>
                     </div>
-                    <span id="calendar-month-label" class="font-bold text-sm text-slate-700">---</span>
                 </div>
-                <div class="calendar-grid mb-4">
-                    <div class="cal-header">日</div><div class="cal-header">一</div><div class="cal-header">二</div><div class="cal-header">三</div><div class="cal-header">四</div><div class="cal-header">五</div><div class="cal-header">六</div>
+                
+                <!-- 動態注入區：依課程種類顯示 UI -->
+                <div id="dynamic-booking-ui" class="mt-10 min-h-[200px]">
+                    <p class="text-center py-10 text-slate-300 italic">初始化專用報名介面...</p>
                 </div>
-                <div id="cal-body" class="calendar-grid"></div>
             </div>
+            <button onclick="switchView('member')" class="w-full text-slate-400 font-bold text-xs uppercase mt-4">⬅ 返回重新選擇學員</button>
         </div>
 
-        <!-- 步驟 3: 結帳 -->
+        <!-- 步驟 3: 結帳與匯款 -->
         <div id="view-checkout" class="hidden">
             <div class="content-card">
-                <h2 class="text-2xl font-bold mb-10 border-b pb-6">報名預約摘要</h2>
-                <div class="space-y-5 mb-12">
-                    <div class="flex justify-between text-sm font-bold text-slate-400"><span>基礎費用 (全勤)</span><span id="final-base">NT$ 0</span></div>
-                    <div class="flex justify-between text-sm font-bold text-red-500"><span>缺席扣除額</span><span id="final-deduct">- NT$ 0</span></div>
-                    <div class="flex justify-between items-end border-t pt-8">
-                        <span class="font-bold text-sm italic text-slate-800">應付總金額</span>
-                        <span id="final-total" class="text-4xl font-black italic text-[#1877f2]">NT$ 0</span>
+                <h2 class="text-2xl font-black mb-8 italic text-slate-800">報名摘要確認</h2>
+                
+                <div class="space-y-4 mb-10">
+                    <div class="flex justify-between items-center py-4 border-b border-slate-50">
+                        <span class="text-sm font-bold text-slate-400">報名學員</span>
+                        <span id="summary-member" class="font-black text-slate-700">---</span>
+                    </div>
+                    <div class="flex justify-between items-center py-4 border-b border-slate-50">
+                        <span class="text-sm font-bold text-slate-400">選取項目/梯次</span>
+                        <span id="summary-target" class="font-black text-slate-700">---</span>
+                    </div>
+                    <div class="bg-blue-50/50 p-8 rounded-3xl text-center mt-8">
+                        <p class="text-xs font-black text-[#1877f2] uppercase tracking-widest mb-2">應付學費總額</p>
+                        <p id="final-amount" class="text-4xl font-black text-[#1877f2] italic">NT$ 0</p>
                     </div>
                 </div>
-                <div class="mb-10">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">匯款帳號後五碼</label>
-                    <input type="text" id="bank-5" class="w-full border-2 border-slate-100 rounded-2xl p-5 font-black bg-slate-50 text-xl outline-none focus:border-[#1877f2] transition-all" maxlength="5" placeholder="00000">
-                </div>
-                <button onclick="submitFinalBooking()" id="btn-submit" class="btn-blue w-full py-5 text-xl tracking-tighter">確認預約並送出資料 ➜</button>
+
+                <label class="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest text-center">請輸入匯款帳號後五碼</label>
+                <input type="text" id="bank-5" class="w-full border-2 border-slate-100 p-5 rounded-2xl mb-10 text-center font-black text-2xl outline-none focus:border-[#1877f2] transition-all bg-slate-50 focus:bg-white" maxlength="5" placeholder="00000">
+                
+                <button onclick="submitBooking()" id="btn-submit" class="btn-blue">確認並完成報名 ➜</button>
             </div>
+            <button onclick="switchView('details')" class="w-full text-slate-400 font-bold text-xs uppercase mt-4">⬅ 返回修改預約內容</button>
         </div>
     </div>
 
-    <!-- 底部浮動欄 -->
-    <div id="checkout-bar" class="sticky-footer flex items-center justify-between hidden">
-        <div><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">預計學費</p><p id="floating-total" class="text-2xl font-black italic text-[#1877f2]">NT$ 0</p></div>
-        <button onclick="switchView('checkout')" class="btn-blue !py-4 !px-8">下一步 ➜</button>
-    </div>
-
-    <div id="overlay" class="overlay" onclick="closeLeaveMenu()"></div>
-    <div id="leave-menu" class="leave-menu">
-        <h3 id="menu-date-title" class="text-xl font-bold mb-10 italic">修改當日狀態</h3>
-        <div class="grid grid-cols-2 gap-4 mb-10">
-            <button onclick="updateDayStatus('出席')" class="p-6 border-2 border-slate-100 rounded-3xl font-bold text-base">恢復出席</button>
-            <button onclick="updateDayStatus('全日')" class="p-6 border-2 border-red-50 bg-red-50 text-red-600 rounded-3xl font-bold text-base">全日請假</button>
-            <button onclick="updateDayStatus('上午')" class="p-6 border-2 border-orange-50 bg-orange-50 text-orange-600 rounded-3xl font-bold text-base">上午請假</button>
-            <button onclick="updateDayStatus('下午')" class="p-6 border-2 border-orange-50 bg-orange-50 text-orange-600 rounded-3xl font-bold text-base">下午請假</button>
+    <!-- 底部動作條 -->
+    <div id="footer-bar" class="sticky-footer hidden">
+        <div class="max-w-[600px] mx-auto flex items-center justify-between gap-6">
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase">預計應付學費</p>
+                <p id="footer-price" class="text-xl font-black text-[#1877f2] italic">NT$ 0</p>
+            </div>
+            <button onclick="switchView('checkout')" class="btn-blue !w-auto !px-12 !py-4 shadow-lg">下一步 ➜</button>
         </div>
-        <button onclick="closeLeaveMenu()" class="w-full py-2 text-slate-400 font-bold uppercase tracking-widest">取消</button>
     </div>
 
     <script>
-        const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
         const eventId = new URLSearchParams(window.location.search).get('id');
-        let state = { uid: null, event: null, members: [], leaves: {}, currentFocusDate: null, finalAmount: 0, selectedMember: null };
+        
+        let state = { 
+            uid: null, 
+            event: null, 
+            members: [], 
+            selectedMember: null, 
+            selectedBatch: null,
+            basePrice: 0 
+        };
 
+        /**
+         * ✨ 穩定導航：解決預覽環境 404 問題
+         */
         function safeNavigate(target) {
-            if (window.location.protocol === 'blob:') return;
-            const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-            window.location.href = path + target;
+            if (window.location.protocol === 'blob:') {
+                alert("[開發測試模式] 預覽環境不支援直接跳轉。在正式環境中，系統將導向: " + target);
+                console.log("Mock Navigation to:", target);
+                return;
+            }
+            try {
+                const url = new URL(target, window.location.href);
+                window.location.href = url.href;
+            } catch (e) {
+                window.location.href = target;
+            }
         }
 
         /**
-         * ✨ 修復金額疊加的核心函式
+         * ✨ 徹底歸零狀態
          */
-        function resetState() {
-            state.leaves = {};
+        function resetBookingSession() {
+            state.selectedBatch = null;
             state.finalAmount = 0;
-            document.getElementById('floating-total').innerText = "NT$ 0";
-            document.getElementById('final-base').innerText = "NT$ 0";
-            document.getElementById('final-deduct').innerText = "- NT$ 0";
-            document.getElementById('final-total').innerText = "NT$ 0";
+            const ui = document.getElementById('dynamic-booking-ui');
+            if(ui) ui.innerHTML = '<p class="text-center py-10 text-slate-300 italic">初始化中...</p>';
         }
 
         async function init() {
-            resetState();
+            resetBookingSession();
             try {
-                await liff.init({ liffId: LIFF_ID });
+                // LIFF 初始化
+                await liff.init({ liffId: "2008786875-7COWtgtL" });
                 if (!liff.isLoggedIn() && liff.isInClient()) { liff.login(); return; }
                 const p = liff.isLoggedIn() ? await liff.getProfile() : { userId: "DEBUG_USER" };
                 state.uid = p.userId;
 
+                // 抓取雲端活動與成員資料
                 const [evRes, memRes] = await Promise.all([
                     fetch(`${PROXY_URL}?action=getEvents`),
                     fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`)
                 ]);
+                
                 const evData = await evRes.json();
+                const memData = await memRes.json();
+
+                // ✨ 修復點：在存取屬性前確保活動資料存在
+                if (!evData.data || !Array.isArray(evData.data)) { throw new Error("活動庫同步失敗"); }
+                
                 state.event = evData.data.find(e => String(e['活動ID']) === String(eventId));
-                state.members = (await memRes.json()).data || [];
+                
+                if (!state.event) {
+                    alert("找不到該活動的規格設定，將返回首頁。");
+                    safeNavigate('index.html');
+                    return;
+                }
 
-                if (!state.event) { safeNavigate('index.html'); return; }
-                document.getElementById('event-name-display').innerText = state.event['活動名稱'];
+                state.members = memData.data || [];
+                state.basePrice = parseInt(state.event['全日價'] || 0);
+                
+                // 渲染基礎 UI 資訊
+                document.getElementById('event-name').innerText = state.event['活動名稱'] || "未命名活動";
+                document.getElementById('event-type-badge').innerText = state.event['活動型態'] || "單日型";
+                document.getElementById('footer-price').innerText = `NT$ ${state.basePrice.toLocaleString()}`;
+                
                 renderMembers();
-            } catch (e) { console.error(e); } finally { document.getElementById('view-loading').style.display = 'none'; }
-        }
+                switchView('member');
 
-        function selectMember(id) { 
-            resetState(); // 切換成員時再次確保歸零
-            state.selectedMember = state.members.find(m => String(m.學員ID) === id); 
-            renderCalendar(); 
-            switchView('details'); 
-        }
-
-        function renderCalendar() {
-            const container = document.getElementById('cal-body');
-            const startStr = state.event['開始日期'].substring(0, 10).replace(/\//g, '-');
-            const endStr = state.event['結束日期'].substring(0, 10).replace(/\//g, '-');
-            const start = new Date(startStr);
-            const end = new Date(endStr);
-            const classDays = (state.event['梯次資料'] || "").split(',').map(Number);
-            const isRegular = state.event['活動型態'] === '常態型';
-
-            document.getElementById('calendar-month-label').innerText = `${start.getMonth()+1}月`;
-            const offset = new Date(start.getFullYear(), start.getMonth(), 1).getDay();
-            let html = "";
-            for (let i = 0; i < offset; i++) html += `<div class="cal-day status-disabled"></div>`;
-
-            let current = new Date(start);
-            while (current <= end) {
-                const dStr = current.toISOString().split('T')[0];
-                const active = isRegular ? classDays.includes(current.getDay()) : true;
-                if (active) state.leaves[dStr] = '出席';
-                html += `
-                <div id="day-${dStr}" onclick="${active ? `openLeaveMenu('${dStr}')` : ''}" class="cal-day ${active ? 'status-attending shadow-sm' : 'status-disabled'}">
-                    <span>${current.getDate()}</span><span id="lb-${dStr}" class="status-label">${active?'出席':''}</span>
-                </div>`;
-                current.setDate(current.getDate() + 1);
+            } catch (e) {
+                console.error("Critical Init Error:", e);
+                document.getElementById('view-loading').innerHTML = `
+                    <div class="text-center p-10">
+                        <p class="text-red-500 font-bold mb-4">雲端資料同步失敗</p>
+                        <button onclick="location.reload()" class="btn-blue !w-auto !px-8">點此重試</button>
+                    </div>`;
+            } finally {
+                document.getElementById('view-loading').style.display = 'none';
             }
-            container.innerHTML = html;
-            calculate();
         }
 
-        function calculate() {
-            const unit = Number(state.event['全日價'] || 0);
-            const activeDays = Object.keys(state.leaves).length;
-            const base = unit * activeDays;
-            let deduct = 0;
-            const dayDeduct = Number(state.event['全日扣除'] || 0);
-            Object.values(state.leaves).forEach(v => {
-                if(v === '全日') deduct += dayDeduct;
-                if(v === '上午' || v === '下午') deduct += (dayDeduct / 2);
-            });
-            const total = base - deduct;
-            document.getElementById('floating-total').innerText = `NT$ ${total.toLocaleString()}`;
-            document.getElementById('final-base').innerText = `NT$ ${base.toLocaleString()}`;
-            document.getElementById('final-deduct').innerText = `- NT$ ${deduct.toLocaleString()}`;
-            document.getElementById('final-total').innerText = `NT$ ${total.toLocaleString()}`;
-            state.finalAmount = total;
-        }
-
-        function openLeaveMenu(d) { state.currentFocusDate = d; document.getElementById('menu-date-title').innerText = `${d.substring(5)} 狀態修改`; document.getElementById('overlay').style.display='block'; document.getElementById('leave-menu').classList.add('active'); }
-        function closeLeaveMenu() { document.getElementById('overlay').style.display='none'; document.getElementById('leave-menu').classList.remove('active'); }
-        function updateDayStatus(s) {
-            state.leaves[state.currentFocusDate] = s;
-            const el = document.getElementById(`day-${state.currentFocusDate}`);
-            const lb = document.getElementById(`lb-${state.currentFocusDate}`);
-            el.className = `cal-day ${s==='出席'?'status-attending shadow-sm':(s==='全日'?'status-absent-full':'status-absent-half shadow-inner')}`;
-            lb.innerText = s==='出席'?'出席':s+'假';
-            calculate(); closeLeaveMenu();
-        }
-
-        function renderMembers() { 
-            document.getElementById('member-list').innerHTML = state.members.map(m => `
-                <div onclick="selectMember('${m.學員ID}')" class="bg-white p-7 rounded-[2rem] border shadow-sm flex justify-between items-center transition-all cursor-pointer hover:border-indigo-600 hover:shadow-xl group">
-                    <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 bg-blue-50 text-[#1877f2] rounded-2xl flex items-center justify-center font-black italic text-2xl shadow-inner group-hover:bg-[#1877f2] group-hover:text-white transition-all">${(m.姓名||"?").charAt(0)}</div>
-                        <p class="font-bold text-slate-800 text-xl">${m.姓名}</p>
+        function renderMembers() {
+            const list = document.getElementById('member-list');
+            if (state.members.length === 0) {
+                list.innerHTML = `<p class="text-center py-10 text-slate-400 font-bold italic">目前成員庫為空，請點擊下方新增</p>`;
+                return;
+            }
+            list.innerHTML = state.members.map(m => `
+                <div onclick="selectMember('${m.學員ID}')" class="batch-item">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-blue-50 text-[#1877f2] rounded-2xl flex items-center justify-center font-black italic shadow-inner">${(m.姓名||"無").charAt(0)}</div>
+                        <div>
+                            <p class="font-black text-xl text-slate-800">${m.姓名 || '未填寫姓名'}</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${m.學校 || '校外人士'} | ${m.年級 || '-'}</p>
+                        </div>
                     </div>
-                    <span class="text-[#1877f2] font-bold text-sm italic">點選 ➜</span>
-                </div>`).join('') || '<p class="text-gray-400 py-10">請先新增成員個資</p>'; 
-            switchView('member');
+                    <span class="text-[#1877f2] font-black italic text-xs">SELECT ➜</span>
+                </div>`).join('');
         }
-        
-        function switchView(v) { ['member', 'details', 'checkout'].forEach(i => document.getElementById('view-' + i).classList.toggle('hidden', i !== v)); document.getElementById('checkout-bar').classList.toggle('hidden', v !== 'details'); window.scrollTo(0,0); }
 
-        async function submitFinalBooking() {
-            const b5 = document.getElementById('bank-5').value;
-            if(b5.length < 5) return alert("請輸入完整匯款後五碼");
-            const btn = document.getElementById('btn-submit'); btn.disabled = true; btn.innerText = "正在處理中...";
-            const leaves = Object.entries(state.leaves).map(e => `${e[0]}:${e[1]}`).join('|');
-            const payload = { student: state.selectedMember, eventId: state.event['活動ID'], eventName: state.event['活動名稱'], amount: state.finalAmount, bankLast5: b5, selectedDates: leaves };
-            const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
-            if((await res.json()).status === 'success') { alert("🎉 預約成功！報名資料已存入雲端。"); safeNavigate('index.html'); }
+        function selectMember(id) {
+            state.selectedMember = state.members.find(m => String(m.學員ID) === id);
+            document.getElementById('summary-member').innerText = state.selectedMember.姓名;
+            renderSpecializedUI();
+            switchView('details');
         }
+
+        /**
+         * ✨ 規格化專用報名介面渲染 (超越健身房等級)
+         */
+        function renderSpecializedUI() {
+            const container = document.getElementById('dynamic-booking-ui');
+            const type = state.event['活動型態'];
+
+            if(type === '梯次型') {
+                let batches = [];
+                try { batches = JSON.parse(state.event['梯次資料'] || "[]"); } catch(e) { batches = []; }
+                
+                if (batches.length === 0) {
+                    container.innerHTML = `<p class="text-center py-20 text-slate-300 font-bold italic">此活動尚未配置任何梯次，請洽管理員。</p>`;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <label class="block font-black text-slate-400 text-xs mb-6 uppercase tracking-widest">請選取您要參加的梯次時段：</label>
+                    <div class="space-y-4">${batches.map((b, i) => `
+                        <div onclick="pickBatch('${b.n}', this)" class="batch-item">
+                            <div class="text-left">
+                                <p class="font-black text-xl text-slate-800 mb-1">${b.n}</p>
+                                <p class="text-xs text-slate-400 font-bold italic tracking-tighter">${b.s ? b.s.replace('T',' ') : ''} ~ ${b.e ? b.e.split('T')[1] : ''}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-blue-50 text-[#1877f2] px-4 py-2 rounded-xl text-[10px] font-black uppercase">選取</span>
+                            </div>
+                        </div>`).join('')}</div>`;
+            } else if(type === '常態型') {
+                container.innerHTML = `
+                    <div class="bg-emerald-50 p-8 rounded-[2rem] border-2 border-emerald-100/50">
+                        <div class="flex items-center gap-4 mb-6">
+                            <span class="text-3xl">🗓️</span>
+                            <h4 class="text-xl font-black text-emerald-800 italic">學期常態課程</h4>
+                        </div>
+                        <p class="text-emerald-700 text-sm font-medium leading-relaxed mb-8">
+                            本課程為學期制固定週課，報名即包含整學期所有課程日期。我們將為學員預留專屬名額。
+                        </p>
+                        <div class="bg-white/60 p-5 rounded-2xl">
+                            <p class="text-[10px] font-black text-emerald-600 uppercase mb-2 tracking-widest">目前設定</p>
+                            <p class="font-black text-emerald-900">${state.event['梯次資料'] || '每週固定上課'}</p>
+                        </div>
+                    </div>`;
+                state.selectedBatch = "整學期常態課程";
+            } else {
+                container.innerHTML = `
+                    <div class="bg-blue-50 p-8 rounded-[2rem] border-2 border-blue-100/50 text-center">
+                        <span class="text-4xl block mb-4">🏷️</span>
+                        <h4 class="text-xl font-black text-[#1877f2] italic mb-2">單日/體驗專案</h4>
+                        <p class="text-xs text-blue-400 font-black uppercase tracking-widest mb-6">${state.event['開始日期']}</p>
+                        <p class="text-blue-700 text-sm font-medium leading-relaxed">
+                            本項目為單次體驗或專案活動，適合初學者或短期進修。
+                        </p>
+                    </div>`;
+                state.selectedBatch = "單日專案活動";
+            }
+            document.getElementById('summary-target').innerText = state.selectedBatch || "未選取";
+            updateCalculation();
+        }
+
+        function pickBatch(name, el) {
+            state.selectedBatch = name;
+            document.querySelectorAll('.batch-item').forEach(d => d.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('summary-target').innerText = name;
+        }
+
+        function updateCalculation() {
+            document.getElementById('final-amount').innerText = `NT$ ${state.basePrice.toLocaleString()}`;
+        }
+
+        function switchView(v) { 
+            const views = ['member', 'details', 'checkout'];
+            views.forEach((i, idx) => {
+                document.getElementById('view-' + i).classList.toggle('hidden', i !== v);
+                const dot = document.getElementById('step-' + (idx + 1));
+                if (dot) dot.classList.toggle('active', i === v || views.indexOf(i) < views.indexOf(v));
+            });
+            document.getElementById('footer-bar').classList.toggle('hidden', v !== 'details');
+            window.scrollTo(0,0);
+        }
+
+        async function submitBooking() {
+            const b5 = document.getElementById('bank-5').value;
+            if(b5.length < 5) return alert("請輸入匯款帳號後五碼以利對帳");
+            if(!state.selectedBatch) return alert("請先選取參加時段或梯次");
+
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true;
+            btn.innerText = "預約中，請勿離開此畫面...";
+
+            const payload = { 
+                student: state.selectedMember, 
+                eventId: state.event['活動ID'], 
+                eventName: state.event['活動名稱'], 
+                type: state.event['活動型態'],
+                amount: state.basePrice, 
+                bankLast5: b5, 
+                selectedBatch: state.selectedBatch 
+            };
+
+            try {
+                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
+                const r = await res.json();
+                if(r.status === 'success') {
+                    alert("🎉 預約申請已成功送出！請稍候老師的通知。");
+                    safeNavigate('index.html');
+                } else {
+                    alert("伺服器回應異常，請重新嘗試。");
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert("連線超時，請檢查網路狀態。");
+                btn.disabled = false;
+            }
+        }
+
         window.onload = init;
     </script>
 </body>
