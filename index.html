@@ -15,11 +15,12 @@
         .view-container.active { display: block; opacity: 1; }
         #loading-screen { transition: opacity 0.5s ease; }
         #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+        .user-avatar-fallback { background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #94a3b8; }
     </style>
 </head>
 <body class="min-h-screen">
 
-    <!-- 載入中畫面 (保持乾淨) -->
+    <!-- 載入中畫面 -->
     <div id="loading-screen" class="fixed inset-0 bg-white z-[3000] flex flex-col items-center justify-center">
         <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         <p class="mt-4 font-bold text-slate-400 tracking-widest text-sm">運動島資源對接中</p>
@@ -32,8 +33,10 @@
                 <h1 class="text-3xl font-black italic text-slate-800">運動島</h1>
                 <p class="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">Member Portal</p>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-slate-100 overflow-hidden shadow-lg border-2 border-white">
-                <img id="profile-img" src="" alt="" onerror="this.src='https://via.placeholder.com/100?text=User'">
+            <!-- 修改：移除外部 Placeholder 網址，改用內建 Fallback -->
+            <div class="w-12 h-12 rounded-2xl overflow-hidden shadow-lg border-2 border-white user-avatar-fallback">
+                <img id="profile-img" src="" alt="" class="hidden w-full h-full object-cover">
+                <span id="profile-initial">U</span>
             </div>
         </header>
 
@@ -46,7 +49,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <button onclick="location.href='booking.html'" class="bg-blue-600 text-white p-6 rounded-[32px] shadow-blue-200 shadow-xl text-left active:scale-95 transition-transform">
                     <div class="text-2xl mb-2">🗓️</div>
-                    <p class="font-black italic">預約課程</p>
+                    <p class="font-black italic">課程專區</p>
                 </button>
                 <button onclick="location.href='register.html'" class="bg-white text-slate-800 p-6 rounded-[32px] border border-slate-100 text-left active:scale-95 transition-transform">
                     <div class="text-2xl mb-2">👤</div>
@@ -102,9 +105,13 @@
             "U078f44d852026858e3760920d005f428"
         ];
 
-        let state = { uid: null, isAdmin: false, profile: null };
+        let state = { 
+            uid: null, 
+            isAdmin: false, 
+            profile: null,
+            params: new URLSearchParams(window.location.search) // 🔹 參數區預處理
+        };
 
-        // 隱藏載入畫面
         function hideLoading() {
             const screen = document.getElementById('loading-screen');
             if(screen) {
@@ -117,39 +124,47 @@
             try {
                 await liff.init({ liffId: LIFF_ID });
                 
-                // 檢查登入狀態
                 if (!liff.isLoggedIn()) {
-                    // 只有在非預覽環境下才跳轉，避免編輯器死循環
                     if (window.self === window.top) {
                         liff.login({ redirectUri: window.location.href.split('#')[0] });
                     } else {
-                        hideLoading(); // 在編輯器預覽中直接隱藏載入畫面方便開發
+                        hideLoading();
                     }
                     return;
                 }
 
-                // 獲取資料
                 const profile = await liff.getProfile();
                 state.uid = profile.userId;
                 state.profile = profile;
                 state.isAdmin = ADMIN_UIDS.includes(state.uid);
                 
-                // 分流顯示
+                // 🔹 根據「身分」與「參數」分流
                 if (state.isAdmin) {
                     showView('view-admin');
-                    fetchAdminStats(); // 異步抓取數據，不影響畫面顯示
+                    fetchAdminStats();
                 } else {
                     showView('view-user');
-                    document.getElementById('display-name').innerText = profile.displayName;
-                    if (profile.pictureUrl) document.getElementById('profile-img').src = profile.pictureUrl;
+                    renderUserProfile();
                 }
 
                 hideLoading();
-
             } catch (e) {
                 console.error("Init Error:", e);
-                // 發生錯誤也強制移除載入遮罩，避免手機空轉
                 hideLoading();
+            }
+        }
+
+        function renderUserProfile() {
+            document.getElementById('display-name').innerText = state.profile.displayName;
+            const imgEl = document.getElementById('profile-img');
+            const initialEl = document.getElementById('profile-initial');
+            
+            if (state.profile.pictureUrl) {
+                imgEl.src = state.profile.pictureUrl;
+                imgEl.classList.remove('hidden');
+                initialEl.classList.add('hidden');
+            } else {
+                initialEl.innerText = state.profile.displayName.charAt(0);
             }
         }
 
@@ -160,14 +175,22 @@
 
         async function fetchAdminStats() {
             try {
-                const res = await fetch(`${PROXY_URL}?action=getAdminStats`);
+                // 🔹 後端請求增加 timeout 機制，防止 DNS 錯誤導致前端長時間等待
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                const res = await fetch(`${PROXY_URL}?action=getAdminStats`, { signal: controller.signal });
                 const data = await res.json();
+                clearTimeout(timeoutId);
+
                 if (data.status === 'success') {
                     document.getElementById('stat-total-bookings').innerText = data.totalBookings || '0';
                     document.getElementById('stat-new-members').innerText = data.newMembersToday || '0';
                 }
             } catch (err) {
-                console.log("Stats API offline");
+                console.log("Stats API offline or DNS issue");
+                document.getElementById('stat-total-bookings').innerText = "ERR";
+                document.getElementById('stat-new-members').innerText = "ERR";
             }
         }
 
