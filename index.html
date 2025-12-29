@@ -3,198 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>運動島 - 系統入口</title>
+    <title>運動島 SPORTS ISLAND</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        .admin-gradient { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .view-container { display: none; opacity: 0; transition: opacity 0.4s ease; }
-        .view-container.active { display: block; opacity: 1; }
-        #loading-screen { transition: opacity 0.5s ease; }
-        #loading-screen.fade-out { opacity: 0; pointer-events: none; }
-        .user-avatar-fallback { background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #94a3b8; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; color: #1f2937; font-size: 16px; -webkit-tap-highlight-color: transparent; }
+        .main-container { max-width: 900px; margin: 0 auto; padding: 0 16px; }
+        
+        /* 導覽列：品牌活力藍 */
+        .nav-tab { flex: 1; text-align: center; padding: 16px 0; font-weight: 700; font-size: 16px; color: rgba(255,255,255,0.7); border-bottom: 4px solid transparent; cursor: pointer; transition: 0.2s; }
+        .nav-tab.active { color: white !important; border-bottom-color: #fbbf24 !important; }
+        
+        .section-view { display: none; opacity: 0; }
+        .section-view.active { display: block; animation: fadeIn 0.4s forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 按鈕樣式：品牌活力藍 #1877f2 */
+        .btn-blue { background-color: #1877f2; color: white; padding: 14px 20px; border-radius: 14px; font-weight: 700; cursor: pointer; border: none; font-size: 16px; transition: 0.2s; text-align: center; width: 100%; }
+        .btn-outline-blue { background-color: white; color: #1877f2; padding: 14px 20px; border-radius: 14px; font-weight: 700; cursor: pointer; border: 2px solid #1877f2; font-size: 16px; transition: 0.2s; text-align: center; width: 100%; }
+        .btn-blue:active, .btn-outline-blue:active { transform: scale(0.97); opacity: 0.9; }
+        
+        .announcement-card { background-color: #fffbeb; border-left: 6px solid #f59e0b; border-radius: 16px; padding: 20px; margin-bottom: 24px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 28px; padding: 32px; position: relative; max-height: 85vh; overflow-y: auto; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="min-h-screen">
+<body>
 
-    <!-- 載入中畫面 -->
-    <div id="loading-screen" class="fixed inset-0 bg-white z-[3000] flex flex-col items-center justify-center">
-        <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 font-bold text-slate-400 tracking-widest text-sm">運動島資源對接中</p>
+    <header id="main-header" class="bg-[#1e293b] text-white pt-4 pb-1 sticky top-0 z-50 shadow-md hidden">
+        <div class="main-container flex justify-between items-center">
+            <h1 class="text-xl font-black italic tracking-tighter uppercase cursor-pointer text-[#1877f2]" onclick="location.reload()">SPORTS ISLAND</h1>
+            <nav class="flex gap-2">
+                <div onclick="switchMainTab('activity')" id="tab-activity" class="nav-tab active px-4">活動預約</div>
+                <div onclick="switchMainTab('member')" id="tab-member" class="nav-tab px-4">我的專區</div>
+                <div onclick="window.location.href='admin.html'" id="tab-admin" class="nav-tab hidden px-4 text-yellow-400">管理</div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 載入控制項：新增 ID 以利 JS 操控 -->
+    <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center text-center p-10">
+        <div id="loading-spinner" class="w-12 h-12 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
+        <p id="loading-text" class="mt-4 font-bold text-slate-400 text-sm tracking-widest uppercase">載入數據中...</p>
+        <button id="btn-retry" onclick="location.reload()" class="mt-6 px-6 py-2 border rounded-full text-xs font-bold text-slate-400 hidden">連線超時，點此重試</button>
     </div>
 
-    <!-- [一般使用者介面] -->
-    <div id="view-user" class="view-container p-6 max-w-md mx-auto">
-        <header class="flex justify-between items-center mb-10 mt-4">
-            <div>
-                <h1 class="text-3xl font-black italic text-slate-800">運動島</h1>
-                <p class="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">Member Portal</p>
-            </div>
-            <!-- 修改：移除外部 Placeholder 網址，改用內建 Fallback -->
-            <div class="w-12 h-12 rounded-2xl overflow-hidden shadow-lg border-2 border-white user-avatar-fallback">
-                <img id="profile-img" src="" alt="" class="hidden w-full h-full object-cover">
-                <span id="profile-initial">U</span>
-            </div>
-        </header>
-
-        <section class="space-y-6">
-            <div class="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100">
-                <p class="text-xs font-black text-blue-500 uppercase mb-1">Welcome Back</p>
-                <h2 id="display-name" class="text-2xl font-black text-slate-800">---</h2>
+    <main class="main-container py-6">
+        <div id="view-activity" class="section-view active text-center">
+            <div class="rounded-[2.5rem] overflow-hidden mb-8 shadow-sm border-4 border-white bg-white">
+                <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto max-h-[280px] object-cover" alt="Banner">
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="location.href='booking.html'" class="bg-blue-600 text-white p-6 rounded-[32px] shadow-blue-200 shadow-xl text-left active:scale-95 transition-transform">
-                    <div class="text-2xl mb-2">🗓️</div>
-                    <p class="font-black italic">課程專區</p>
-                </button>
-                <button onclick="location.href='register.html'" class="bg-white text-slate-800 p-6 rounded-[32px] border border-slate-100 text-left active:scale-95 transition-transform">
-                    <div class="text-2xl mb-2">👤</div>
-                    <p class="font-black italic">個資管理</p>
-                </button>
-            </div>
-        </section>
-    </div>
-
-    <!-- [管理員儀表板] -->
-    <div id="view-admin" class="view-container min-h-screen admin-gradient text-white pb-10">
-        <div class="p-8">
-            <header class="flex justify-between items-end mb-10">
-                <div>
-                    <span class="bg-red-500 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-widest">Administrator</span>
-                    <h1 class="text-3xl font-black italic mt-2">控制中心</h1>
-                </div>
-                <button onclick="liff.logout(); location.reload();" class="text-slate-400 text-xs underline">登出</button>
-            </header>
-
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="glass-card p-5 rounded-3xl">
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">總報名人數</p>
-                    <p id="stat-total-bookings" class="text-3xl font-black italic mt-1 text-blue-400">--</p>
-                </div>
-                <div class="glass-card p-5 rounded-3xl">
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">今日新成員</p>
-                    <p id="stat-new-members" class="text-3xl font-black italic mt-1 text-emerald-400">--</p>
-                </div>
-            </div>
-
-            <div class="space-y-4">
-                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] px-2">管理功能</h3>
-                <button onclick="location.href='admin_list.html'" class="w-full glass-card p-6 rounded-[2rem] flex items-center justify-between group active:bg-slate-700 transition-all">
-                    <div class="flex items-center gap-5">
-                        <span class="text-3xl">📋</span>
-                        <div class="text-left">
-                            <p class="font-black italic text-lg">報名清單審核</p>
-                            <p class="text-[10px] text-slate-400 uppercase">Verification System</p>
-                        </div>
+            <div id="announcement-area" class="announcement-card text-left">
+                <div class="flex items-start gap-4">
+                    <span class="text-2xl">📢</span>
+                    <div>
+                        <h4 class="font-black text-amber-900 text-sm uppercase tracking-widest mb-1">重要公告 NOTICE</h4>
+                        <p id="announcement-text" class="text-amber-800 text-base font-medium leading-relaxed"></p>
                     </div>
-                    <span class="text-slate-500">➜</span>
-                </button>
+                </div>
             </div>
+            
+            <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-left"></div>
+        </div>
+
+        <div id="view-member" class="section-view">
+            <div class="flex justify-between items-center mb-8 px-2">
+                <h2 class="text-2xl font-black italic text-slate-800">家庭成員個資</h2>
+                <button onclick="safeNavigate('register.html?mode=add')" class="bg-[#1877f2] text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg">+ 新增成員</button>
+            </div>
+            <div id="family-grid" class="space-y-4"></div>
+        </div>
+    </main>
+
+    <div id="desc-modal" class="modal-overlay" onclick="if(event.target===this) closeDesc()">
+        <div class="modal-content shadow-2xl">
+            <h3 id="desc-title" class="text-2xl font-black text-slate-800 mb-6 border-b pb-4 italic leading-tight">課程說明</h3>
+            <div id="desc-body" class="text-slate-600 leading-relaxed whitespace-pre-wrap text-base mb-10 min-h-[100px]"></div>
+            <button onclick="closeDesc()" class="btn-blue">關閉詳細說明</button>
         </div>
     </div>
 
     <script>
-        const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
         const LIFF_ID = "2008786875-7COWtgtL";
-        const ADMIN_UIDS = [
-            "U9738096f99059550e64f8990666060c5", 
-            "U078f44d852026858e3760920d005f428"
-        ];
+        const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
+        let state = { uid: null, events: [], config: {} };
 
-        let state = { 
-            uid: null, 
-            isAdmin: false, 
-            profile: null,
-            params: new URLSearchParams(window.location.search) // 🔹 參數區預處理
+        function safeNavigate(t) { 
+            if (window.location.protocol === 'blob:') return;
+            window.location.href = t; 
+        }
+
+        // 超時保護：若 10 秒沒反應，顯示重試按鈕
+        setTimeout(() => {
+            const loadingText = document.getElementById('loading-text');
+            if (loadingText && document.getElementById('view-loading').style.display !== 'none') {
+                loadingText.innerText = "連線較慢，請稍候...";
+                document.getElementById('btn-retry').classList.remove('hidden');
+            }
+        }, 10000);
+
+        const App = {
+            async init() {
+                try {
+                    await liff.init({ liffId: LIFF_ID });
+                    
+                    if (!liff.isLoggedIn() && liff.isInClient()) {
+                        liff.login();
+                        return;
+                    }
+                    
+                    let profile = { userId: "DEBUG_USER" };
+                    if (liff.isLoggedIn()) {
+                        profile = await liff.getProfile();
+                    }
+                    
+                    state.uid = profile.userId;
+                    await this.loadInitialData();
+
+                } catch (e) { 
+                    console.error("LIFF Init Error:", e);
+                    // 初始化失敗時仍嘗試讀取活動 (供一般瀏覽器查看)
+                    await this.loadInitialData();
+                }
+            },
+
+            async loadInitialData() {
+                try {
+                    const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
+                    const r = await res.json();
+                    
+                    if (r.status === 'registered') {
+                        document.getElementById('main-header').classList.remove('hidden');
+                        if (r.role === '管理員') document.getElementById('tab-admin').classList.remove('hidden');
+                        await loadCourses();
+                    } else if (r.status === 'not_found' && state.uid !== 'DEBUG_USER') {
+                        safeNavigate('register.html');
+                        return;
+                    } else {
+                        // 偵錯模式
+                        document.getElementById('main-header').classList.remove('hidden');
+                        await loadCourses();
+                    }
+                } catch(e) {
+                    console.error("Data Load Error:", e);
+                } finally {
+                    document.getElementById('view-loading').style.display = 'none';
+                }
+            }
         };
 
-        function hideLoading() {
-            const screen = document.getElementById('loading-screen');
-            if(screen) {
-                screen.classList.add('fade-out');
-                setTimeout(() => screen.style.display = 'none', 500);
-            }
-        }
-
-        async function init() {
+        async function loadCourses() {
             try {
-                await liff.init({ liffId: LIFF_ID });
-                
-                if (!liff.isLoggedIn()) {
-                    if (window.self === window.top) {
-                        liff.login({ redirectUri: window.location.href.split('#')[0] });
-                    } else {
-                        hideLoading();
-                    }
-                    return;
+                const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
+                const r = await res.json();
+                state.events = r.data || [];
+                state.config = r.config || {};
+
+                if (state.config.announcement) {
+                    document.getElementById('announcement-text').innerText = state.config.announcement;
+                    document.getElementById('announcement-area').style.display = 'block';
                 }
 
-                const profile = await liff.getProfile();
-                state.uid = profile.userId;
-                state.profile = profile;
-                state.isAdmin = ADMIN_UIDS.includes(state.uid);
-                
-                // 🔹 根據「身分」與「參數」分流
-                if (state.isAdmin) {
-                    showView('view-admin');
-                    fetchAdminStats();
-                } else {
-                    showView('view-user');
-                    renderUserProfile();
-                }
-
-                hideLoading();
+                document.getElementById('event-list').innerHTML = state.events.filter(ev => ev['狀態'] === '上架').map(ev => `
+                    <div class="bg-white rounded-[2rem] overflow-hidden shadow-sm flex flex-col hover:shadow-xl transition-all border border-white">
+                        <div class="relative h-48 overflow-hidden border-b border-gray-50">
+                            <img src="${ev['圖片URL'] || 'https://placehold.co/600x400?text=Activity'}" class="w-full h-full object-cover">
+                            <span class="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black text-[#1877f2] shadow-sm tracking-tighter">${ev['分類']}</span>
+                        </div>
+                        <div class="p-8 flex-1 flex flex-col">
+                            <h3 class="font-black text-xl text-slate-800 mb-3 leading-tight h-14 overflow-hidden">${ev['活動名稱']}</h3>
+                            <p class="text-sm font-normal text-black italic mb-1">${(ev['開始日期'] || "---").substring(0,16)} 起</p>
+                            <div class="flex items-center gap-1 mb-10">
+                                <span class="text-xs font-normal text-black">全勤學費：</span>
+                                <span class="text-xl font-normal text-black italic">NT$ ${parseInt(ev['全日價'] || 0).toLocaleString()}</span>
+                            </div>
+                            <div class="flex flex-col gap-3 mt-auto">
+                                <button onclick="openDesc('${ev['活動ID']}')" class="btn-outline-blue">詳細說明</button>
+                                <button onclick="safeNavigate('booking.html?id=${ev['活動ID']}')" class="btn-blue">立即預約 ➜</button>
+                            </div>
+                        </div>
+                    </div>`).join('') || '<p class="col-span-full text-center py-20 text-slate-400 font-bold italic">目前無活動上架</p>';
             } catch (e) {
-                console.error("Init Error:", e);
-                hideLoading();
+                document.getElementById('event-list').innerHTML = '<p class="col-span-full text-center py-20 text-red-400">活動資料同步異常</p>';
             }
         }
 
-        function renderUserProfile() {
-            document.getElementById('display-name').innerText = state.profile.displayName;
-            const imgEl = document.getElementById('profile-img');
-            const initialEl = document.getElementById('profile-initial');
-            
-            if (state.profile.pictureUrl) {
-                imgEl.src = state.profile.pictureUrl;
-                imgEl.classList.remove('hidden');
-                initialEl.classList.add('hidden');
-            } else {
-                initialEl.innerText = state.profile.displayName.charAt(0);
-            }
+        function openDesc(id) {
+            const ev = state.events.find(e => String(e['活動ID']) === String(id));
+            if (!ev) return;
+            document.getElementById('desc-title').innerText = ev['活動名稱'];
+            document.getElementById('desc-body').innerText = ev['描述'] || "本課程暫無詳細說明。";
+            document.getElementById('desc-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
-        function showView(viewId) {
-            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
+        function closeDesc() {
+            document.getElementById('desc-modal').classList.remove('active');
+            document.body.style.overflow = 'auto';
         }
 
-        async function fetchAdminStats() {
+        function switchMainTab(m) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + m)?.classList.add('active');
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+            const v = document.getElementById('view-' + m);
+            if (v) v.classList.add('active');
+            if (m === 'member') loadFamilyMembers();
+            window.scrollTo(0,0);
+        }
+
+        async function loadFamilyMembers() {
             try {
-                // 🔹 後端請求增加 timeout 機制，防止 DNS 錯誤導致前端長時間等待
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-                const res = await fetch(`${PROXY_URL}?action=getAdminStats`, { signal: controller.signal });
-                const data = await res.json();
-                clearTimeout(timeoutId);
-
-                if (data.status === 'success') {
-                    document.getElementById('stat-total-bookings').innerText = data.totalBookings || '0';
-                    document.getElementById('stat-new-members').innerText = data.newMembersToday || '0';
-                }
-            } catch (err) {
-                console.log("Stats API offline or DNS issue");
-                document.getElementById('stat-total-bookings').innerText = "ERR";
-                document.getElementById('stat-new-members').innerText = "ERR";
-            }
+                const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
+                const data = (await res.json()).data || [];
+                document.getElementById('family-grid').innerHTML = data.map(m => `
+                    <div class="bg-white p-6 rounded-3xl border shadow-sm flex items-center gap-6 group hover:border-[#1877f2] transition-colors">
+                        <div class="w-16 h-16 bg-blue-50 text-[#1877f2] rounded-2xl flex items-center justify-center font-black italic text-3xl shadow-inner group-hover:bg-[#1877f2] group-hover:text-white transition-all">${(m.姓名||"?").charAt(0)}</div>
+                        <div class="flex-1">
+                            <h4 class="font-black text-xl text-slate-800">${m.姓名}</h4>
+                            <p class="text-sm text-gray-400 font-bold mt-1 uppercase tracking-widest">${m.學校 || '---'} | ${m.年級 || '-'}</p>
+                        </div>
+                        <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-[#1877f2] font-black text-sm border-b-2 border-transparent hover:border-[#1877f2] transition-all">編輯</button>
+                    </div>`).join('') || '<p class="text-center py-10 text-slate-300">尚未新增家庭成員</p>';
+            } catch(e) {}
         }
 
-        window.onload = init;
+        window.onload = () => App.init();
     </script>
 </body>
 </html>
