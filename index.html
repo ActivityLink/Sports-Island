@@ -11,24 +11,22 @@
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; font-size: 16px; -webkit-tap-highlight-color: transparent; }
         .main-container { max-width: 900px; margin: 0 auto; padding: 0 16px; }
         
-        /* 導覽頁籤：易讀大字 */
         .nav-tab { flex: 1; text-align: center; padding: 20px 0; font-weight: 700; font-size: 16px; color: rgba(255,255,255,0.7); border-bottom: 4px solid transparent; cursor: pointer; transition: 0.3s; }
         .nav-tab.active { color: white !important; border-bottom-color: #fbbf24 !important; }
         
-        /* 活動卡片優化：高質感設計 */
-        .activity-card { background: white; border-radius: 36px; overflow: hidden; border: 1px solid #e2e8f0; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+        /* 活動卡片美化：不再簡略 */
+        .activity-card { background: white; border-radius: 40px; overflow: hidden; border: 1px solid #e2e8f0; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 32px; }
         .activity-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); }
         
         .section-view { display: none; opacity: 0; transition: 0.4s ease-out; }
         .section-view.active { display: block; opacity: 1; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* 圖片容器 */
-        .img-container { height: 240px; overflow: hidden; position: relative; border-bottom: 1px solid #f1f5f9; }
+        .img-container { height: 260px; overflow: hidden; position: relative; border-bottom: 1px solid #f1f5f9; }
         .img-zoom { width: 100%; height: 100%; object-fit: cover; transition: 0.8s; }
         .activity-card:hover .img-zoom { transform: scale(1.08); }
         
-        .badge { position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.95); backdrop-filter: blur(4px); padding: 6px 16px; border-radius: 99px; font-size: 13px; font-weight: 900; color: #1877f2; shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .badge { position: absolute; top: 24px; left: 24px; background: rgba(255,255,255,0.95); backdrop-filter: blur(4px); padding: 8px 18px; border-radius: 99px; font-size: 14px; font-weight: 900; color: #1877f2; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -39,34 +37,28 @@
             <nav class="flex gap-4">
                 <div onclick="switchTab('activity')" id="tab-activity" class="nav-tab active">活動預約</div>
                 <div onclick="switchTab('member')" id="tab-member" class="nav-tab">我的專區</div>
-                <div onclick="safeNavigate('admin.html')" id="tab-admin" class="nav-tab hidden text-amber-300">管理中心</div>
+                <div onclick="window.location.href='admin.html'" id="tab-admin" class="nav-tab hidden text-amber-300">管理中心</div>
             </nav>
         </div>
     </header>
 
-    <!-- 載入中動畫 -->
     <div id="view-loading" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center">
         <div class="w-14 h-14 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
         <p class="mt-6 font-bold text-slate-400 text-sm tracking-[0.2em] uppercase">Loading Sports Hub...</p>
     </div>
 
     <main class="main-container py-10">
-        <!-- 活動列表視圖 -->
         <div id="view-activity" class="section-view active">
-            <div class="rounded-[3rem] overflow-hidden mb-12 shadow-2xl border-4 border-white">
+            <div class="rounded-[3.5rem] overflow-hidden mb-12 shadow-2xl border-4 border-white">
                 <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto object-cover" alt="Banner">
             </div>
-            <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 gap-10"></div>
+            <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 gap-12"></div>
         </div>
 
-        <!-- 成員庫視圖 -->
         <div id="view-member" class="section-view">
             <div class="flex justify-between items-end mb-10 px-2">
-                <div>
-                    <h2 class="text-3xl font-black italic text-slate-800 tracking-tight">我的家庭成員</h2>
-                    <p class="text-sm text-slate-400 font-bold uppercase mt-1">My Family Members</p>
-                </div>
-                <button onclick="safeNavigate('register.html?mode=add')" class="bg-[#1877f2] text-white px-8 py-3.5 rounded-2xl font-black text-base shadow-xl hover:bg-blue-700 transition-all">+ 新增成員</button>
+                <div><h2 class="text-3xl font-black italic text-slate-800 tracking-tight">我的家庭成員</h2><p class="text-sm text-slate-400 font-bold uppercase mt-1">My Family Members</p></div>
+                <button onclick="window.location.href='register.html?mode=add'" class="bg-[#1877f2] text-white px-8 py-3.5 rounded-2xl font-black text-base shadow-xl hover:bg-blue-700 transition-all">+ 新增成員</button>
             </div>
             <div id="family-grid" class="space-y-6"></div>
         </div>
@@ -77,34 +69,9 @@
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
         let state = { uid: null, events: [] };
 
-        /**
-         * 解決 Location: 'xxx.html' is not a valid URL 報錯的安全導航
-         */
-        function safeNavigate(target) {
-            if (window.location.protocol === 'blob:') {
-                console.warn("[預覽環境限制] 無法從 blob 網址跳轉至: " + target);
-                return;
-            }
-            try {
-                // 補齊完整路徑解析
-                const url = new URL(target, window.location.href);
-                window.location.assign(url.href);
-            } catch (e) {
-                // 備用方案：計算相對路徑
-                const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-                window.location.href = path + target;
-            }
-        }
-
         async function fetchApi(action) {
-            try {
-                const res = await fetch(`${PROXY_URL}?action=${action}&uid=${state.uid || ''}&_t=${Date.now()}`);
-                const text = await res.text();
-                return JSON.parse(text);
-            } catch (e) {
-                console.error("Fetch API Error:", e);
-                return { status: 'error' };
-            }
+            const res = await fetch(`${PROXY_URL}?action=${action}&uid=${state.uid || ''}&_t=${Date.now()}`);
+            return await res.json();
         }
 
         const App = {
@@ -118,18 +85,10 @@
                     const r = await fetchApi('checkUser');
                     if (r.status === 'registered') {
                         document.getElementById('main-header').classList.remove('hidden');
-                        if (r.role === '管理員') {
-                            document.getElementById('tab-admin').classList.remove('hidden');
-                        }
+                        if (r.role === '管理員') document.getElementById('tab-admin').classList.remove('hidden');
                         await loadCourses();
-                    } else { 
-                        safeNavigate('register.html'); 
-                    }
-                } catch (e) { 
-                    console.error("Init Error:", e); 
-                } finally { 
-                    document.getElementById('view-loading').style.display = 'none'; 
-                }
+                    } else { window.location.href = 'register.html'; }
+                } catch (e) { console.error(e); } finally { document.getElementById('view-loading').style.display = 'none'; }
             }
         };
 
@@ -139,20 +98,17 @@
             document.getElementById('event-list').innerHTML = state.events.filter(ev => ev.狀態 === '上架').map(ev => `
                 <div class="activity-card group">
                     <div class="img-container">
-                        <img src="${ev.圖片URL || 'https://placehold.co/600x400?text=SPORTS'}" class="img-zoom" alt="Course Image">
+                        <img src="${ev.圖片URL || 'https://placehold.co/600x400?text=SPORTS'}" class="img-zoom">
                         <span class="badge">${ev.分類}</span>
                     </div>
-                    <div class="p-8">
+                    <div class="p-10">
                         <h3 class="font-black text-2xl text-slate-800 mb-2 leading-tight">${ev.活動名稱}</h3>
-                        <div class="flex items-center gap-2 mb-8">
-                            <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                            <p class="text-sm font-bold text-slate-400 italic">${ev.開始日期} ~ ${ev.結束日期}</p>
-                        </div>
-                        <div class="flex justify-between items-center bg-slate-50 p-6 rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                        <p class="text-base font-bold text-slate-400 italic mb-8">${ev.開始日期} ~ ${ev.結束日期}</p>
+                        <div class="flex justify-between items-center bg-slate-50 p-6 rounded-[2rem] mb-10 border border-slate-100 shadow-inner">
                             <p class="text-xs font-black text-slate-400 uppercase tracking-widest">課程費用</p>
-                            <p class="text-2xl font-black italic text-[#1877f2]">NT$ ${parseInt(ev.全日價 || 0).toLocaleString()}</p>
+                            <p class="text-3xl font-black italic text-[#1877f2]">NT$ ${parseInt(ev.全日價 || 0).toLocaleString()}</p>
                         </div>
-                        <button onclick="safeNavigate('booking.html?id=${ev.活動ID}')" class="w-full bg-[#1877f2] text-white py-5 rounded-2xl font-black text-lg italic uppercase tracking-wider shadow-xl hover:bg-blue-700 transition-all">立即預約報名 ➜</button>
+                        <button onclick="window.location.href='booking.html?id=${ev.活動ID}'" class="w-full bg-[#1877f2] text-white py-5 rounded-2xl font-black text-lg italic uppercase tracking-wider shadow-xl hover:bg-blue-700 transition-all">立即報名預約 ➜</button>
                     </div>
                 </div>`).join('');
         }
@@ -168,18 +124,17 @@
         async function loadFamily() {
             const r = await fetchApi('getFamily');
             document.getElementById('family-grid').innerHTML = (r.data || []).map(m => `
-                <div class="bg-white p-8 rounded-[2.5rem] border-2 border-slate-50 shadow-sm flex justify-between items-center hover:border-blue-200 hover:shadow-lg transition-all group">
+                <div class="bg-white p-8 rounded-[2.5rem] border-2 border-slate-50 shadow-sm flex justify-between items-center hover:border-blue-200 transition-all">
                     <div class="flex items-center gap-6">
-                        <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center font-black italic text-3xl shadow-inner group-hover:bg-[#1877f2] group-hover:text-white transition-colors">${m.姓名.charAt(0)}</div>
+                        <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center font-black italic text-3xl shadow-inner">${m.姓名.charAt(0)}</div>
                         <div>
-                            <p class="font-black text-slate-800 text-2xl mb-1">${m.姓名}</p>
-                            <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">${m.學校} ${m.年級}</p>
+                            <p class="font-black text-slate-800 text-2xl">${m.姓名}</p>
+                            <p class="text-sm font-bold text-slate-400">${m.學校} ${m.年級}</p>
                         </div>
                     </div>
-                    <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-[#1877f2] font-black text-base italic border-b-2 border-transparent hover:border-[#1877f2] transition-all">修改個資 ➜</button>
+                    <button onclick="window.location.href='register.html?edit=${m.學員ID}'" class="text-[#1877f2] font-black text-base italic border-b-2 border-transparent hover:border-[#1877f2] transition-all">修改個資 ➜</button>
                 </div>`).join('');
         }
-
         window.onload = () => App.init();
     </script>
 </body>
