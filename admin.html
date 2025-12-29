@@ -11,16 +11,15 @@
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; color: #1e293b; font-size: 16px; -webkit-tap-highlight-color: transparent; }
         .main-container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
         
-        /* 導覽頁籤：大字版 */
+        /* 導覽頁籤 */
         .admin-sub-tab { padding: 16px 32px; border-radius: 16px; font-weight: 700; font-size: 16px; color: #64748b; cursor: pointer; transition: 0.3s; white-space: nowrap; border: 2px solid transparent; }
         .admin-sub-tab.active { background: #1877f2; color: white; border-color: #1877f2; box-shadow: 0 10px 20px -5px rgba(24,119,242,0.3); }
         
-        /* 輸入框：正常文字大小 */
+        /* 輸入框：清晰大字 */
         .input-field { width: 100%; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; font-weight: 500; outline: none; background: #fff; appearance: none; transition: 0.2s; font-size: 16px; }
         .input-field:focus { border-color: #1877f2; box-shadow: 0 0 0 4px rgba(24, 119, 242, 0.1); }
-        select.input-field { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-size: 20px; padding-right: 44px; }
         
-        .tag-label { color: #64748b; font-weight: 700; margin-bottom: 10px; display: block; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tag-label { color: #64748b; font-weight: 700; margin-bottom: 10px; display: block; font-size: 15px; }
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); z-index: 1000; display: none; align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto; }
         .modal-overlay.active { display: flex; }
@@ -29,18 +28,21 @@
         .session-row { background: #f8fafc; border: 1px solid #e2e8f0; padding: 24px; border-radius: 24px; margin-bottom: 16px; }
         .loading-screen { position: fixed; inset: 0; background: #0f172a; color: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .btn-blue { background-color: #1877f2; color: white; transition: 0.3s; }
+        .btn-blue:hover { background-color: #166fe5; }
     </style>
 </head>
 <body>
 
     <div id="loading-screen" class="loading-screen">
-        <div class="w-14 h-14 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-8"></div>
+        <div class="w-14 h-14 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin mb-8"></div>
         <h2 class="text-2xl font-black italic uppercase tracking-widest text-blue-400">安全驗證中</h2>
-        <p class="text-slate-500 text-sm mt-4">正在檢查管理權限，請稍候...</p>
+        <p class="text-slate-500 text-sm mt-4">正在比對管理權限，請稍候...</p>
     </div>
 
     <div id="main-content" class="main-container opacity-0 transition-opacity duration-700">
-        <!-- 頁首 -->
+        <!-- 頂部頁首 -->
         <div class="flex justify-between items-center mb-12">
             <div class="flex items-center gap-5">
                 <div class="w-16 h-16 bg-slate-900 rounded-[1.5rem] flex items-center justify-center shadow-2xl">
@@ -64,7 +66,7 @@
         <div id="view-events" class="space-y-8">
             <div class="flex justify-between items-center px-2">
                 <h3 class="font-black text-slate-400 text-sm uppercase tracking-widest italic">Inventory</h3>
-                <button onclick="EventManager.openEditor(null)" class="bg-[#1877f2] text-white px-10 py-4 rounded-2xl font-black text-base shadow-xl hover:bg-blue-700 transition-all">+ 新增活動</button>
+                <button onclick="EventManager.openEditor(null)" class="btn-blue px-10 py-4 rounded-2xl font-black text-base shadow-xl">+ 新增活動</button>
             </div>
             <div id="admin-event-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"></div>
         </div>
@@ -73,7 +75,7 @@
             <div class="bg-white rounded-[3rem] border border-slate-200 overflow-hidden shadow-sm">
                 <div class="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                     <h3 class="font-black text-slate-800 uppercase italic text-2xl tracking-tighter">學員個資資料庫</h3>
-                    <span class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-black">總人數: <span id="crm-count">0</span></span>
+                    <span class="bg-blue-100 text-[#1877f2] px-4 py-1 rounded-full text-xs font-black">總人數: <span id="crm-count">0</span></span>
                 </div>
                 <table class="w-full text-left">
                     <thead class="bg-slate-50">
@@ -86,7 +88,7 @@
 
         <div id="view-config" class="hidden space-y-10">
             <div class="bg-white p-12 rounded-[3.5rem] border border-slate-200 shadow-sm">
-                <h3 class="text-xl font-black mb-12 italic border-b pb-6 text-slate-800 uppercase tracking-tight">系統全域參數設定中心</h3>
+                <h3 class="text-xl font-black mb-12 italic border-b pb-6 text-slate-800 uppercase tracking-tight">系統全域參數設定</h3>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
                     <div>
                         <label class="tag-label text-indigo-600">活動分類標籤 (逗號隔開)</label>
@@ -97,7 +99,7 @@
                         <textarea id="cfg-rental" rows="5" class="input-field border-blue-100 font-mono text-sm text-slate-400 shadow-inner"></textarea>
                     </div>
                 </div>
-                <button onclick="ConfigManager.saveAll()" id="btn-save-config" class="bg-slate-900 text-white w-full py-6 rounded-3xl font-black shadow-2xl hover:bg-black transition-all text-xl italic uppercase">同步發布至雲端 ➜</button>
+                <button onclick="ConfigManager.saveAll()" id="btn-save-config" class="btn-blue w-full py-6 rounded-3xl font-black shadow-2xl text-xl italic">同步發布至雲端 ➜</button>
             </div>
         </div>
     </div>
@@ -108,7 +110,7 @@
             <div class="flex justify-between items-start mb-12 border-b pb-8">
                 <div>
                     <h2 class="text-4xl font-black italic tracking-tighter text-[#1877f2]">規格編輯器</h2>
-                    <p class="text-xs text-slate-400 font-bold uppercase mt-3 tracking-widest">19 Fields specification Matrix</p>
+                    <p class="text-xs text-slate-400 font-bold uppercase mt-3">Comprehensive Specification Matrix</p>
                 </div>
                 <button onclick="EventManager.closeEditor()" class="text-slate-300 hover:text-slate-600 text-4xl transition-colors">✕</button>
             </div>
@@ -121,10 +123,10 @@
                 <div id="session-editor-area" class="col-span-full bg-blue-50/30 p-10 rounded-[2.5rem] border-2 border-dashed border-blue-200 hidden">
                     <div class="flex justify-between items-center mb-8">
                         <div>
-                            <label class="tag-label !mb-0 text-blue-700 font-black italic">梯次班別與起訖時間</label>
-                            <p class="text-xs text-blue-400 font-bold mt-2 italic">設定每個梯次獨立的開始與結束日期</p>
+                            <label class="tag-label !mb-0 text-[#1877f2] font-black italic">梯次時間精細設定</label>
+                            <p class="text-xs text-blue-400 font-bold mt-2 italic">設定每個梯次獨立的名稱與起訖日期</p>
                         </div>
-                        <button type="button" id="btn-add-session" class="bg-[#1877f2] text-white px-8 py-3 rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-transform">+ 新增梯次</button>
+                        <button type="button" id="btn-add-session" class="btn-blue px-8 py-3 rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-transform">+ 新增梯次</button>
                     </div>
                     <div id="session-list-container" class="space-y-6"></div>
                 </div>
@@ -141,7 +143,7 @@
                 <div class="col-span-full"><label class="tag-label">活動詳細描述</label><textarea id="ed-desc" rows="6" class="input-field font-bold"></textarea></div>
             </div>
 
-            <button onclick="EventManager.save()" id="btn-save-event" class="bg-[#1877f2] text-white w-full py-6 rounded-[2.5rem] font-black shadow-2xl hover:bg-blue-700 transition-all mt-10 text-xl italic uppercase">同步規格至雲端 ➜</button>
+            <button onclick="EventManager.save()" id="btn-save-event" class="btn-blue w-full py-6 rounded-[2.5rem] font-black shadow-2xl text-xl italic">發布活動規格至雲端 ➜</button>
         </div>
     </div>
 
@@ -149,6 +151,9 @@
         const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
         let state = { uid: null, events: [], config: { sportCategories: [], rentalItems: [] }, currentEditId: null };
+
+        // 精簡日期顯示函式
+        function fmtDate(d) { return d ? d.substring(0, 16).replace('T', ' ') : '---'; }
 
         async function fetchApi(action, params = "") {
             const res = await fetch(`${PROXY_URL}?action=${action}${params}&_t=${Date.now()}`);
@@ -168,8 +173,8 @@
                     document.getElementById('main-content').classList.remove('opacity-0');
                     await loadAppData();
                 } else {
-                    document.getElementById('loading-screen').style.display = 'none';
-                    document.getElementById('error-screen').classList.remove('hidden');
+                    document.getElementById('loading-status').innerText = "權限不足，將返回首頁";
+                    setTimeout(() => window.location.href='index.html', 2000);
                 }
             } catch (e) { console.error(e); }
         }
@@ -185,24 +190,24 @@
             EventManager.renderGrid();
         }
 
-        /* --- 模組：活動規格管理 --- */
         const EventManager = {
             renderGrid() {
                 document.getElementById('admin-event-grid').innerHTML = state.events.map(ev => `
                     <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300">
-                        <div class="flex justify-between items-start mb-8"><div class="w-24 h-24 bg-slate-50 rounded-[2rem] overflow-hidden border shadow-inner"><img src="${ev['圖片URL'] || 'https://placehold.co/200x200'}" class="w-full h-full object-cover"></div><span class="text-xs font-black px-4 py-1.5 rounded-full ${ev['狀態']==='上架'?'bg-green-100 text-green-600':'bg-slate-100 text-slate-400'} uppercase">${ev['狀態']}</span></div>
+                        <div class="flex justify-between items-start mb-8"><div class="w-24 h-24 bg-slate-50 rounded-[2rem] overflow-hidden border shadow-inner"><img src="${ev['圖片URL'] || 'https://placehold.co/200x200'}" class="w-full h-full object-cover"></div><span class="text-xs font-black px-4 py-2 rounded-full ${ev['狀態']==='上架'?'bg-green-100 text-green-600':'bg-slate-100 text-slate-400'} uppercase">${ev['狀態']}</span></div>
                         <h4 class="font-black text-slate-800 text-xl mb-2 h-14 overflow-hidden leading-tight">${ev['活動名稱']}</h4>
                         <p class="text-sm text-slate-400 font-bold uppercase mb-10 tracking-widest">${ev['分類']} | ${ev['活動型態']}</p>
-                        <button onclick="EventManager.openEditor('${ev['活動ID']}')" class="w-full py-5 bg-[#1877f2] text-white rounded-2xl font-black text-sm shadow-xl hover:bg-blue-700 transition-all uppercase italic">規格編輯 ➜</button>
+                        <button onclick="EventManager.openEditor('${ev['活動ID']}')" class="btn-blue w-full py-5 rounded-2xl font-black text-sm shadow-xl italic uppercase">規格編輯 ➜</button>
                     </div>`).join('');
             },
             toggleFormLogic() { const type = document.getElementById('ed-type').value; document.getElementById('session-editor-area').classList.toggle('hidden', type !== '梯次型'); },
             
-            // ✨ 修復點 1：預設梯次名稱自動化
+            // ✨ 修復點 1：預設梯次名稱
             appendSession(obj = { n: "", s: "", e: "" }) {
                 const container = document.getElementById('session-list-container');
                 const count = container.children.length + 1;
-                const defaultName = obj.n || `第${this.toChineseNum(count)}梯次`;
+                const cnNum = ['零','一','二','三','四','五','六','七','八','九','十'][count] || count;
+                const defaultName = obj.n || `第${cnNum}梯次`;
                 
                 const div = document.createElement('div');
                 div.className = "session-row shadow-sm animate-fadeIn";
@@ -217,7 +222,6 @@
                     </div>`;
                 container.appendChild(div);
             },
-            toChineseNum(n) { const c = ['零','一','二','三','四','五','六','七','八','九','十']; return c[n] || n; },
             
             openEditor(id) {
                 state.currentEditId = id; const ev = state.events.find(e => String(e['活動ID']) === String(id)) || {};
@@ -235,7 +239,7 @@
                 document.getElementById('ed-desc').value = ev['描述'] || "";
                 
                 const rawData = ev['梯次資料'] || "";
-                if (ev['活動型態'] === '梯次型') { 
+                if (ev['活動型態'] === '梯次型' && rawData) { 
                     try { JSON.parse(rawData).forEach(s => this.appendSession(s)); } 
                     catch (e) { rawData.split(',').forEach(n => { if(n) this.appendSession({n, s:"", e:""}); }); } 
                 }
@@ -243,12 +247,12 @@
             },
             closeEditor() { document.getElementById('editor-modal').classList.remove('active'); },
             async save() {
-                const btn = document.getElementById('btn-save-event'); btn.disabled = true;
+                const btn = document.getElementById('btn-save-event'); btn.disabled = true; btn.innerText = "同步中...";
                 const type = document.getElementById('ed-type').value;
                 let sessionData = type === '梯次型' ? JSON.stringify(Array.from(document.querySelectorAll('.session-row')).map(r => ({ n: r.querySelector('.session-n').value, s: r.querySelector('.session-s').value, e: r.querySelector('.session-e').value })).filter(s=>s.n)) : "";
                 const payload = { "活動ID": state.currentEditId || ("EVT-" + Date.now()), "活動名稱": document.getElementById('ed-name').value, "分類": document.getElementById('ed-cat').value, "活動型態": type, "梯次資料": sessionData, "開始日期": document.getElementById('ed-start').value, "結束日期": document.getElementById('ed-end').value, "全日價": document.getElementById('ed-price').value, "全日扣除": document.getElementById('ed-deduct').value, "圖片URL": document.getElementById('ed-img').value, "狀態": document.getElementById('ed-status').value, "描述": document.getElementById('ed-desc').value };
                 await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateEvent', payload }) });
-                alert("✅ 規格已同步至雲端庫！"); this.closeEditor(); btn.disabled = false; loadAppData();
+                alert("✅ 規格已同步！"); this.closeEditor(); btn.disabled = false; btn.innerText = "同步規格至雲端 ➜"; loadAppData();
             }
         };
 
@@ -257,13 +261,12 @@
                 const btn = document.getElementById('btn-save-config'); btn.disabled = true; btn.innerText = "同步中...";
                 const payload = { sportCategories: document.getElementById('cfg-tags').value, rentalItems: document.getElementById('cfg-rental').value };
                 await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateConfig', payload }) });
-                alert("✅ 全域參數已同步！"); btn.disabled = false; btn.innerText = "同步發布至雲端 ➜";
+                alert("✅ 參數已更新！"); btn.disabled = false; btn.innerText = "同步發布至雲端 ➜";
             }
         };
 
         document.getElementById('btn-add-session').addEventListener('click', () => EventManager.appendSession());
         function switchTab(t) { ['events', 'crm', 'config'].forEach(i => { document.getElementById(`view-${i}`).classList.toggle('hidden', i !== t); document.getElementById(`btn-${i}`).classList.toggle('active', i === t); }); }
-        function safeNavigate(t) { window.location.href = t; }
         window.onload = init;
     </script>
 </body>
