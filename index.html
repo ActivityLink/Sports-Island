@@ -97,7 +97,7 @@
             .sub-menu { position: absolute; top: 100%; left: 0; width: 100%; z-index: 150; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         }
 
-        /* 視圖切換 */
+        /* 視圖切換動畫 */
         .section-view { display: none; }
         .section-view.active { display: block; animation: fadeIn 0.25s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -107,17 +107,26 @@
         .card-header { padding: 12px 20px; border-bottom: 1px solid #e5e7eb; background: #f9fafb; font-weight: 700; color: #374151; display: flex; justify-content: space-between; align-items: center; }
         .card-body { padding: 20px; }
 
-        .form-label { display: block; font-size: 13px; font-weight: 700; color: #4b5563; margin-bottom: 8px; }
-        .form-input { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 10px; font-size: 14px; outline: none; }
-        .form-input:focus { border-color: #1a73e8; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 13px; font-weight: 700; color: #4b5563; margin-bottom: 5px; }
+        .form-input { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 8px 12px; font-size: 14px; outline: none; background-color: #fff; }
+        .form-input:focus { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
         
-        .btn-blue { background-color: #1a73e8; color: white; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; }
-        .btn-blue:active { background-color: #1557b0; }
+        .btn-blue { background-color: #1a73e8; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-blue:hover { background-color: #1557b0; }
+        .btn-outline { background-color: #fff; color: #374151; border: 1px solid #d1d5db; padding: 8px 16px; border-radius: 4px; font-size: 14px; }
+        .btn-outline:hover { background-color: #f9fafb; }
 
-        /* 列表樣式 */
+        /* 表格樣式 */
         .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
         .data-table th { text-align: left; padding: 12px; background: #f9fafb; border-bottom: 2px solid #e5e7eb; color: #6b7280; font-weight: 700; }
         .data-table td { padding: 12px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+        .data-table tr:hover { background-color: #fafafa; }
+
+        .status-badge { padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-gray { background: #f3f4f6; color: #4b5563; }
 
         .tag-pill { background: #eef2ff; color: #4f46e5; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
     </style>
@@ -146,89 +155,150 @@
     <main class="main-content">
         <div id="view-loading" class="flex flex-col items-center justify-center py-40">
             <div class="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
-            <p class="mt-4 text-slate-400 font-medium">系統同步中...</p>
+            <p class="mt-4 text-slate-400 font-medium">資料傳輸中...</p>
         </div>
 
-        <!-- 視圖：活動預約 (使用者) -->
+        <!-- [使用者] 活動預約 -->
         <div id="view-activity" class="section-view">
             <div class="rounded overflow-hidden mb-6 border shadow-sm"><img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-40 object-cover" alt="Banner"></div>
             <div id="event-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
 
-        <!-- 視圖：我的專區 -->
+        <!-- [使用者] 我的專區 -->
         <div id="view-member" class="section-view">
-            <div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold">家庭成員個資</h2><button onclick="safeNavigate('register.html?mode=add')" class="btn-blue px-4">+ 新增成員</button></div>
+            <div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold">家庭成員管理</h2><button onclick="safeNavigate('register.html?mode=add')" class="btn-blue">+ 新增成員</button></div>
             <div id="family-grid" class="space-y-3"></div>
         </div>
 
-        <!-- 視圖：管理端 - 數據總覽 -->
+        <!-- [管理端] 數據總覽 -->
         <div id="view-admin-dashboard" class="section-view">
-            <h2 class="text-xl font-bold mb-6">數據總覽</h2>
+            <h2 class="text-xl font-bold mb-6">管理端中心</h2>
             <div class="flex gap-4 mb-8">
-                <div class="flex-1 bg-white border border-l-4 border-l-blue-600 p-5 rounded"><p class="text-xs text-slate-400 font-bold uppercase">總預約</p><div id="stat-total" class="text-2xl font-black mt-1">--</div></div>
-                <div class="flex-1 bg-white border border-l-4 border-l-emerald-600 p-5 rounded"><p class="text-xs text-slate-400 font-bold uppercase">今日新增</p><div id="stat-today" class="text-2xl font-black mt-1">--</div></div>
+                <div class="flex-1 bg-white border border-l-4 border-l-blue-600 p-5 rounded shadow-sm"><p class="text-xs text-slate-400 font-bold">總預約人次</p><div id="stat-total" class="text-3xl font-black mt-1">--</div></div>
+                <div class="flex-1 bg-white border border-l-4 border-l-emerald-600 p-5 rounded shadow-sm"><p class="text-xs text-slate-400 font-bold">今日新增</p><div id="stat-today" class="text-3xl font-black mt-1">--</div></div>
             </div>
         </div>
 
-        <!-- 視圖：管理端 - 活動管理 -->
+        <!-- [管理端] 活動管理列表 -->
         <div id="view-admin-events" class="section-view">
-            <div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold">課程活動管理</h2><button onclick="alert('請在 Google Sheet 新增課程列')" class="btn-blue">同步雲端資料</button></div>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">課程活動管理</h2>
+                <button onclick="AdminEventManager.openEditor()" class="btn-blue">+ 新增活動</button>
+            </div>
             <div class="standard-card">
                 <div class="card-header">目前上架活動清單</div>
                 <div class="overflow-x-auto">
                     <table class="data-table">
-                        <thead><tr><th>活動名稱</th><th>日期</th><th>價格</th><th>狀態</th><th>操作</th></tr></thead>
+                        <thead><tr><th>活動名稱</th><th>日期</th><th>價格</th><th>狀態</th><th class="text-right">操作</th></tr></thead>
                         <tbody id="admin-event-table-body"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- 視圖：管理端 - 參數設定 (參數區) -->
-        <div id="view-admin-config" class="section-view">
-            <h2 class="text-xl font-bold mb-6">系統核心參數設定</h2>
-            
+        <!-- [管理端] 活動編輯/新增介面 -->
+        <div id="view-admin-event-form" class="section-view">
+            <div class="flex items-center gap-3 mb-6">
+                <button onclick="switchAdminView('events')" class="btn-outline">⬅ 返回列表</button>
+                <h2 id="event-form-title" class="text-xl font-bold">新增活動</h2>
+            </div>
             <div class="standard-card">
-                <div class="card-header">📢 首頁公告管理</div>
                 <div class="card-body">
-                    <textarea id="cfg-announcement" rows="3" class="form-input" placeholder="填寫公告內容..."></textarea>
+                    <div class="form-grid">
+                        <div class="form-group col-span-2">
+                            <label class="form-label">活動名稱</label>
+                            <input type="text" id="ev-name" class="form-input" placeholder="請輸入課程完整名稱">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">分類標籤</label>
+                            <select id="ev-category" class="form-input"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">顯示狀態</label>
+                            <select id="ev-status" class="form-input">
+                                <option value="上架">上架</option>
+                                <option value="下架">下架</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">開始日期</label>
+                            <input type="date" id="ev-start" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">結束日期</label>
+                            <input type="date" id="ev-end" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">全日學費</label>
+                            <input type="number" id="ev-price" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">活動型態</label>
+                            <select id="ev-type" class="form-input">
+                                <option value="單日型">單日型</option>
+                                <option value="梯次型">梯次型</option>
+                                <option value="常態型">常態型</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group mt-4">
+                        <label class="form-label">圖片網址 (URL)</label>
+                        <input type="text" id="ev-image" class="form-input">
+                    </div>
+                    <div class="form-group mt-4">
+                        <label class="form-label">詳細描述</label>
+                        <textarea id="ev-desc" rows="4" class="form-input"></textarea>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button onclick="switchAdminView('events')" class="btn-outline">取消</button>
+                        <button onclick="AdminEventManager.save()" id="btn-save-event" class="btn-blue px-10">確認儲存 💾</button>
+                    </div>
                 </div>
             </div>
+        </div>
 
+        <!-- [管理端] 參數設定 (參數區) -->
+        <div id="view-admin-config" class="section-view">
+            <h2 class="text-xl font-bold mb-6">核心參數管理</h2>
             <div class="standard-card">
-                <div class="card-header">🎒 裝備租用設定</div>
+                <div class="card-header">📢 系統公告內容</div>
+                <div class="card-body"><textarea id="cfg-announcement" rows="3" class="form-input" placeholder="首頁顯示的黃色公告..."></textarea></div>
+            </div>
+            <div class="standard-card">
+                <div class="card-header">🎒 裝備租用總清單</div>
                 <div class="card-body">
                     <div id="admin-rent-list" class="space-y-2 mb-4"></div>
                     <div class="flex gap-2">
-                        <input type="text" id="new-rent-name" class="form-input" style="flex:2" placeholder="裝備名稱">
-                        <input type="number" id="new-rent-price" class="form-input" style="flex:1" placeholder="金額">
+                        <input type="text" id="new-rent-name" class="form-input" style="flex:2" placeholder="裝備名稱 (如：直排輪)">
+                        <input type="number" id="new-rent-price" class="form-input" style="flex:1" placeholder="租金">
                         <button onclick="ConfigManager.addItem('rent')" class="btn-blue px-6">新增</button>
                     </div>
                 </div>
             </div>
-
             <div class="standard-card">
-                <div class="card-header">🏷️ 分類標籤管理</div>
+                <div class="card-header">🏷️ 課程分類標籤</div>
                 <div class="card-body">
                     <div id="admin-tag-list" class="flex flex-wrap gap-2 mb-4"></div>
-                    <div class="flex gap-2">
-                        <input type="text" id="new-tag-input" class="form-input" placeholder="新標籤名稱">
-                        <button onclick="ConfigManager.addItem('tag')" class="btn-blue px-6">新增</button>
-                    </div>
+                    <div class="flex gap-2"><input type="text" id="new-tag-input" class="form-input" placeholder="新分類名稱"><button onclick="ConfigManager.addItem('tag')" class="btn-blue px-6">新增</button></div>
                 </div>
             </div>
-
-            <div class="mt-8 mb-20"><button onclick="ConfigManager.saveAll()" id="btn-save-cfg" class="btn-blue w-full py-4 text-lg">保存並同步至雲端 ➜</button></div>
+            <div class="mt-8 mb-20 text-center"><button onclick="ConfigManager.saveAll()" id="btn-save-cfg" class="btn-blue w-full py-4 text-lg shadow-lg">同步至 Google Sheet ➜</button></div>
         </div>
 
-        <!-- 視圖：佔位符 (審核與名冊) -->
-        <div id="view-admin-placeholder" class="section-view py-20 text-center text-slate-400">
-            <p>正在載入詳細管理頁面...</p>
+        <!-- [管理端] 會員名冊 & 報名列表 (暫用表格整合) -->
+        <div id="view-admin-list" class="section-view">
+            <h2 class="text-xl font-bold mb-6">報名審核清單</h2>
+            <div class="standard-card"><div class="card-header">待處理名單</div><div class="card-body py-20 text-center text-slate-400">正在串接即時資料表...</div></div>
+        </div>
+
+        <div id="view-admin-members" class="section-view">
+            <h2 class="text-xl font-bold mb-6">全體會員名冊</h2>
+            <div class="standard-card"><div class="card-header">註冊會員總覽</div><div class="card-body py-20 text-center text-slate-400">正在讀取會員個資庫...</div></div>
         </div>
 
     </main>
 
-    <!-- 說明彈窗 -->
+    <!-- 課程說明彈窗 -->
     <div id="desc-modal" class="fixed inset-0 bg-black/60 z-[2000] hidden items-center justify-center p-4" onclick="if(event.target===this) closeDesc()">
         <div class="bg-white w-full max-w-lg rounded shadow-2xl overflow-hidden">
             <div class="p-4 border-b bg-slate-50 font-bold" id="desc-title"></div>
@@ -240,7 +310,13 @@
     <script>
         const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
-        let state = { uid: null, events: [], config: { sportCategories: [], rentalItems: [], announcement: "" }, role: '一般用戶' };
+        let state = { 
+            uid: null, 
+            events: [], 
+            config: { sportCategories: [], rentalItems: [], announcement: "" }, 
+            role: '一般用戶',
+            currentEditingId: null 
+        };
 
         function safeNavigate(t) { window.location.href = t; }
 
@@ -284,8 +360,6 @@
                 const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
                 const r = await res.json();
                 state.events = r.data || [];
-                
-                // 解析參數區
                 const cfg = r.config || {};
                 state.config.announcement = cfg.announcement || "";
                 state.config.sportCategories = (cfg.sportCategories || "").split(',').filter(i=>i);
@@ -297,43 +371,110 @@
             } catch (e) {}
         }
 
+        // [介面渲染] 使用者活動清單
         function renderActivityList() {
             document.getElementById('event-list').innerHTML = state.events.filter(ev => ev['狀態'] === '上架').map(ev => `
                 <div class="standard-card flex p-3 gap-3">
                     <img src="${ev['圖片URL'] || 'https://placehold.co/100x100?text=SPORTS'}" class="w-20 h-20 rounded object-cover border">
                     <div class="flex-1 flex flex-col">
                         <h3 class="font-bold text-sm text-slate-800">${ev['活動名稱']}</h3>
-                        <p class="text-[10px] text-slate-400 mt-1">${ev['開始日期'].substring(0,10)} 起</p>
                         <div class="mt-auto flex justify-between items-center">
                             <span class="text-blue-600 font-bold text-xs">NT$ ${parseInt(ev['全日價'] || 0).toLocaleString()}</span>
                             <div class="flex gap-1">
                                 <button onclick="openDesc('${ev['活動ID']}')" class="text-[10px] border px-2 py-1 rounded">說明</button>
-                                <button onclick="safeNavigate('booking.html?id=${ev['活動ID']}')" class="text-[10px] bg-blue-600 text-white px-2 py-1 rounded">預約</button>
+                                <button onclick="safeNavigate('booking.html?id=${ev['活動ID']}')" class="text-[10px] bg-blue-600 text-white px-2 py-1 rounded shadow-sm">預約</button>
                             </div>
                         </div>
                     </div>
                 </div>`).join('');
         }
 
+        // [介面渲染] 管理端活動清單 (含編輯)
         function renderAdminEventList() {
             document.getElementById('admin-event-table-body').innerHTML = state.events.map(ev => `
                 <tr>
                     <td class="font-bold">${ev['活動名稱']}</td>
-                    <td class="text-xs">${ev['開始日期'].substring(5,10)}</td>
+                    <td class="text-xs">${(ev['開始日期']||"").substring(5,10)}</td>
                     <td class="text-xs">$${ev['全日價']}</td>
-                    <td><span class="px-2 py-0.5 rounded text-[10px] ${ev['狀態']==='上架'?'bg-emerald-100 text-emerald-700':'bg-slate-100 text-slate-400'}">${ev['狀態']}</span></td>
-                    <td><button onclick="safeNavigate('booking.html?id=${ev['活動ID']}')" class="text-blue-600 text-xs font-bold underline">預覽</button></td>
+                    <td><span class="status-badge ${ev['狀態']==='上架'?'badge-green':'badge-gray'}">${ev['狀態']}</span></td>
+                    <td class="text-right">
+                        <button onclick="AdminEventManager.openEditor('${ev['活動ID']}')" class="text-blue-600 text-xs font-bold mr-3">編輯</button>
+                        <button onclick="safeNavigate('booking.html?id=${ev['活動ID']}')" class="text-slate-400 text-xs">預覽</button>
+                    </td>
                 </tr>`).join('');
         }
 
+        // [課程活動管理邏輯]
+        const AdminEventManager = {
+            openEditor(id = null) {
+                state.currentEditingId = id;
+                document.getElementById('event-form-title').innerText = id ? '編輯活動' : '新增活動';
+                
+                // 初始化分類選單
+                const catSelect = document.getElementById('ev-category');
+                catSelect.innerHTML = state.config.sportCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+                if (id) {
+                    const ev = state.events.find(e => String(e['活動ID']) === String(id));
+                    if (ev) {
+                        document.getElementById('ev-name').value = ev['活動名稱'];
+                        document.getElementById('ev-category').value = ev['分類'];
+                        document.getElementById('ev-status').value = ev['狀態'];
+                        document.getElementById('ev-start').value = ev['開始日期'].substring(0,10);
+                        document.getElementById('ev-end').value = ev['結束日期'].substring(0,10);
+                        document.getElementById('ev-price').value = ev['全日價'];
+                        document.getElementById('ev-type').value = ev['活動型態'];
+                        document.getElementById('ev-image').value = ev['圖片URL'];
+                        document.getElementById('ev-desc').value = ev['描述'];
+                    }
+                } else {
+                    document.querySelectorAll('#view-admin-event-form input, #view-admin-event-form textarea').forEach(i => i.value = '');
+                    document.getElementById('ev-status').value = '上架';
+                    document.getElementById('ev-type').value = '梯次型';
+                }
+                showView('view-admin-event-form');
+            },
+            async save() {
+                const btn = document.getElementById('btn-save-event');
+                btn.disabled = true; btn.innerText = "儲存中...";
+                
+                const payload = {
+                    action: 'updateEvent',
+                    payload: {
+                        '活動ID': state.currentEditingId || Date.now(), // 新增則產生暫時 ID
+                        '活動名稱': document.getElementById('ev-name').value,
+                        '分類': document.getElementById('ev-category').value,
+                        '狀態': document.getElementById('ev-status').value,
+                        '開始日期': document.getElementById('ev-start').value,
+                        '結束日期': document.getElementById('ev-end').value,
+                        '全日價': document.getElementById('ev-price').value,
+                        '活動型態': document.getElementById('ev-type').value,
+                        '圖片URL': document.getElementById('ev-image').value,
+                        '描述': document.getElementById('ev-desc').value
+                    }
+                };
+
+                try {
+                    const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify(payload) });
+                    const r = await res.json();
+                    if (r.status === 'success') {
+                        alert("✅ 活動資料更新成功！");
+                        await loadCourses();
+                        switchAdminView('events');
+                    }
+                } catch(e) { alert("儲存失敗"); } finally { btn.disabled = false; btn.innerText = "確認儲存 💾"; }
+            }
+        };
+
+        // [核心參數管理邏輯]
         const ConfigManager = {
             render() {
                 document.getElementById('cfg-announcement').value = state.config.announcement;
                 document.getElementById('admin-rent-list').innerHTML = state.config.rentalItems.map((it, i) => `
-                    <div class="flex justify-between items-center bg-slate-50 p-3 border rounded">
-                        <div><p class="font-bold text-sm">${it.name}</p><p class="text-xs text-blue-600">$${it.price}</p></div>
-                        <button onclick="ConfigManager.removeItem('rent', ${i})" class="text-red-500 text-xs font-bold">移除</button>
-                    </div>`).join('') || '<p class="text-slate-300 text-center py-4">無租用項目</p>';
+                    <div class="flex justify-between items-center bg-slate-50 p-2 border rounded text-sm">
+                        <div><span class="font-bold">${it.name}</span> <span class="text-blue-600 ml-2">$${it.price}</span></div>
+                        <button onclick="ConfigManager.removeItem('rent', ${i})" class="text-red-500 font-bold">✕</button>
+                    </div>`).join('') || '<p class="text-slate-300 text-center py-4">目前無租用項目</p>';
                 document.getElementById('admin-tag-list').innerHTML = state.config.sportCategories.map((t, i) => `
                     <div class="tag-pill">${t} <span onclick="ConfigManager.removeItem('tag', ${i})" class="cursor-pointer ml-1 opacity-40">✕</span></div>`).join('');
             },
@@ -353,15 +494,16 @@
                 this.render();
             },
             async saveAll() {
-                const btn = document.getElementById('btn-save-cfg'); btn.disabled = true; btn.innerText = "儲存中...";
+                const btn = document.getElementById('btn-save-cfg'); btn.disabled = true; btn.innerText = "正在儲存...";
                 const payload = { announcement: document.getElementById('cfg-announcement').value, sportCategories: state.config.sportCategories.join(','), rentalItems: JSON.stringify(state.config.rentalItems) };
                 try {
                     const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateConfig', payload }) });
-                    if ((await res.json()).status === 'success') { alert("✅ 系統參數已成功同步！"); }
-                } catch(e) { alert("儲存異常"); } finally { btn.disabled = false; btn.innerText = "保存並同步至雲端 ➜"; }
+                    if ((await res.json()).status === 'success') { alert("✅ 系統參數已同步成功！"); }
+                } catch(e) { alert("儲存異常"); } finally { btn.disabled = false; btn.innerText = "同步至 Google Sheet ➜"; }
             }
         };
 
+        // [導覽控制邏輯]
         function switchMainTab(tab) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tab)?.classList.add('active');
@@ -376,18 +518,16 @@
             document.querySelectorAll('.sub-item').forEach(el => el.classList.remove('active'));
             document.getElementById('sub-' + view)?.classList.add('active');
             if (view === 'dashboard') { showView('view-admin-dashboard'); loadAdminStats(); }
-            else if (view === 'events') { showView('view-admin-events'); }
-            else if (view === 'config') { showView('view-admin-config'); }
-            else {
-                showView('view-admin-placeholder');
-                const pageMap = { 'list': 'admin_list.html', 'members': 'admin_members.html' };
-                setTimeout(() => { safeNavigate(pageMap[view]); }, 500);
-            }
+            else if (view === 'events') { showView('view-admin-events'); renderAdminEventList(); }
+            else if (view === 'config') { showView('view-admin-config'); ConfigManager.render(); }
+            else if (view === 'list') { showView('view-admin-list'); }
+            else if (view === 'members') { showView('view-admin-members'); }
         }
 
         function showView(id) {
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
             document.getElementById(id)?.classList.add('active');
+            window.scrollTo(0,0);
         }
 
         async function loadAdminStats() {
@@ -408,8 +548,8 @@
                 document.getElementById('family-grid').innerHTML = data.map(m => `
                     <div class="bg-white p-3 border rounded shadow-sm flex items-center justify-between">
                         <div class="flex items-center"><div class="w-8 h-8 bg-slate-100 text-slate-500 rounded flex items-center justify-center font-bold mr-3 text-xs">${(m.姓名||"?").charAt(0)}</div><div><h4 class="font-bold text-sm">${m.姓名}</h4><p class="text-[10px] text-slate-400">${m.學校 || ''} ${m.年級 || ''}</p></div></div>
-                        <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-blue-600 text-xs font-bold border border-blue-100 px-2 py-1 rounded">編輯</button>
-                    </div>`).join('') || '<p class="text-center py-10 text-slate-300 text-xs">暫無資料</p>';
+                        <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-blue-600 text-xs font-bold border border-blue-100 px-2 py-1 rounded hover:bg-blue-50">編輯</button>
+                    </div>`).join('') || '<p class="text-center py-10 text-slate-300 text-xs">暫無成員資料</p>';
             } catch(e) {}
         }
 
@@ -419,8 +559,9 @@
             document.getElementById('desc-title').innerText = ev['活動名稱'];
             document.getElementById('desc-body').innerText = ev['描述'] || "暫無說明。";
             document.getElementById('desc-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
-        function closeDesc() { document.getElementById('desc-modal').style.display = 'none'; }
+        function closeDesc() { document.getElementById('desc-modal').style.display = 'none'; document.body.style.overflow = 'auto'; }
 
         window.onload = () => App.init();
     </script>
