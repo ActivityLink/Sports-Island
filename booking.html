@@ -3,63 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>預約確認 - 運動島 Flagship</title>
+    <title>預約確認 - 運動島</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f4f7fa; color: #1e293b; }
         .main-container { max-width: 600px; margin: 0 auto; padding: 16px; padding-bottom: 140px; }
-        .content-card { background: white; border-radius: 32px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.04); padding: 28px; margin-bottom: 20px; border: 1px solid #f1f5f9; }
-        
-        /* 智慧日曆樣式 */
+        .content-card { background: white; border-radius: 32px; box-shadow: 0 4px 25px rgba(0,0,0,0.04); padding: 28px; margin-bottom: 20px; border: 1px solid #edf2f7; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .cal-header { text-align: center; font-size: 11px; font-weight: 900; color: #94a3b8; text-transform: uppercase; padding-bottom: 12px; }
-        .cal-day { aspect-ratio: 1; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
-        .status-attending { background: #eef2ff; color: #4f46e5; border-color: #e0e7ff; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
-        .status-absent-full { background: #fef2f2; color: #ef4444; border-color: #fee2e2; }
-        .status-absent-half { background: #fffbeb; color: #d97706; border-color: #fef3c7; }
-        .status-disabled { background: #f8fafc; color: #e2e8f0; opacity: 0.3; pointer-events: none; }
-        .status-label { font-size: 9px; margin-top: 2px; font-weight: 900; }
-
-        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #f1f5f9; padding: 24px; box-shadow: 0 -20px 40px rgba(0,0,0,0.05); z-index: 100; }
-        .btn-checkout { background: #4f46e5; color: white; padding: 14px 40px; border-radius: 20px; font-weight: 900; box-shadow: 0 10px 20px -5px rgba(79,70,229,0.4); }
-        
-        .leave-menu { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 40px 40px 0 0; padding: 40px; z-index: 1001; transform: translateY(100%); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 -20px 50px rgba(0,0,0,0.15); }
+        .cal-header { text-align: center; font-size: 11px; font-weight: 900; color: #94a3b8; padding-bottom: 12px; }
+        .cal-day { aspect-ratio: 1; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; cursor: pointer; transition: 0.2s; }
+        .status-attending { background: #eef2ff; color: #1877f2; border: 2px solid #d0e7ff; }
+        .status-absent-full { background: #fee2e2; color: #dc2626; border: 2px solid #fecaca; }
+        .status-disabled { background: #f8fafc; color: #e2e8f0; pointer-events: none; opacity: 0.4; }
+        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 -10px 30px rgba(0,0,0,0.08); z-index: 100; }
+        .btn-blue { background: #1877f2; color: white; padding: 16px 40px; border-radius: 20px; font-weight: 900; box-shadow: 0 10px 20px -5px rgba(24,119,242,0.4); }
+        .leave-menu { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 32px 32px 0 0; padding: 40px; z-index: 1001; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 -10px 50px rgba(0,0,0,0.1); }
         .leave-menu.active { transform: translateY(0); }
-        .overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 1000; display: none; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: none; }
     </style>
 </head>
 <body>
 
     <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center">
-        <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-6 font-black text-slate-400 text-xs tracking-widest uppercase">Expert Syncing...</p>
+        <div class="w-10 h-10 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 font-black text-gray-400 text-xs tracking-widest uppercase">系統同步中...</p>
     </div>
 
     <div class="main-container">
-        <!-- 步驟 1: 選擇成員 -->
         <div id="view-member" class="hidden">
-            <h2 class="text-3xl font-black mb-10 italic tracking-tighter text-slate-800">1. 選擇預約學員</h2>
+            <h2 class="text-3xl font-black mb-10 italic tracking-tighter">1. 選擇預約學員</h2>
             <div id="member-list" class="space-y-4"></div>
-            <button onclick="window.location.href='register.html?mode=add'" class="w-full mt-10 py-5 border-2 border-dashed border-slate-200 rounded-3xl text-slate-400 font-black">+ 新增家庭成員</button>
+            <button onclick="safeNavigate('register.html?mode=add')" class="w-full mt-10 py-5 border-2 border-dashed border-slate-200 rounded-3xl text-slate-400 font-black">+ 新增家庭成員</button>
         </div>
 
-        <!-- 步驟 2: 日曆勾選 -->
         <div id="view-details" class="hidden">
-            <button onclick="switchView('member')" class="mb-6 text-slate-400 font-bold text-xs uppercase flex items-center gap-2">⬅ 返回選擇成員</button>
-            
+            <button onclick="switchView('member')" class="mb-6 text-slate-400 font-bold text-xs uppercase flex items-center gap-2">⬅ 返回上一步</button>
             <div class="content-card">
-                <h2 id="event-name-display" class="text-2xl font-black text-indigo-600 mb-8 italic tracking-tight">---</h2>
-                
+                <h2 id="event-name-display" class="text-2xl font-black text-[#1877f2] mb-8 italic">---</h2>
                 <div class="flex justify-between items-end mb-6">
                     <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">行程與費用調整</label>
-                        <p class="text-xs font-bold text-indigo-400 mt-1 italic">請點選不出席的當日修改設定</p>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">行程安排</label>
+                        <p class="text-xs font-bold text-blue-400 mt-1 italic">請點選不出席的當日修改設定</p>
                     </div>
                     <span id="calendar-month-label" class="font-black text-sm text-slate-700">---</span>
                 </div>
-
                 <div class="calendar-grid mb-4">
                     <div class="cal-header">日</div><div class="cal-header">一</div><div class="cal-header">二</div><div class="cal-header">三</div><div class="cal-header">四</div><div class="cal-header">五</div><div class="cal-header">六</div>
                 </div>
@@ -67,37 +56,29 @@
             </div>
         </div>
 
-        <!-- 步驟 3: 結帳確認 -->
         <div id="view-checkout" class="hidden">
             <div class="content-card">
                 <h2 class="text-2xl font-black mb-10 border-b pb-6 italic">報名結帳摘要</h2>
                 <div class="space-y-5 mb-12">
-                    <div class="flex justify-between text-xs font-black text-slate-400 uppercase tracking-widest"><span>基礎課程費用 (全出席)</span><span id="final-base">NT$ 0</span></div>
-                    <div class="flex justify-between text-xs font-black text-red-500 uppercase tracking-widest"><span>缺席/請假扣除額</span><span id="final-deduct">- NT$ 0</span></div>
+                    <div class="flex justify-between text-xs font-black text-slate-400"><span>基礎課程費用 (全勤)</span><span id="final-base">NT$ 0</span></div>
+                    <div class="flex justify-between text-xs font-black text-red-500"><span>缺席扣除額</span><span id="final-deduct">- NT$ 0</span></div>
                     <div class="flex justify-between items-end border-t pt-8">
-                        <span class="font-black text-sm italic text-slate-800">總計應付金額</span>
-                        <span id="final-total" class="text-4xl font-black italic text-indigo-600 tracking-tighter">NT$ 0</span>
+                        <span class="font-black text-sm italic">總計應付金額</span>
+                        <span id="final-total" class="text-4xl font-black italic text-[#1877f2]">NT$ 0</span>
                     </div>
                 </div>
-
                 <div class="mb-10">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">匯款帳號後五碼</label>
-                    <input type="text" id="bank-5" class="w-full border-2 border-slate-100 rounded-2xl p-5 font-black bg-slate-50 text-xl tracking-[0.5em] outline-none focus:border-indigo-600 focus:bg-white transition-all" maxlength="5" placeholder="00000">
+                    <input type="text" id="bank-5" class="w-full border-2 border-slate-100 rounded-2xl p-5 font-black bg-slate-50 text-xl outline-none focus:border-[#1877f2] transition-all" maxlength="5" placeholder="00000">
                 </div>
-
-                <!-- ✨ 修復點 4：按鈕中文化 -->
-                <button onclick="submitFinalBooking()" id="btn-submit" class="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black shadow-2xl hover:bg-black transition-all text-lg italic tracking-tighter">確認預約並送出 ➜</button>
+                <button onclick="submitFinalBooking()" id="btn-submit" class="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black shadow-2xl hover:bg-black transition-all text-lg italic uppercase">確認預約並送出 ➜</button>
             </div>
         </div>
     </div>
 
-    <!-- 底部浮動欄 -->
     <div id="checkout-bar" class="sticky-footer flex items-center justify-between hidden">
-        <div>
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">應付金額</p>
-            <p id="floating-total" class="text-2xl font-black italic text-indigo-600">NT$ 0</p>
-        </div>
-        <button onclick="switchView('checkout')" class="btn-checkout italic font-black uppercase">下一步 ➜</button>
+        <div><p class="text-[10px] font-black text-slate-400 uppercase">預估總額</p><p id="floating-total" class="text-2xl font-black italic text-[#1877f2]">NT$ 0</p></div>
+        <button onclick="switchView('checkout')" class="btn-blue">下一步 ➜</button>
     </div>
 
     <div id="overlay" class="overlay" onclick="closeLeaveMenu()"></div>
@@ -106,8 +87,8 @@
         <div class="grid grid-cols-2 gap-4 mb-10">
             <button onclick="updateDayStatus('出席')" class="p-6 border-2 border-slate-100 rounded-3xl font-black text-sm">恢復出席</button>
             <button onclick="updateDayStatus('全日')" class="p-6 border-2 border-red-50 bg-red-50 text-red-600 rounded-3xl font-black text-sm">全日請假</button>
-            <button onclick="updateDayStatus('上午')" class="p-6 border-2 border-amber-50 bg-amber-50 text-amber-600 rounded-3xl font-black text-sm">上午請假</button>
-            <button onclick="updateDayStatus('下午')" class="p-6 border-2 border-amber-50 bg-amber-50 text-amber-600 rounded-3xl font-black text-sm">下午請假</button>
+            <button onclick="updateDayStatus('上午')" class="p-6 border-2 border-orange-50 bg-orange-50 text-orange-600 rounded-3xl font-black text-sm">上午請假</button>
+            <button onclick="updateDayStatus('下午')" class="p-6 border-2 border-orange-50 bg-orange-50 text-orange-600 rounded-3xl font-black text-sm">下午請假</button>
         </div>
         <button onclick="closeLeaveMenu()" class="w-full py-2 text-slate-400 font-bold uppercase tracking-widest">取消</button>
     </div>
@@ -118,8 +99,27 @@
         const eventId = new URLSearchParams(window.location.search).get('id');
         let state = { uid: null, event: null, members: [], leaves: {}, rentedItems: [], currentFocusDate: null, finalAmount: 0 };
 
+        /**
+         * 解決 Location: 'index.html' is not a valid URL 錯誤的安全導航函式
+         */
+        function safeNavigate(target) {
+            if (window.location.protocol === 'blob:') {
+                console.warn("[預覽環境限制] 跳轉被攔截: " + target);
+                return;
+            }
+            try {
+                // 將相對路徑轉換為絕對路徑
+                const url = new URL(target, window.location.href);
+                window.location.assign(url.href);
+            } catch (e) {
+                // 如果 URL 解析失敗，退回基本的路徑合併
+                const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                window.location.href = path + target;
+            }
+        }
+
         async function init() {
-            // ✨ 修復點 2：徹底重置狀態，防止累加
+            // 重置狀態，防止金額與請假紀錄疊加
             state.leaves = {};
             state.rentedItems = [];
             state.finalAmount = 0;
@@ -138,28 +138,27 @@
                 state.event = evData.data.find(e => String(e['活動ID']) === String(eventId));
                 state.members = (await memRes.json()).data || [];
 
-                if (!state.event) { window.location.href = 'index.html'; return; }
+                if (!state.event) { safeNavigate('index.html'); return; }
                 document.getElementById('event-name-display').innerText = state.event['活動名稱'];
                 renderMembers(); renderCalendar(); switchView('member');
             } catch (e) { console.error(e); } finally { document.getElementById('view-loading').style.display = 'none'; }
         }
 
-        // ✨ 修復點 3：時間格式精簡化
         function renderCalendar() {
             const container = document.getElementById('cal-body');
-            const startStr = state.event['開始日期'].replace(/\//g, '-');
-            const endStr = state.event['結束日期'].replace(/\//g, '-');
+            // 精簡化日期處理
+            const startStr = state.event['開始日期'].substring(0, 10).replace(/\//g, '-');
+            const endStr = state.event['結束日期'].substring(0, 10).replace(/\//g, '-');
             const start = new Date(startStr);
             const end = new Date(endStr);
             const classDays = (state.event['梯次資料'] || "").split(',').map(Number);
             const isRegular = state.event['活動型態'] === '常態型';
 
             document.getElementById('calendar-month-label').innerText = `${start.getMonth()+1}月`;
-            const firstDayOfMonth = new Date(start.getFullYear(), start.getMonth(), 1);
-            const offset = firstDayOfMonth.getDay();
+            const firstDayOfMonth = new Date(start.getFullYear(), start.getMonth(), 1).getDay();
             
             let html = "";
-            for (let i = 0; i < offset; i++) html += `<div class="cal-day status-disabled"></div>`;
+            for (let i = 0; i < firstDayOfMonth; i++) html += `<div class="cal-day status-disabled"></div>`;
 
             let current = new Date(start);
             while (current <= end) {
@@ -168,7 +167,7 @@
                 if (active && !state.leaves[dStr]) state.leaves[dStr] = '出席';
                 html += `
                 <div id="day-${dStr}" onclick="${active ? `openLeaveMenu('${dStr}')` : ''}" class="cal-day ${active ? 'status-attending' : 'status-disabled'}">
-                    <span>${current.getDate()}</span><span id="lb-${dStr}" class="status-label">${active?'出席':''}</span>
+                    <span>${current.getDate()}</span><span id="lb-${dStr}" class="status-label text-[8px] mt-1">${active?'出席':''}</span>
                 </div>`;
                 current.setDate(current.getDate() + 1);
             }
@@ -182,8 +181,9 @@
             const base = unit * activeDays;
             let deduct = 0;
             Object.values(state.leaves).forEach(v => {
-                if(v === '全日') deduct += Number(state.event['全日扣除'] || 0);
-                if(v === '上午' || v === '下午') deduct += Number(state.event['半日扣除'] || 0);
+                const dayDeduct = Number(state.event['全日扣除'] || 0);
+                if(v === '全日') deduct += dayDeduct;
+                if(v === '上午' || v === '下午') deduct += (dayDeduct / 2);
             });
             const total = base - deduct;
             document.getElementById('floating-total').innerText = `NT$ ${total.toLocaleString()}`;
@@ -193,29 +193,82 @@
             state.finalAmount = total;
         }
 
-        function openLeaveMenu(d) { state.currentFocusDate = d; document.getElementById('menu-date-title').innerText = `${d.substring(5)} 狀態修改`; document.getElementById('overlay').style.display='block'; document.getElementById('leave-menu').classList.add('active'); }
-        function closeLeaveMenu() { document.getElementById('overlay').style.display='none'; document.getElementById('leave-menu').classList.remove('active'); }
+        function openLeaveMenu(d) { 
+            state.currentFocusDate = d; 
+            document.getElementById('menu-date-title').innerText = `${d.substring(5)} 狀態修改`; 
+            document.getElementById('overlay').style.display='block'; 
+            document.getElementById('leave-menu').classList.add('active'); 
+        }
+
+        function closeLeaveMenu() { 
+            document.getElementById('overlay').style.display='none'; 
+            document.getElementById('leave-menu').classList.remove('active'); 
+        }
+
         function updateDayStatus(s) {
             state.leaves[state.currentFocusDate] = s;
             const el = document.getElementById(`day-${state.currentFocusDate}`);
             const lb = document.getElementById(`lb-${state.currentFocusDate}`);
-            el.className = `cal-day ${s==='出席'?'status-attending':(s==='全日'?'status-absent-full':'status-absent-half')}`;
+            el.className = `cal-day ${s==='出席'?'status-attending':(s==='全日'?'status-absent-full':'status-absent-half shadow-inner')}`;
             lb.innerText = s==='出席'?'出席':s+'假';
             calculate(); closeLeaveMenu();
         }
 
-        function renderMembers() { document.getElementById('member-list').innerHTML = state.members.map(m => `<div onclick="selectMember('${m.學員ID}')" class="bg-white p-7 rounded-[2rem] border shadow-sm flex justify-between items-center transition-all cursor-pointer hover:border-indigo-600 hover:shadow-xl"><div class="flex items-center gap-5"><div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black italic text-2xl shadow-inner">${m.姓名.charAt(0)}</div><p class="font-black text-slate-800 text-xl">${m.姓名}</p></div><span class="text-indigo-600 font-black text-sm italic">SELECT ➜</span></div>`).join(''); }
+        function renderMembers() { 
+            document.getElementById('member-list').innerHTML = state.members.map(m => `
+                <div onclick="selectMember('${m.學員ID}')" class="bg-white p-7 rounded-[2rem] border shadow-sm flex justify-between items-center transition-all cursor-pointer hover:border-indigo-600 hover:shadow-xl">
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black italic text-2xl shadow-inner">${m.姓名.charAt(0)}</div>
+                        <p class="font-black text-slate-800 text-xl">${m.姓名}</p>
+                    </div>
+                    <span class="text-indigo-600 font-black text-sm italic">選擇學員 ➜</span>
+                </div>`).join(''); 
+        }
+
         function selectMember(id) { state.selectedMember = state.members.find(m => String(m.學員ID) === id); switchView('details'); }
-        function switchView(v) { ['member', 'details', 'checkout'].forEach(i => document.getElementById('view-' + i).classList.toggle('hidden', i !== v)); document.getElementById('checkout-bar').classList.toggle('hidden', v !== 'details'); window.scrollTo(0,0); }
+        
+        function switchView(v) { 
+            ['member', 'details', 'checkout'].forEach(i => document.getElementById('view-' + i).classList.toggle('hidden', i !== v)); 
+            document.getElementById('checkout-bar').classList.toggle('hidden', v !== 'details'); 
+            window.scrollTo(0,0); 
+        }
 
         async function submitFinalBooking() {
             const b5 = document.getElementById('bank-5').value;
             if(b5.length < 5) return alert("請輸入完整匯款帳號後五碼");
-            const btn = document.getElementById('btn-submit'); btn.disabled = true; btn.innerText = "正在處理中...";
-            const leaves = Object.entries(state.leaves).filter(e => e[1] !== '出席').map(e => `${e[0].substring(5)}(${e[1]}假)`).join(', ');
-            const payload = { student: state.selectedMember, eventId: state.event['活動ID'], eventName: state.event['活動名稱'], amount: state.finalAmount, bankLast5: b5, rentedItems: [], selectedDates: leaves || '全勤參加' };
-            const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
-            if((await res.json()).status === 'success') { alert("🎉 預約成功！報名資料已存入雲端庫。"); window.location.href='index.html'; }
+            const btn = document.getElementById('btn-submit'); 
+            btn.disabled = true; 
+            btn.innerText = "正在同步資料...";
+            
+            const leaves = Object.entries(state.leaves)
+                .filter(e => e[1] !== '出席')
+                .map(e => `${e[0].substring(5)}(${e[1]}假)`)
+                .join(', ');
+                
+            const payload = { 
+                student: state.selectedMember, 
+                eventId: state.event['活動ID'], 
+                eventName: state.event['活動名稱'], 
+                amount: state.finalAmount, 
+                bankLast5: b5, 
+                rentedItems: [], 
+                selectedDates: leaves || '全勤參加' 
+            };
+            
+            try {
+                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
+                const result = await res.json();
+                if(result.status === 'success') { 
+                    alert("🎉 預約成功！報名資料已存入雲端庫。"); 
+                    safeNavigate('index.html'); 
+                } else {
+                    alert("預約失敗，請再試一次。");
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert("網路連線錯誤");
+                btn.disabled = false;
+            }
         }
         window.onload = init;
     </script>
