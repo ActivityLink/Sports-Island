@@ -97,7 +97,6 @@
             .sub-menu { position: absolute; top: 100%; left: 0; width: 100%; z-index: 150; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         }
 
-        /* 視圖切換動畫 */
         .section-view { display: none; }
         .section-view.active { display: block; animation: fadeIn 0.25s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -114,21 +113,20 @@
         .form-input:focus { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
         
         .btn-blue { background-color: #1a73e8; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: 0.2s; }
-        .btn-blue:hover { background-color: #1557b0; }
         .btn-outline { background-color: #fff; color: #374151; border: 1px solid #d1d5db; padding: 8px 16px; border-radius: 4px; font-size: 14px; }
-        .btn-outline:hover { background-color: #f9fafb; }
 
         /* 表格樣式 */
         .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
         .data-table th { text-align: left; padding: 12px; background: #f9fafb; border-bottom: 2px solid #e5e7eb; color: #6b7280; font-weight: 700; }
         .data-table td { padding: 12px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
-        .data-table tr:hover { background-color: #fafafa; }
 
         .status-badge { padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; }
         .badge-green { background: #dcfce7; color: #166534; }
         .badge-gray { background: #f3f4f6; color: #4b5563; }
 
         .tag-pill { background: #eef2ff; color: #4f46e5; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+        
+        .type-config-box { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 15px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -189,14 +187,14 @@
                 <div class="card-header">目前上架活動清單</div>
                 <div class="overflow-x-auto">
                     <table class="data-table">
-                        <thead><tr><th>活動名稱</th><th>日期</th><th>價格</th><th>狀態</th><th class="text-right">操作</th></tr></thead>
+                        <thead><tr><th>活動名稱</th><th>類型</th><th>價格</th><th>狀態</th><th class="text-right">操作</th></tr></thead>
                         <tbody id="admin-event-table-body"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- [管理端] 活動編輯/新增介面 -->
+        <!-- [管理端] 活動編輯/新增介面 (客製化類型) -->
         <div id="view-admin-event-form" class="section-view">
             <div class="flex items-center gap-3 mb-6">
                 <button onclick="switchAdminView('events')" class="btn-outline">⬅ 返回列表</button>
@@ -207,51 +205,90 @@
                     <div class="form-grid">
                         <div class="form-group col-span-2">
                             <label class="form-label">活動名稱</label>
-                            <input type="text" id="ev-name" class="form-input" placeholder="請輸入課程完整名稱">
+                            <input type="text" id="ev-name" class="form-input" placeholder="課程標題">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">分類標籤</label>
+                            <label class="form-label">分類</label>
                             <select id="ev-category" class="form-input"></select>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">顯示狀態</label>
-                            <select id="ev-status" class="form-input">
-                                <option value="上架">上架</option>
-                                <option value="下架">下架</option>
+                            <label class="form-label">活動型態</label>
+                            <select id="ev-type" class="form-input" onchange="AdminEventManager.toggleTypeConfig(this.value)">
+                                <option value="單日型">單日型 (一次性活動)</option>
+                                <option value="梯次型">梯次型 (冬夏令營/多個梯次)</option>
+                                <option value="常態型">常態型 (學期課/固定星期)</option>
                             </select>
                         </div>
+                        
+                        <!-- 價格設定 -->
                         <div class="form-group">
-                            <label class="form-label">開始日期</label>
-                            <input type="date" id="ev-start" class="form-input">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">結束日期</label>
-                            <input type="date" id="ev-end" class="form-input">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">全日學費</label>
+                            <label class="form-label">全日學費 (原價)</label>
                             <input type="number" id="ev-price" class="form-input">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">活動型態</label>
-                            <select id="ev-type" class="form-input">
-                                <option value="單日型">單日型</option>
-                                <option value="梯次型">梯次型</option>
-                                <option value="常態型">常態型</option>
-                            </select>
+                            <label class="form-label">全日早鳥價 (留空則不啟用)</label>
+                            <input type="number" id="ev-early-price" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">早鳥截止日期</label>
+                            <input type="datetime-local" id="ev-early-deadline" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">請假扣抵金額 (全日)</label>
+                            <input type="number" id="ev-deduct-full" class="form-input" placeholder="例如：500">
                         </div>
                     </div>
+
+                    <!-- 活動型態客製化區 -->
+                    <div id="type-config-container" class="type-config-box">
+                        <!-- 梯次型配置 -->
+                        <div id="config-batch" class="type-sub-config hidden">
+                            <label class="form-label text-blue-600">梯次資料設定 (JSON 格式)</label>
+                            <p class="text-[10px] text-slate-400 mb-2">範例: [{"n":"梯次A","s":"2025-01-20","e":"2025-01-24"}]</p>
+                            <textarea id="ev-batch-data" rows="3" class="form-input font-mono text-xs"></textarea>
+                        </div>
+                        <!-- 常態型配置 -->
+                        <div id="config-term" class="type-sub-config hidden">
+                            <label class="form-label text-emerald-600">常態上課日設定 (多選星期)</label>
+                            <div class="flex gap-4 mt-2">
+                                <label class="flex items-center gap-1 text-xs"><input type="checkbox" name="ev-weekdays" value="1"> 一</label>
+                                <label class="flex items-center gap-1 text-xs"><input type="checkbox" name="ev-weekdays" value="2"> 二</label>
+                                <label class="flex items-center gap-1 text-xs"><input type="checkbox" name="ev-weekdays" value="3"> 三</label>
+                                <label class="flex items-center gap-1 text-xs"><input type="checkbox" name="ev-weekdays" value="4"> 四</label>
+                                <label class="flex items-center gap-1 text-xs"><input type="checkbox" name="ev-weekdays" value="5"> 五</label>
+                                <label class="flex items-center gap-1 text-xs"><input type="checkbox" name="ev-weekdays" value="6"> 六</label>
+                                <label class="flex items-center gap-1 text-xs"><input type="checkbox" name="ev-weekdays" value="0"> 日</label>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mt-4">
+                                <div><label class="form-label">學期開始</label><input type="date" id="ev-start" class="form-input"></div>
+                                <div><label class="form-label">學期結束</label><input type="date" id="ev-end" class="form-input"></div>
+                            </div>
+                        </div>
+                        <!-- 單日型配置 -->
+                        <div id="config-single" class="type-sub-config">
+                            <label class="form-label">活動日期</label>
+                            <input type="date" id="ev-single-date" class="form-input">
+                        </div>
+                    </div>
+
+                    <!-- 共通進階設定 -->
+                    <div class="mt-6 border-t pt-6">
+                        <label class="form-label">允許租用裝備 (對應參數區名稱，用逗號隔開)</label>
+                        <input type="text" id="ev-rentals" class="form-input" placeholder="例如：足球鞋,直排輪">
+                    </div>
+                    
                     <div class="form-group mt-4">
-                        <label class="form-label">圖片網址 (URL)</label>
+                        <label class="form-label">圖片網址 (Banner URL)</label>
                         <input type="text" id="ev-image" class="form-input">
                     </div>
                     <div class="form-group mt-4">
-                        <label class="form-label">詳細描述</label>
+                        <label class="form-label">詳細描述 / 備註</label>
                         <textarea id="ev-desc" rows="4" class="form-input"></textarea>
                     </div>
-                    <div class="mt-6 flex justify-end gap-3">
-                        <button onclick="switchAdminView('events')" class="btn-outline">取消</button>
-                        <button onclick="AdminEventManager.save()" id="btn-save-event" class="btn-blue px-10">確認儲存 💾</button>
+
+                    <div class="mt-8 flex justify-end gap-3">
+                        <button onclick="switchAdminView('events')" class="btn-outline px-10">取消</button>
+                        <button onclick="AdminEventManager.save()" id="btn-save-event" class="btn-blue px-12 font-bold">確認儲存並同步至雲端 💾</button>
                     </div>
                 </div>
             </div>
@@ -269,7 +306,7 @@
                 <div class="card-body">
                     <div id="admin-rent-list" class="space-y-2 mb-4"></div>
                     <div class="flex gap-2">
-                        <input type="text" id="new-rent-name" class="form-input" style="flex:2" placeholder="裝備名稱 (如：直排輪)">
+                        <input type="text" id="new-rent-name" class="form-input" style="flex:2" placeholder="裝備名稱">
                         <input type="number" id="new-rent-price" class="form-input" style="flex:1" placeholder="租金">
                         <button onclick="ConfigManager.addItem('rent')" class="btn-blue px-6">新增</button>
                     </div>
@@ -285,7 +322,6 @@
             <div class="mt-8 mb-20 text-center"><button onclick="ConfigManager.saveAll()" id="btn-save-cfg" class="btn-blue w-full py-4 text-lg shadow-lg">同步至 Google Sheet ➜</button></div>
         </div>
 
-        <!-- [管理端] 會員名冊 & 報名列表 (暫用表格整合) -->
         <div id="view-admin-list" class="section-view">
             <h2 class="text-xl font-bold mb-6">報名審核清單</h2>
             <div class="standard-card"><div class="card-header">待處理名單</div><div class="card-body py-20 text-center text-slate-400">正在串接即時資料表...</div></div>
@@ -298,7 +334,7 @@
 
     </main>
 
-    <!-- 課程說明彈窗 -->
+    <!-- 說明彈窗 -->
     <div id="desc-modal" class="fixed inset-0 bg-black/60 z-[2000] hidden items-center justify-center p-4" onclick="if(event.target===this) closeDesc()">
         <div class="bg-white w-full max-w-lg rounded shadow-2xl overflow-hidden">
             <div class="p-4 border-b bg-slate-50 font-bold" id="desc-title"></div>
@@ -345,9 +381,7 @@
                         } else {
                             switchMainTab('activity');
                         }
-                    } else {
-                        switchMainTab('activity');
-                    }
+                    } else { switchMainTab('activity'); }
                     await loadCourses();
                 } catch(e) { console.error(e); } finally {
                     document.getElementById('view-loading').style.display = 'none';
@@ -389,66 +423,100 @@
                 </div>`).join('');
         }
 
-        // [介面渲染] 管理端活動清單 (含編輯)
+        // [介面渲染] 管理端活動清單
         function renderAdminEventList() {
             document.getElementById('admin-event-table-body').innerHTML = state.events.map(ev => `
                 <tr>
                     <td class="font-bold">${ev['活動名稱']}</td>
-                    <td class="text-xs">${(ev['開始日期']||"").substring(5,10)}</td>
+                    <td class="text-xs text-blue-600">${ev['活動型態']}</td>
                     <td class="text-xs">$${ev['全日價']}</td>
                     <td><span class="status-badge ${ev['狀態']==='上架'?'badge-green':'badge-gray'}">${ev['狀態']}</span></td>
                     <td class="text-right">
-                        <button onclick="AdminEventManager.openEditor('${ev['活動ID']}')" class="text-blue-600 text-xs font-bold mr-3">編輯</button>
-                        <button onclick="safeNavigate('booking.html?id=${ev['活動ID']}')" class="text-slate-400 text-xs">預覽</button>
+                        <button onclick="AdminEventManager.openEditor('${ev['活動ID']}')" class="text-blue-600 text-xs font-bold underline">編輯</button>
                     </td>
                 </tr>`).join('');
         }
 
         // [課程活動管理邏輯]
         const AdminEventManager = {
+            toggleTypeConfig(type) {
+                document.querySelectorAll('.type-sub-config').forEach(el => el.classList.add('hidden'));
+                if (type === '梯次型') document.getElementById('config-batch').classList.remove('hidden');
+                else if (type === '常態型') document.getElementById('config-term').classList.remove('hidden');
+                else document.getElementById('config-single').classList.remove('hidden');
+            },
             openEditor(id = null) {
                 state.currentEditingId = id;
-                document.getElementById('event-form-title').innerText = id ? '編輯活動' : '新增活動';
+                document.getElementById('event-form-title').innerText = id ? '編輯課程活動' : '發佈新課程';
                 
-                // 初始化分類選單
-                const catSelect = document.getElementById('ev-category');
-                catSelect.innerHTML = state.config.sportCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+                // 分類與裝備同步
+                document.getElementById('ev-category').innerHTML = state.config.sportCategories.map(c => `<option value="${c}">${c}</option>`).join('');
 
                 if (id) {
                     const ev = state.events.find(e => String(e['活動ID']) === String(id));
                     if (ev) {
-                        document.getElementById('ev-name').value = ev['活動名稱'];
-                        document.getElementById('ev-category').value = ev['分類'];
-                        document.getElementById('ev-status').value = ev['狀態'];
-                        document.getElementById('ev-start').value = ev['開始日期'].substring(0,10);
-                        document.getElementById('ev-end').value = ev['結束日期'].substring(0,10);
-                        document.getElementById('ev-price').value = ev['全日價'];
-                        document.getElementById('ev-type').value = ev['活動型態'];
-                        document.getElementById('ev-image').value = ev['圖片URL'];
-                        document.getElementById('ev-desc').value = ev['描述'];
+                        document.getElementById('ev-name').value = ev['活動名稱'] || '';
+                        document.getElementById('ev-category').value = ev['分類'] || '';
+                        document.getElementById('ev-type').value = ev['活動型態'] || '單日型';
+                        document.getElementById('ev-price').value = ev['全日價'] || 0;
+                        document.getElementById('ev-early-price').value = ev['全日早鳥價'] || '';
+                        document.getElementById('ev-early-deadline').value = (ev['早鳥截止日期'] || '').substring(0,16);
+                        document.getElementById('ev-deduct-full').value = ev['全日扣除'] || 0;
+                        document.getElementById('ev-batch-data').value = ev['梯次資料'] || '';
+                        document.getElementById('ev-rentals').value = ev['內容媒體'] || '';
+                        document.getElementById('ev-image').value = ev['圖片URL'] || '';
+                        document.getElementById('ev-desc').value = ev['描述'] || '';
+                        
+                        // 日期與星期
+                        if (ev['活動型態'] === '常態型') {
+                            document.getElementById('ev-start').value = (ev['開始日期']||'').substring(0,10);
+                            document.getElementById('ev-end').value = (ev['結束日期']||'').substring(0,10);
+                            const days = (ev['梯次資料'] || '').split(',');
+                            document.querySelectorAll('input[name="ev-weekdays"]').forEach(i => i.checked = days.includes(i.value));
+                        } else if (ev['活動型態'] === '單日型') {
+                            document.getElementById('ev-single-date').value = (ev['開始日期']||'').substring(0,10);
+                        }
+                        this.toggleTypeConfig(ev['活動型態']);
                     }
                 } else {
                     document.querySelectorAll('#view-admin-event-form input, #view-admin-event-form textarea').forEach(i => i.value = '');
-                    document.getElementById('ev-status').value = '上架';
-                    document.getElementById('ev-type').value = '梯次型';
+                    this.toggleTypeConfig('單日型');
                 }
                 showView('view-admin-event-form');
             },
             async save() {
                 const btn = document.getElementById('btn-save-event');
-                btn.disabled = true; btn.innerText = "儲存中...";
+                btn.disabled = true; btn.innerText = "正在同步雲端...";
                 
+                const type = document.getElementById('ev-type').value;
+                let batchData = document.getElementById('ev-batch-data').value;
+                let startDate = document.getElementById('ev-start').value;
+                let endDate = document.getElementById('ev-end').value;
+
+                if (type === '常態型') {
+                    const days = Array.from(document.querySelectorAll('input[name="ev-weekdays"]:checked')).map(i => i.value);
+                    batchData = days.join(',');
+                } else if (type === '單日型') {
+                    startDate = document.getElementById('ev-single-date').value;
+                    endDate = startDate;
+                }
+
                 const payload = {
                     action: 'updateEvent',
                     payload: {
-                        '活動ID': state.currentEditingId || Date.now(), // 新增則產生暫時 ID
+                        '活動ID': state.currentEditingId || `EV${Date.now()}`,
                         '活動名稱': document.getElementById('ev-name').value,
                         '分類': document.getElementById('ev-category').value,
-                        '狀態': document.getElementById('ev-status').value,
-                        '開始日期': document.getElementById('ev-start').value,
-                        '結束日期': document.getElementById('ev-end').value,
+                        '活動型態': type,
+                        '開始日期': startDate,
+                        '結束日期': endDate,
                         '全日價': document.getElementById('ev-price').value,
-                        '活動型態': document.getElementById('ev-type').value,
+                        '全日早鳥價': document.getElementById('ev-early-price').value,
+                        '早鳥截止日期': document.getElementById('ev-early-deadline').value,
+                        '全日扣除': document.getElementById('ev-deduct-full').value,
+                        '梯次資料': batchData,
+                        '內容媒體': document.getElementById('ev-rentals').value,
+                        '狀態': '上架',
                         '圖片URL': document.getElementById('ev-image').value,
                         '描述': document.getElementById('ev-desc').value
                     }
@@ -456,9 +524,8 @@
 
                 try {
                     const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify(payload) });
-                    const r = await res.json();
-                    if (r.status === 'success') {
-                        alert("✅ 活動資料更新成功！");
+                    if ((await res.json()).status === 'success') {
+                        alert("✅ 資料儲存成功");
                         await loadCourses();
                         switchAdminView('events');
                     }
@@ -474,17 +541,17 @@
                     <div class="flex justify-between items-center bg-slate-50 p-2 border rounded text-sm">
                         <div><span class="font-bold">${it.name}</span> <span class="text-blue-600 ml-2">$${it.price}</span></div>
                         <button onclick="ConfigManager.removeItem('rent', ${i})" class="text-red-500 font-bold">✕</button>
-                    </div>`).join('') || '<p class="text-slate-300 text-center py-4">目前無租用項目</p>';
+                    </div>`).join('') || '<p class="text-slate-300 text-center py-4">無項目</p>';
                 document.getElementById('admin-tag-list').innerHTML = state.config.sportCategories.map((t, i) => `
                     <div class="tag-pill">${t} <span onclick="ConfigManager.removeItem('tag', ${i})" class="cursor-pointer ml-1 opacity-40">✕</span></div>`).join('');
             },
             addItem(type) {
                 if (type === 'tag') {
                     const v = document.getElementById('new-tag-input').value.trim();
-                    if (v && !state.config.sportCategories.includes(v)) { state.config.sportCategories.push(v); document.getElementById('new-tag-input').value=""; }
+                    if (v && !state.config.sportCategories.includes(v)) { state.config.sportCategories.push(v); }
                 } else {
                     const n = document.getElementById('new-rent-name').value.trim(), p = document.getElementById('new-rent-price').value;
-                    if (n && p) { state.config.rentalItems.push({ name: n, price: Number(p) }); document.getElementById('new-rent-name').value=""; document.getElementById('new-rent-price').value=""; }
+                    if (n && p) { state.config.rentalItems.push({ name: n, price: Number(p) }); }
                 }
                 this.render();
             },
@@ -498,12 +565,11 @@
                 const payload = { announcement: document.getElementById('cfg-announcement').value, sportCategories: state.config.sportCategories.join(','), rentalItems: JSON.stringify(state.config.rentalItems) };
                 try {
                     const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'updateConfig', payload }) });
-                    if ((await res.json()).status === 'success') { alert("✅ 系統參數已同步成功！"); }
+                    if ((await res.json()).status === 'success') { alert("✅ 參數已同步！"); }
                 } catch(e) { alert("儲存異常"); } finally { btn.disabled = false; btn.innerText = "同步至 Google Sheet ➜"; }
             }
         };
 
-        // [導覽控制邏輯]
         function switchMainTab(tab) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tab)?.classList.add('active');
@@ -548,8 +614,8 @@
                 document.getElementById('family-grid').innerHTML = data.map(m => `
                     <div class="bg-white p-3 border rounded shadow-sm flex items-center justify-between">
                         <div class="flex items-center"><div class="w-8 h-8 bg-slate-100 text-slate-500 rounded flex items-center justify-center font-bold mr-3 text-xs">${(m.姓名||"?").charAt(0)}</div><div><h4 class="font-bold text-sm">${m.姓名}</h4><p class="text-[10px] text-slate-400">${m.學校 || ''} ${m.年級 || ''}</p></div></div>
-                        <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-blue-600 text-xs font-bold border border-blue-100 px-2 py-1 rounded hover:bg-blue-50">編輯</button>
-                    </div>`).join('') || '<p class="text-center py-10 text-slate-300 text-xs">暫無成員資料</p>';
+                        <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-blue-600 text-xs font-bold border border-blue-100 px-2 py-1 rounded">編輯</button>
+                    </div>`).join('') || '<p class="text-center py-10 text-slate-300 text-xs">暫無資料</p>';
             } catch(e) {}
         }
 
@@ -559,7 +625,6 @@
             document.getElementById('desc-title').innerText = ev['活動名稱'];
             document.getElementById('desc-body').innerText = ev['描述'] || "暫無說明。";
             document.getElementById('desc-modal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
         }
         function closeDesc() { document.getElementById('desc-modal').style.display = 'none'; document.body.style.overflow = 'auto'; }
 
