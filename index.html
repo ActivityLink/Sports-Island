@@ -8,159 +8,154 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; color: #1f2937; font-size: 16px; -webkit-tap-highlight-color: transparent; }
-        .main-container { max-width: 900px; margin: 0 auto; padding: 0 16px; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; color: #333; font-size: 16px; -webkit-tap-highlight-color: transparent; }
+        .main-container { max-width: 800px; margin: 0 auto; padding: 0 12px; }
         
-        /* 導覽列樣式 */
-        .nav-tab { flex: 1; text-align: center; padding: 16px 0; font-weight: 700; font-size: 14px; color: rgba(255,255,255,0.6); border-bottom: 4px solid transparent; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-        .nav-tab.active { color: white !important; border-bottom-color: #fbbf24 !important; }
+        /* 傳統導覽列：標準藍底白字 */
+        .nav-header { background-color: #1a2a44; color: white; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .nav-tab { flex: 1; text-align: center; padding: 14px 0; font-weight: 500; font-size: 15px; color: rgba(255,255,255,0.7); border-bottom: 3px solid transparent; cursor: pointer; }
+        .nav-tab.active { color: #fff; border-bottom-color: #ffd700; font-weight: 700; }
         
-        .section-view { display: none; opacity: 0; }
-        .section-view.active { display: block; animation: fadeIn 0.4s forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .section-view { display: none; }
+        .section-view.active { display: block; animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* 通用按鈕 */
-        .btn-blue { background-color: #1877f2; color: white; padding: 14px 20px; border-radius: 14px; font-weight: 700; cursor: pointer; border: none; font-size: 16px; transition: 0.2s; text-align: center; width: 100%; }
-        .btn-outline-blue { background-color: white; color: #1877f2; padding: 14px 20px; border-radius: 14px; font-weight: 700; cursor: pointer; border: 2px solid #1877f2; font-size: 16px; transition: 0.2s; text-align: center; width: 100%; }
-        .btn-blue:active, .btn-outline-blue:active { transform: scale(0.97); opacity: 0.9; }
+        /* 傳統列表卡片 */
+        .standard-card { background: white; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 12px; overflow: hidden; }
+        .list-item { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid #eee; background: white; cursor: pointer; }
+        .list-item:last-child { border-bottom: none; }
+        .list-item:active { background-color: #f5f5f5; }
         
-        .announcement-card { background-color: #fffbeb; border-left: 6px solid #f59e0b; border-radius: 16px; padding: 20px; margin-bottom: 24px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        
-        /* 管理員卡片樣式 */
-        .admin-card { background: white; border-radius: 24px; padding: 24px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        .stat-value { font-family: 'Noto Sans TC'; font-weight: 900; font-style: italic; font-size: 2.25rem; line-height: 2.5rem; color: #1877f2; }
+        /* 按鈕樣式：穩重的深藍色 */
+        .btn-primary { background-color: #1a73e8; color: white; padding: 12px 20px; border-radius: 6px; font-weight: 500; text-align: center; cursor: pointer; transition: 0.2s; }
+        .btn-primary:active { background-color: #1557b0; }
 
-        /* Modal 樣式 */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 28px; padding: 32px; position: relative; max-height: 85vh; overflow-y: auto; }
-        
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .stat-box { background: #fff; border-top: 4px solid #1a73e8; border-radius: 4px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-label { font-size: 12px; color: #666; font-weight: 700; }
+        .stat-num { font-size: 24px; font-weight: 700; color: #1a73e8; margin-top: 4px; }
+
+        .announcement-bar { background: #fffde7; border: 1px solid #fff59d; border-radius: 6px; padding: 12px; margin-bottom: 16px; display: none; }
     </style>
 </head>
 <body>
 
-    <header id="main-header" class="bg-[#1e293b] text-white pt-4 pb-0 sticky top-0 z-50 shadow-md hidden">
-        <div class="main-container flex justify-between items-center">
-            <h1 class="text-xl font-black italic tracking-tighter uppercase cursor-pointer text-[#1877f2] ml-2" onclick="location.reload()">SPORTS ISLAND</h1>
-            <nav class="flex gap-1 pr-2">
-                <div onclick="switchMainTab('activity')" id="tab-activity" class="nav-tab active px-3">活動預約</div>
-                <div onclick="switchMainTab('member')" id="tab-member" class="nav-tab px-3">我的專區</div>
-                <div onclick="switchMainTab('admin')" id="tab-admin" class="nav-tab hidden px-3 text-yellow-400">管理中心</div>
+    <header id="main-header" class="nav-header hidden">
+        <div class="main-container flex justify-between items-center px-2">
+            <h1 class="text-lg font-bold tracking-tight py-3" onclick="location.reload()">SPORTS ISLAND</h1>
+            <nav class="flex w-64">
+                <div onclick="switchMainTab('activity')" id="tab-activity" class="nav-tab active">活動預約</div>
+                <div onclick="switchMainTab('member')" id="tab-member" class="nav-tab">我的專區</div>
+                <div onclick="switchMainTab('admin')" id="tab-admin" class="nav-tab hidden text-yellow-400">管理端</div>
             </nav>
         </div>
     </header>
 
-    <!-- 載入控制畫面 -->
-    <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center text-center p-10">
-        <div id="loading-spinner" class="w-12 h-12 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
-        <p id="loading-text" class="mt-4 font-bold text-slate-400 text-sm tracking-widest uppercase text-center">正在接入島內系統...</p>
-        <button id="btn-retry" onclick="location.reload()" class="mt-6 px-6 py-2 border rounded-full text-xs font-bold text-slate-400 hidden">連線超時，點此重試</button>
+    <!-- 載入中 -->
+    <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center p-10">
+        <div class="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+        <p class="mt-4 text-slate-500 font-medium">系統讀取中...</p>
     </div>
 
-    <main class="main-container py-6">
+    <main class="main-container py-4">
         
-        <!-- [1. 活動預約視圖] -->
-        <div id="view-activity" class="section-view active text-center">
-            <div class="rounded-[2.5rem] overflow-hidden mb-8 shadow-sm border-4 border-white bg-white">
-                <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto max-h-[280px] object-cover" alt="運動島 Banner">
+        <!-- [1. 活動列表] -->
+        <div id="view-activity" class="section-view active">
+            <!-- 傳統橫幅 -->
+            <div class="rounded-lg overflow-hidden mb-4 shadow-sm">
+                <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-40 object-cover" alt="Banner">
             </div>
 
-            <!-- 公告區塊 -->
-            <div id="announcement-area" class="announcement-card text-left">
-                <div class="flex items-start gap-4">
-                    <span class="text-2xl">📢</span>
-                    <div>
-                        <h4 class="font-black text-amber-900 text-[10px] uppercase tracking-widest mb-1">重要公告 NOTICE</h4>
-                        <p id="announcement-text" class="text-amber-800 text-base font-medium leading-relaxed"></p>
-                    </div>
+            <div id="announcement-area" class="announcement-bar">
+                <div class="flex items-start gap-2 text-sm">
+                    <span class="text-amber-600">通知：</span>
+                    <p id="announcement-text" class="text-slate-700"></p>
                 </div>
             </div>
             
-            <!-- 活動列表 -->
-            <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-left"></div>
+            <!-- 活動卡片列表：傳統垂直排列 -->
+            <div id="event-list" class="space-y-4"></div>
         </div>
 
-        <!-- [2. 我的專區視圖] -->
+        <!-- [2. 我的專區] -->
         <div id="view-member" class="section-view">
-            <div class="flex justify-between items-center mb-8 px-2">
-                <h2 class="text-2xl font-black italic text-slate-800">家庭成員個資</h2>
-                <button onclick="safeNavigate('register.html?mode=add')" class="bg-[#1877f2] text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg">+ 新增成員</button>
+            <div class="flex justify-between items-center mb-4 px-1">
+                <h2 class="text-xl font-bold text-slate-800">家庭成員名單</h2>
+                <button onclick="safeNavigate('register.html?mode=add')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-bold shadow-sm">+ 新增成員</button>
             </div>
-            <div id="family-grid" class="space-y-4"></div>
+            <div id="family-grid" class="space-y-2"></div>
         </div>
 
-        <!-- [3. 管理員儀表板視圖] -->
+        <!-- [3. 管理端儀表板] -->
         <div id="view-admin" class="section-view">
-            <div class="mb-10 px-2">
-                <h2 class="text-3xl font-black italic text-slate-800 mb-2">管理中心</h2>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Administrative Dashboard</p>
+            <div class="mb-6 px-1">
+                <h2 class="text-2xl font-bold text-slate-800">管理中心</h2>
+                <p class="text-xs text-slate-400 mt-1 uppercase">Admin Control Panel</p>
             </div>
 
             <!-- 數據統計 -->
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="admin-card">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">總預約人次</p>
-                    <div id="stat-total" class="stat-value">--</div>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="stat-box">
+                    <p class="stat-label uppercase">總預約人次</p>
+                    <div id="stat-total" class="stat-num">--</div>
                 </div>
-                <div class="admin-card text-right">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">今日新增預約</p>
-                    <div id="stat-today" class="stat-value text-emerald-500">--</div>
+                <div class="stat-box">
+                    <p class="stat-label uppercase">今日新增</p>
+                    <div id="stat-today" class="stat-num text-emerald-600">--</div>
                 </div>
             </div>
 
-            <!-- 功能按鈕區：完整管理功能入口 -->
-            <div class="space-y-4">
-                <!-- 1. 報名審核 (報名人資訊) -->
-                <button onclick="safeNavigate('admin_list.html')" class="w-full admin-card flex items-center justify-between group hover:border-[#1877f2] transition-all">
-                    <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 bg-blue-50 text-[#1877f2] rounded-2xl flex items-center justify-center text-2xl shadow-inner">📋</div>
-                        <div class="text-left">
-                            <h4 class="font-black text-lg text-slate-800 leading-tight">報名審核清單</h4>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Booking List & Audit</p>
-                        </div>
+            <!-- 功能選單：傳統條列清單 -->
+            <div class="standard-card">
+                <div onclick="safeNavigate('admin_list.html')" class="list-item">
+                    <div class="w-10 h-10 bg-slate-100 text-slate-600 rounded flex items-center justify-center text-xl mr-4">📋</div>
+                    <div class="flex-1">
+                        <p class="font-bold text-slate-800">報名審核清單</p>
+                        <p class="text-xs text-slate-400">核對匯款後五碼與名單審核</p>
                     </div>
-                    <span class="text-slate-300 group-hover:text-[#1877f2] transition-colors">➜</span>
-                </button>
-
-                <!-- 2. 全體會員名冊 -->
-                <button onclick="safeNavigate('admin_members.html')" class="w-full admin-card flex items-center justify-between group hover:border-emerald-500 transition-all border-l-4 border-l-emerald-500">
-                    <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl shadow-inner">👤</div>
-                        <div class="text-left">
-                            <h4 class="font-black text-lg text-slate-800 leading-tight">全體會員名冊</h4>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Member Registry Management</p>
-                        </div>
-                    </div>
-                    <span class="text-slate-300 group-hover:text-emerald-500 transition-colors">➜</span>
-                </button>
-
-                <!-- 3. 系統核心參數 (參數區) -->
-                <button onclick="safeNavigate('admin_config.html')" class="w-full admin-card flex items-center justify-between group hover:border-amber-500 transition-all border-dashed border-2 border-amber-100">
-                    <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl shadow-inner">⚙️</div>
-                        <div class="text-left">
-                            <h4 class="font-black text-lg text-slate-800 leading-tight">系統核心參數</h4>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">System Configuration (參數區)</p>
-                        </div>
-                    </div>
-                    <span class="text-slate-300 group-hover:text-amber-500 transition-colors">➜</span>
-                </button>
-
-                <div class="py-12 text-center">
-                    <button onclick="liff.logout(); location.reload();" class="text-slate-400 text-xs font-bold underline uppercase tracking-widest">登出管理身分 Logout</button>
+                    <span class="text-slate-300">❯</span>
                 </div>
+                
+                <div onclick="safeNavigate('admin_events.html')" class="list-item">
+                    <div class="w-10 h-10 bg-slate-100 text-slate-600 rounded flex items-center justify-center text-xl mr-4">🎾</div>
+                    <div class="flex-1">
+                        <p class="font-bold text-slate-800">課程活動管理</p>
+                        <p class="text-xs text-slate-400">管理課程上架、編輯內容</p>
+                    </div>
+                    <span class="text-slate-300">❯</span>
+                </div>
+
+                <div onclick="safeNavigate('admin_members.html')" class="list-item">
+                    <div class="w-10 h-10 bg-slate-100 text-slate-600 rounded flex items-center justify-center text-xl mr-4">👤</div>
+                    <div class="flex-1">
+                        <p class="font-bold text-slate-800">全體會員名冊</p>
+                        <p class="text-xs text-slate-400">查看並管理系統內所有註冊會員</p>
+                    </div>
+                    <span class="text-slate-300">❯</span>
+                </div>
+
+                <div onclick="safeNavigate('admin_config.html')" class="list-item">
+                    <div class="w-10 h-10 bg-slate-100 text-slate-600 rounded flex items-center justify-center text-xl mr-4">⚙️</div>
+                    <div class="flex-1">
+                        <p class="font-bold text-slate-800">系統核心參數 (參數區)</p>
+                        <p class="text-xs text-slate-400">公告管理、標籤定義、租用設定</p>
+                    </div>
+                    <span class="text-slate-300">❯</span>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center">
+                <button onclick="liff.logout(); location.reload();" class="text-slate-400 text-xs font-bold underline">登出系統 Logout</button>
             </div>
         </div>
 
     </main>
 
     <!-- 課程說明彈窗 -->
-    <div id="desc-modal" class="modal-overlay" onclick="if(event.target===this) closeDesc()">
-        <div class="modal-content shadow-2xl">
-            <h3 id="desc-title" class="text-2xl font-black text-slate-800 mb-6 border-b pb-4 italic leading-tight">課程說明</h3>
-            <div id="desc-body" class="text-slate-600 leading-relaxed whitespace-pre-wrap text-base mb-10 min-h-[100px]"></div>
-            <button onclick="closeDesc()" class="btn-blue">關閉詳細說明</button>
+    <div id="desc-modal" class="fixed inset-0 bg-black/50 z-[1000] hidden items-center justify-center p-4" onclick="if(event.target===this) closeDesc()">
+        <div class="bg-white w-full max-w-md rounded-lg p-6 shadow-xl">
+            <h3 id="desc-title" class="text-xl font-bold text-slate-800 mb-4 border-b pb-2">課程說明</h3>
+            <div id="desc-body" class="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap mb-6 max-h-64 overflow-y-auto"></div>
+            <button onclick="closeDesc()" class="w-full bg-slate-800 text-white py-2 rounded font-bold">關閉</button>
         </div>
     </div>
 
@@ -170,15 +165,8 @@
         let state = { uid: null, events: [], config: {}, role: '一般用戶' };
 
         function safeNavigate(t) { 
-            if (window.location.protocol === 'blob:') return;
             window.location.href = t; 
         }
-
-        const retryTimer = setTimeout(() => {
-            if (document.getElementById('view-loading').style.display !== 'none') {
-                document.getElementById('btn-retry').classList.remove('hidden');
-            }
-        }, 10000);
 
         const App = {
             async init() {
@@ -193,7 +181,6 @@
                     state.uid = profile.userId;
                     await this.loadInitialData();
                 } catch (e) { 
-                    console.error("LIFF Init Error:", e);
                     await this.loadInitialData();
                 }
             },
@@ -223,7 +210,6 @@
                 } catch(e) {
                     console.error("Data Load Error:", e);
                 } finally {
-                    clearTimeout(retryTimer);
                     document.getElementById('view-loading').style.display = 'none';
                 }
             }
@@ -235,41 +221,40 @@
                 const r = await res.json();
                 state.events = r.data || [];
                 state.config = r.config || {};
+                
                 if (state.config.announcement) {
                     document.getElementById('announcement-text').innerText = state.config.announcement;
                     document.getElementById('announcement-area').style.display = 'block';
                 }
+
                 document.getElementById('event-list').innerHTML = state.events.filter(ev => ev['狀態'] === '上架').map(ev => `
-                    <div class="bg-white rounded-[2rem] overflow-hidden shadow-sm flex flex-col hover:shadow-xl transition-all border border-white">
-                        <div class="relative h-48 overflow-hidden border-b border-gray-50">
-                            <img src="${ev['圖片URL'] || 'https://placehold.co/600x400?text=SPORTS+ISLAND'}" class="w-full h-full object-cover">
-                            <span class="absolute top-4 left-4 bg-white/95 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black text-[#1877f2] shadow-sm tracking-tighter">${ev['分類']}</span>
-                        </div>
-                        <div class="p-8 flex-1 flex flex-col">
-                            <h3 class="font-black text-xl text-slate-800 mb-3 leading-tight h-14 overflow-hidden">${ev['活動名稱']}</h3>
-                            <p class="text-sm font-normal text-black italic mb-1">${(ev['開始日期'] || "---").substring(0,16)} 起</p>
-                            <div class="flex items-center gap-1 mb-10">
-                                <span class="text-xs font-normal text-black">全勤學費：</span>
-                                <span class="text-xl font-normal text-black italic">NT$ ${parseInt(ev['全日價'] || 0).toLocaleString()}</span>
-                            </div>
-                            <div class="flex flex-col gap-3 mt-auto">
-                                <button onclick="openDesc('${ev['活動ID']}')" class="btn-outline-blue">詳細說明</button>
-                                <button onclick="safeNavigate('booking.html?id=${ev['活動ID']}')" class="btn-blue">立即預約 ➜</button>
+                    <div class="standard-card">
+                        <div class="flex p-4 gap-4">
+                            <img src="${ev['圖片URL'] || 'https://placehold.co/100x100?text=Course'}" class="w-24 h-24 rounded object-cover">
+                            <div class="flex-1 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-bold uppercase">${ev['分類']}</span>
+                                    <h3 class="font-bold text-base text-slate-800 mt-1">${ev['活動名稱']}</h3>
+                                    <p class="text-xs text-slate-400 mt-1">${ev['開始日期'].substring(0,10)} 起</p>
+                                </div>
+                                <div class="text-blue-600 font-bold text-sm">NT$ ${parseInt(ev['全日價'] || 0).toLocaleString()}</div>
                             </div>
                         </div>
-                    </div>`).join('') || '<p class="col-span-full text-center py-20 text-slate-400 font-bold italic">目前無活動上架</p>';
+                        <div class="flex border-t border-slate-50">
+                            <button onclick="openDesc('${ev['活動ID']}')" class="flex-1 py-3 text-xs font-bold text-slate-500 border-r">詳細說明</button>
+                            <button onclick="safeNavigate('booking.html?id=${ev['活動ID']}')" class="flex-1 py-3 text-xs font-bold text-blue-600">立即預約</button>
+                        </div>
+                    </div>`).join('') || '<p class="text-center py-10 text-slate-400 italic">目前無活動</p>';
             } catch (e) {
-                document.getElementById('event-list').innerHTML = '<p class="col-span-full text-center py-20 text-red-400">活動資料讀取失敗</p>';
+                document.getElementById('event-list').innerHTML = '<p class="text-center py-10 text-red-400">載入異常</p>';
             }
         }
 
         function switchMainTab(m) {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            const currentTab = document.getElementById('tab-' + m);
-            if (currentTab) currentTab.classList.add('active');
+            document.getElementById('tab-' + m)?.classList.add('active');
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
-            const v = document.getElementById('view-' + m);
-            if (v) v.classList.add('active');
+            document.getElementById('view-' + m)?.classList.add('active');
             if (m === 'member') loadFamilyMembers();
             if (m === 'admin') loadAdminStats();
             window.scrollTo(0,0);
@@ -283,10 +268,7 @@
                     document.getElementById('stat-total').innerText = r.totalBookings || '0';
                     document.getElementById('stat-today').innerText = r.todayBookings || '0';
                 }
-            } catch(e) {
-                document.getElementById('stat-total').innerText = '--';
-                document.getElementById('stat-today').innerText = '--';
-            }
+            } catch(e) {}
         }
 
         async function loadFamilyMembers() {
@@ -294,14 +276,16 @@
                 const res = await fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`);
                 const data = (await res.json()).data || [];
                 document.getElementById('family-grid').innerHTML = data.map(m => `
-                    <div class="bg-white p-6 rounded-3xl border shadow-sm flex items-center gap-6 group hover:border-[#1877f2] transition-colors">
-                        <div class="w-16 h-16 bg-blue-50 text-[#1877f2] rounded-2xl flex items-center justify-center font-black italic text-3xl shadow-inner group-hover:bg-[#1877f2] group-hover:text-white transition-all">${(m.姓名||"?").charAt(0)}</div>
-                        <div class="flex-1">
-                            <h4 class="font-black text-xl text-slate-800 leading-tight">${m.姓名}</h4>
-                            <p class="text-sm text-gray-400 font-bold mt-1 uppercase tracking-widest leading-none">${m.學校 || '---'} | ${m.年級 || '-'}</p>
+                    <div class="bg-white p-4 border rounded shadow-sm flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-slate-100 text-slate-500 rounded flex items-center justify-center font-bold mr-3">${(m.姓名||"?").charAt(0)}</div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">${m.姓名}</h4>
+                                <p class="text-xs text-slate-400">${m.學校 || ''} ${m.年級 || ''}</p>
+                            </div>
                         </div>
-                        <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-[#1877f2] font-black text-sm border-b-2 border-transparent hover:border-[#1877f2] transition-all">編輯</button>
-                    </div>`).join('') || '<p class="text-center py-10 text-slate-300">尚未新增成員資料</p>';
+                        <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-blue-600 text-xs font-bold">編輯</button>
+                    </div>`).join('') || '<p class="text-center py-10 text-slate-300">尚未新增成員</p>';
             } catch(e) {}
         }
 
@@ -309,13 +293,13 @@
             const ev = state.events.find(e => String(e['活動ID']) === String(id));
             if (!ev) return;
             document.getElementById('desc-title').innerText = ev['活動名稱'];
-            document.getElementById('desc-body').innerText = ev['描述'] || "本課程暫無詳細說明。";
-            document.getElementById('desc-modal').classList.add('active');
+            document.getElementById('desc-body').innerText = ev['描述'] || "暫無說明。";
+            document.getElementById('desc-modal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
         }
 
         function closeDesc() {
-            document.getElementById('desc-modal').classList.remove('active');
+            document.getElementById('desc-modal').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
 
