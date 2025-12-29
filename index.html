@@ -24,10 +24,8 @@
         .btn-outline-blue { background-color: white; color: #1877f2; padding: 14px 20px; border-radius: 14px; font-weight: 700; cursor: pointer; border: 2px solid #1877f2; font-size: 16px; transition: 0.2s; text-align: center; width: 100%; }
         .btn-blue:active, .btn-outline-blue:active { transform: scale(0.97); opacity: 0.9; }
         
-        /* 公告欄 */
         .announcement-card { background-color: #fffbeb; border-left: 6px solid #f59e0b; border-radius: 16px; padding: 20px; margin-bottom: 24px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         
-        /* 詳細說明彈窗 */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 28px; padding: 32px; position: relative; max-height: 85vh; overflow-y: auto; }
@@ -37,7 +35,6 @@
 </head>
 <body>
 
-    <!-- 頂部藍色導航 -->
     <header id="main-header" class="bg-[#1e293b] text-white pt-4 pb-1 sticky top-0 z-50 shadow-md hidden">
         <div class="main-container flex justify-between items-center">
             <h1 class="text-xl font-black italic tracking-tighter uppercase cursor-pointer text-[#1877f2]" onclick="location.reload()">SPORTS ISLAND</h1>
@@ -49,20 +46,19 @@
         </div>
     </header>
 
-    <!-- 全螢幕載入中 -->
-    <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center text-center">
-        <div class="w-12 h-12 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
+    <!-- 載入控制項：新增 ID 以利 JS 操控 -->
+    <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center text-center p-10">
+        <div id="loading-spinner" class="w-12 h-12 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
         <p id="loading-text" class="mt-4 font-bold text-slate-400 text-sm tracking-widest uppercase">載入數據中...</p>
+        <button id="btn-retry" onclick="location.reload()" class="mt-6 px-6 py-2 border rounded-full text-xs font-bold text-slate-400 hidden">連線超時，點此重試</button>
     </div>
 
     <main class="main-container py-6">
-        <!-- [活動預約頁面] -->
         <div id="view-activity" class="section-view active text-center">
             <div class="rounded-[2.5rem] overflow-hidden mb-8 shadow-sm border-4 border-white bg-white">
                 <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-auto max-h-[280px] object-cover" alt="Banner">
             </div>
 
-            <!-- 公告區塊 -->
             <div id="announcement-area" class="announcement-card text-left">
                 <div class="flex items-start gap-4">
                     <span class="text-2xl">📢</span>
@@ -73,11 +69,9 @@
                 </div>
             </div>
             
-            <!-- 活動網格 -->
             <div id="event-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-left"></div>
         </div>
 
-        <!-- [會員專區頁面] -->
         <div id="view-member" class="section-view">
             <div class="flex justify-between items-center mb-8 px-2">
                 <h2 class="text-2xl font-black italic text-slate-800">家庭成員個資</h2>
@@ -87,7 +81,6 @@
         </div>
     </main>
 
-    <!-- 課程詳細說明彈窗 -->
     <div id="desc-modal" class="modal-overlay" onclick="if(event.target===this) closeDesc()">
         <div class="modal-content shadow-2xl">
             <h3 id="desc-title" class="text-2xl font-black text-slate-800 mb-6 border-b pb-4 italic leading-tight">課程說明</h3>
@@ -101,37 +94,33 @@
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
         let state = { uid: null, events: [], config: {} };
 
-        // 穩定導航函式
         function safeNavigate(t) { 
-            if (window.location.protocol === 'blob:') {
-                console.log("預覽環境限制跳轉，目標: " + t);
-                return;
-            }
+            if (window.location.protocol === 'blob:') return;
             window.location.href = t; 
         }
+
+        // 超時保護：若 10 秒沒反應，顯示重試按鈕
+        setTimeout(() => {
+            const loadingText = document.getElementById('loading-text');
+            if (loadingText && document.getElementById('view-loading').style.display !== 'none') {
+                loadingText.innerText = "連線較慢，請稍候...";
+                document.getElementById('btn-retry').classList.remove('hidden');
+            }
+        }, 10000);
 
         const App = {
             async init() {
                 try {
-                    // 1. 初始化 LIFF
                     await liff.init({ liffId: LIFF_ID });
                     
-                    // 2. 登入檢查 (僅在 LINE 客戶端內自動執行)
                     if (!liff.isLoggedIn() && liff.isInClient()) {
                         liff.login();
                         return;
                     }
                     
-                    // 3. 獲取用戶身分
-                    let profile = { userId: "GUEST_USER" };
+                    let profile = { userId: "DEBUG_USER" };
                     if (liff.isLoggedIn()) {
-                        try {
-                            profile = await liff.getProfile();
-                        } catch (pError) {
-                            console.warn("Profile fetch failed, using fallback.", pError);
-                        }
-                    } else {
-                        console.log("Not logged in, using debug mode.");
+                        profile = await liff.getProfile();
                     }
                     
                     state.uid = profile.userId;
@@ -139,8 +128,8 @@
 
                 } catch (e) { 
                     console.error("LIFF Init Error:", e);
-                    document.getElementById('loading-text').className = "mt-4 text-red-500 font-bold";
-                    document.getElementById('loading-text').innerHTML = `LIFF 初始化失敗<br><span class="text-[10px] opacity-60">${e.message || e}</span>`;
+                    // 初始化失敗時仍嘗試讀取活動 (供一般瀏覽器查看)
+                    await this.loadInitialData();
                 }
             },
 
@@ -153,9 +142,13 @@
                         document.getElementById('main-header').classList.remove('hidden');
                         if (r.role === '管理員') document.getElementById('tab-admin').classList.remove('hidden');
                         await loadCourses();
-                    } else {
-                        // 未註冊，引導至註冊頁面
+                    } else if (r.status === 'not_found' && state.uid !== 'DEBUG_USER') {
                         safeNavigate('register.html');
+                        return;
+                    } else {
+                        // 偵錯模式
+                        document.getElementById('main-header').classList.remove('hidden');
+                        await loadCourses();
                     }
                 } catch(e) {
                     console.error("Data Load Error:", e);
@@ -172,16 +165,11 @@
                 state.events = r.data || [];
                 state.config = r.config || {};
 
-                // 處理首頁公告
-                const annArea = document.getElementById('announcement-area');
                 if (state.config.announcement) {
                     document.getElementById('announcement-text').innerText = state.config.announcement;
-                    annArea.style.display = 'block';
-                } else {
-                    annArea.style.display = 'none';
+                    document.getElementById('announcement-area').style.display = 'block';
                 }
 
-                // 渲染活動清單
                 document.getElementById('event-list').innerHTML = state.events.filter(ev => ev['狀態'] === '上架').map(ev => `
                     <div class="bg-white rounded-[2rem] overflow-hidden shadow-sm flex flex-col hover:shadow-xl transition-all border border-white">
                         <div class="relative h-48 overflow-hidden border-b border-gray-50">
@@ -190,14 +178,11 @@
                         </div>
                         <div class="p-8 flex-1 flex flex-col">
                             <h3 class="font-black text-xl text-slate-800 mb-3 leading-tight h-14 overflow-hidden">${ev['活動名稱']}</h3>
-                            
-                            <!-- 日期與學費文字：純黑 (#000000) 不加粗 -->
                             <p class="text-sm font-normal text-black italic mb-1">${(ev['開始日期'] || "---").substring(0,16)} 起</p>
                             <div class="flex items-center gap-1 mb-10">
                                 <span class="text-xs font-normal text-black">全勤學費：</span>
                                 <span class="text-xl font-normal text-black italic">NT$ ${parseInt(ev['全日價'] || 0).toLocaleString()}</span>
                             </div>
-
                             <div class="flex flex-col gap-3 mt-auto">
                                 <button onclick="openDesc('${ev['活動ID']}')" class="btn-outline-blue">詳細說明</button>
                                 <button onclick="safeNavigate('booking.html?id=${ev['活動ID']}')" class="btn-blue">立即預約 ➜</button>
@@ -205,12 +190,10 @@
                         </div>
                     </div>`).join('') || '<p class="col-span-full text-center py-20 text-slate-400 font-bold italic">目前無活動上架</p>';
             } catch (e) {
-                console.error("Course Load Error:", e);
-                document.getElementById('event-list').innerHTML = '<p class="col-span-full text-center py-20 text-red-400">活動資料載入異常</p>';
+                document.getElementById('event-list').innerHTML = '<p class="col-span-full text-center py-20 text-red-400">活動資料同步異常</p>';
             }
         }
 
-        // 彈窗邏輯
         function openDesc(id) {
             const ev = state.events.find(e => String(e['活動ID']) === String(id));
             if (!ev) return;
@@ -229,8 +212,8 @@
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + m)?.classList.add('active');
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
-            const targetView = document.getElementById('view-' + m);
-            if (targetView) targetView.classList.add('active');
+            const v = document.getElementById('view-' + m);
+            if (v) v.classList.add('active');
             if (m === 'member') loadFamilyMembers();
             window.scrollTo(0,0);
         }
@@ -248,9 +231,7 @@
                         </div>
                         <button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-[#1877f2] font-black text-sm border-b-2 border-transparent hover:border-[#1877f2] transition-all">編輯</button>
                     </div>`).join('') || '<p class="text-center py-10 text-slate-300">尚未新增家庭成員</p>';
-            } catch(e) {
-                console.error("Family Load Error:", e);
-            }
+            } catch(e) {}
         }
 
         window.onload = () => App.init();
