@@ -130,7 +130,7 @@
 <body>
 
     <!-- 左側功能列 -->
-    <aside id="sidebar" class="sidebar">
+    <aside id="sidebar" class="sidebar hidden">
         <div class="sidebar-logo">運動島管理中心</div>
         
         <div class="nav-group">
@@ -147,12 +147,12 @@
                 <div onclick="switchAdminView('audit')" id="sub-audit" class="sub-item">報名審核</div>
                 <div onclick="switchAdminView('events')" id="sub-events" class="sub-item active">課程管理</div>
                 <div onclick="switchAdminView('members')" id="sub-members" class="sub-item">會員名冊</div>
-                <div onclick="switchAdminView('config')" id="sub-config" class="sub-item">參數區 (設定)</div>
+                <div onclick="switchAdminView('config')" id="sub-config" class="sub-item">參數設定 (參數區)</div>
             </div>
         </div>
 
         <div class="mt-auto p-4 border-t border-white/10">
-            <button onclick="liff.logout(); location.reload();" class="text-xs text-white/30 hover:text-white underline">登出系統</button>
+            <button onclick="liff.logout(); location.reload();" class="text-xs text-white/30 hover:text-white underline text-center w-full">登出系統</button>
         </div>
     </aside>
 
@@ -300,23 +300,23 @@
                         </div>
                     </div>
 
-                    <!-- 第四部分：設備租用與媒體 (核心更新：從參數區調用項目) -->
+                    <!-- 第四部分：設備租用與媒體設定 -->
                     <div class="form-section">
                         <div class="form-title">4. 設備租用與媒體設定</div>
                         <div class="mb-4">
                             <label class="field-label font-bold text-blue-600">設備租用勾選 (讀取自參數區)</label>
                             <div id="ev-rent-checkboxes" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 p-3 bg-slate-50 border rounded">
-                                <!-- 由 JS 動態產生勾選清單 -->
+                                <!-- 由 JS 動態產生 -->
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="form-group">
-                                <label class="field-label">標題圖片 URL (列表顯示圖)</label>
-                                <input type="text" id="ev-title-image" class="input-std" placeholder="請填寫標題圖片網址">
+                                <label class="field-label">標題圖片 URL (列表圖)</label>
+                                <input type="text" id="ev-title-image" class="input-std" placeholder="請填寫網址">
                             </div>
                             <div class="form-group">
-                                <label class="field-label">內容圖片 URL (詳細介紹圖)</label>
-                                <input type="text" id="ev-content-image" class="input-std" placeholder="請填寫內容詳細圖網址">
+                                <label class="field-label">內容圖片 URL (介紹圖)</label>
+                                <input type="text" id="ev-content-image" class="input-std" placeholder="請填寫網址">
                             </div>
                         </div>
                     </div>
@@ -335,7 +335,7 @@
         <div id="view-admin-members" class="section-view">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold">全體註冊會員名冊</h2>
-                <input type="text" class="input-std w-64 text-xs" placeholder="搜尋姓名、電話或家長..." oninput="AdminMemberManager.filter(this.value)">
+                <input type="text" class="input-std w-64 text-xs" placeholder="搜尋姓名、電話..." oninput="AdminMemberManager.filter(this.value)">
             </div>
             <div class="card overflow-x-auto">
                 <table class="data-table">
@@ -348,24 +348,15 @@
         <!-- [管理端] 參數設定 (參數區) -->
         <div id="view-admin-config" class="section-view">
             <h2 class="text-xl font-bold mb-6">核心參數管理 (參數區)</h2>
+            <div class="card"><div class="card-header">首頁系統公告</div><div class="card-body"><textarea id="cfg-announcement" rows="3" class="input-std"></textarea></div></div>
             <div class="card">
-                <div class="card-header">首頁系統公告管理</div>
-                <div class="card-body">
-                    <textarea id="cfg-announcement" rows="3" class="input-std" placeholder="輸入公告內容..."></textarea>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header">設備租用單價資料庫 (上架清單)</div>
+                <div class="card-header">設備租用單價資料庫</div>
                 <div class="card-body">
                     <div id="admin-rent-list" class="space-y-2 mb-4"></div>
-                    <div class="flex gap-2">
-                        <input type="text" id="new-rent-name" class="input-std" placeholder="設備名稱 (如：足球鞋)">
-                        <input type="number" id="new-rent-price" class="input-std" placeholder="租金金額">
-                        <button onclick="ConfigManager.addItem()" class="btn btn-blue">新增項目</button>
-                    </div>
+                    <div class="flex gap-2"><input type="text" id="new-rent-name" class="input-std" placeholder="設備名稱"><input type="number" id="new-rent-price" class="input-std" placeholder="金額"><button onclick="ConfigManager.addItem()" class="btn btn-blue">新增</button></div>
                 </div>
             </div>
-            <button onclick="ConfigManager.saveAll()" id="btn-save-cfg" class="btn btn-blue w-full py-4 font-bold text-base shadow-lg">同步保存至 Google Apps Script ➜</button>
+            <button onclick="ConfigManager.saveAll()" id="btn-save-cfg" class="btn btn-blue w-full py-4 font-bold">同步更新雲端設定 ➜</button>
         </div>
 
     </main>
@@ -388,17 +379,30 @@
             },
             async loadInitialData() {
                 try {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const forceAdmin = urlParams.get('action') === 'admin';
+
                     const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
                     const r = await res.json();
                     state.role = r.role || '一般用戶';
-                    document.getElementById('admin-nav-group').classList.toggle('hidden', state.role !== '管理員');
-                    if (state.role === '管理員') {
+                    
+                    document.getElementById('sidebar').classList.remove('hidden');
+
+                    // 🔹 關鍵修正：尊重 URL 參數，防止 admin 模式閃退
+                    const shouldShowAdmin = (state.role === '管理員' || forceAdmin);
+                    document.getElementById('admin-nav-group').classList.toggle('hidden', !shouldShowAdmin);
+
+                    if (shouldShowAdmin) {
                         switchAdminView('dashboard');
                     } else {
                         switchView('activity');
                     }
                     await this.refreshData();
-                } catch(e) {} finally { document.getElementById('view-loading').style.display='none'; }
+                } catch(e) {
+                    switchView('activity');
+                } finally {
+                    document.getElementById('view-loading').style.display='none';
+                }
             },
             async refreshData() {
                 const res = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
@@ -415,18 +419,12 @@
                 document.getElementById('form-title').innerText = id ? '編輯活動內容' : '發佈全新單日活動';
                 document.getElementById('ev-category').innerHTML = (state.config.sportCategories || "足球,籃球,其他").split(',').map(c => `<option value="${c}">${c}</option>`).join('');
                 
-                // 🔹 更新：從參數區渲染設備勾選清單
+                // 渲染設備勾選
                 let rentalLib = []; try { rentalLib = JSON.parse(state.config.rentalItems || "[]"); } catch(e){}
                 const rentContainer = document.getElementById('ev-rent-checkboxes');
-                if (rentalLib.length > 0) {
-                    rentContainer.innerHTML = rentalLib.map(it => `
-                        <label class="flex items-center gap-2 text-xs cursor-pointer">
-                            <input type="checkbox" name="ev-rent-pick" value="${it.name}"> ${it.name} ($${it.price})
-                        </label>
-                    `).join('');
-                } else {
-                    rentContainer.innerHTML = '<p class="text-xs text-slate-400">請先在參數區建立設備項目</p>';
-                }
+                rentContainer.innerHTML = rentalLib.length > 0 ? rentalLib.map(it => `
+                    <label class="flex items-center gap-2 text-xs cursor-pointer"><input type="checkbox" name="ev-rent-pick" value="${it.name}"> ${it.name} ($${it.price})</label>
+                `).join('') : '<p class="text-xs text-slate-400">請先在參數區建立項目</p>';
 
                 if (id) {
                     const ev = state.events.find(e => String(e['活動ID']) === String(id));
@@ -444,29 +442,21 @@
                     document.getElementById('ev-title-image').value = ev['圖片URL'] || '';
                     document.getElementById('ev-content-image').value = ev['課程代碼'] || ''; 
                     document.getElementById('ev-desc').value = ev['描述'] || '';
-                    
-                    // 恢復年級勾選
                     const savedGrades = (ev['分類'] || "").split(',');
                     document.querySelectorAll('#grade-options input').forEach(i => i.checked = savedGrades.includes(i.value));
-
-                    // 🔹 恢復設備勾選 (存放在備註欄位)
                     const savedRents = (ev['備註'] || "").split(',');
                     document.querySelectorAll('input[name="ev-rent-pick"]').forEach(i => i.checked = savedRents.includes(i.value));
                 } else {
                     document.querySelectorAll('#view-admin-event-form input:not([type="checkbox"]), #view-admin-event-form textarea').forEach(i => i.value = '');
                     document.querySelectorAll('#grade-options input, input[name="ev-rent-pick"]').forEach(i => i.checked = false);
-                    document.getElementById('ev-early-enable').checked = false;
                 }
                 showSection('view-admin-event-form');
             },
             async save() {
                 const btn = document.getElementById('btn-save-event');
-                btn.disabled = true; btn.innerText = "資料封裝儲存中...";
-                
+                btn.disabled = true; btn.innerText = "儲存中...";
                 const grades = Array.from(document.querySelectorAll('#grade-options input:checked')).map(i => i.value).join(',');
-                // 🔹 收集勾選的設備
                 const rents = Array.from(document.querySelectorAll('input[name="ev-rent-pick"]:checked')).map(i => i.value).join(',');
-
                 const payload = {
                     action: 'updateEvent',
                     payload: {
@@ -476,19 +466,17 @@
                         '全日價': document.getElementById('ev-price').value,
                         '全日早鳥價': document.getElementById('ev-early-enable').checked ? document.getElementById('ev-early-price').value : '',
                         '早鳥截止日期': document.getElementById('ev-early-deadline').value,
-                        '全日扣除': document.getElementById('ev-deduct').value,
                         '梯次資料': document.getElementById('ev-time-s').value + '-' + document.getElementById('ev-time-e').value,
                         '內容媒體': document.getElementById('ev-capacity').value,
-                        '分類': grades, 
-                        '標籤': document.getElementById('ev-level-req').value,
-                        '備註': rents, // 將勾選的項目存入備註
+                        '分類': grades, '標籤': document.getElementById('ev-level-req').value,
+                        '備註': rents, '活動型態': '單日型', '狀態': '上架',
                         '圖片URL': document.getElementById('ev-title-image').value,
                         '課程代碼': document.getElementById('ev-content-image').value,
-                        '活動型態': '單日型', '狀態': '上架', '描述': document.getElementById('ev-desc').value
+                        '描述': document.getElementById('ev-desc').value
                     }
                 };
                 await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify(payload) });
-                alert("✅ 儲存成功！");
+                alert("✅ 儲存成功");
                 await App.refreshData();
                 switchAdminView('events');
                 btn.disabled = false; btn.innerText = "確認儲存發佈 💾";
@@ -506,15 +494,8 @@
             },
             render(data) {
                 document.getElementById('admin-member-table-body').innerHTML = data.map(m => `
-                    <tr>
-                        <td class="font-bold text-slate-800">${m.姓名}</td>
-                        <td>${m.性別}</td>
-                        <td class="text-xs font-mono">${(m.生日||"").substring(0,10)}</td>
-                        <td class="text-xs">${m.學校}/${m.年級}</td>
-                        <td class="font-bold text-blue-600">${m.聯繫電話}</td>
-                        <td class="text-xs text-gray-400">${m.家長姓名}</td>
-                        <td class="text-right"><button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-blue-600 underline font-bold">詳情</button></td>
-                    </tr>`).join('');
+                    <tr><td class="font-bold">${m.姓名}</td><td>${m.性別}</td><td class="text-xs">${(m.生日||"").substring(0,10)}</td><td>${m.年級}</td><td class="font-bold">${m.聯繫電話}</td><td>${m.家長姓名}</td><td class="text-right"><button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-blue-600 underline">詳情</button></td></tr>
+                `).join('');
             },
             filter(q) { this.render(state.adminMembers.filter(m => m.姓名.includes(q) || m.聯繫電話.includes(q))); }
         };
@@ -527,12 +508,7 @@
             },
             addItem() {
                 const n = document.getElementById('new-rent-name').value, p = document.getElementById('new-rent-price').value;
-                if(n && p) { 
-                    state.tempRentals.push({name:n, price:Number(p)}); 
-                    document.getElementById('new-rent-name').value=''; 
-                    document.getElementById('new-rent-price').value=''; 
-                    this.renderList(); 
-                }
+                if(n && p) { state.tempRentals.push({name:n, price:Number(p)}); document.getElementById('new-rent-name').value=''; document.getElementById('new-rent-price').value=''; this.renderList(); }
             },
             renderList() { document.getElementById('admin-rent-list').innerHTML = state.tempRentals.map((it, i) => `<div class="flex justify-between items-center bg-gray-50 p-2 border rounded text-xs mb-1"><span><b>${it.name}</b> ($${it.price})</span><button onclick="ConfigManager.removeItem(${i})" class="text-red-500 font-bold">✕</button></div>`).join(''); },
             removeItem(i) { state.tempRentals.splice(i, 1); this.renderList(); },
@@ -551,7 +527,11 @@
             showSection('view-' + v);
             if(v==='member') loadUserMembers();
         }
-        function toggleAdminNav() { document.getElementById('sub-menu-admin').classList.toggle('active'); }
+        function toggleAdminNav() { 
+            const sub = document.getElementById('sub-menu-admin');
+            sub.classList.toggle('active');
+            if (sub.classList.contains('active')) switchAdminView('dashboard');
+        }
         function switchAdminView(v) {
             document.querySelectorAll('.nav-item, .sub-item').forEach(el => el.classList.remove('active'));
             document.getElementById('nav-admin').classList.add('active');
@@ -564,7 +544,7 @@
         function showSection(id) { document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
 
         function renderAdminEventList() {
-            document.getElementById('admin-event-table-body').innerHTML = state.events.map(ev => `<tr><td class="font-bold text-slate-800">${ev['活動名稱']}</td><td class="text-[10px] text-slate-400 font-bold">${ev['活動型態']}</td><td class="text-xs text-slate-500">${ev['開始日期'].substring(5,10)}<br>${ev['梯次資料']}</td><td class="text-xs font-bold text-blue-600">${ev['內容媒體']||0}人</td><td class="text-xs font-bold">$${parseInt(ev['全日價'])}</td><td><span class="status-badge badge-green">上架中</span></td><td class="text-right"><button onclick="AdminEventManager.openEditor('${ev['活動ID']}')" class="text-blue-600 underline font-bold text-xs">編輯</button></td></tr>`).join('');
+            document.getElementById('admin-event-table-body').innerHTML = state.events.map(ev => `<tr><td class="font-bold text-slate-800">${ev['活動名稱']}</td><td class="text-xs">${ev['活動型態']}</td><td class="text-xs">${ev['開始日期'].substring(5,10)}<br>${ev['梯次資料']}</td><td class="text-xs">${ev['內容媒體']||0}人</td><td class="text-xs font-bold">$${parseInt(ev['全日價'])}</td><td><span class="status-badge badge-green">上架中</span></td><td class="text-right"><button onclick="AdminEventManager.openEditor('${ev['活動ID']}')" class="text-blue-600 underline font-bold text-xs">編輯</button></td></tr>`).join('');
         }
 
         function renderActivityList() {
