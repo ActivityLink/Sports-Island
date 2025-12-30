@@ -140,7 +140,7 @@
         </div>
 
         <div id="admin-nav-group" class="nav-group border-t border-white/5 mt-4">
-            <div class="nav-label">管理員後台</div>
+            <div class="nav-label">管理後台</div>
             <div onclick="toggleAdminNav()" id="nav-admin" class="nav-item">⚙️ 系統核心管理</div>
             <div id="sub-menu-admin" class="sub-nav">
                 <div onclick="switchAdminView('dashboard')" id="sub-dashboard" class="sub-item">數據總覽</div>
@@ -300,22 +300,23 @@
                         </div>
                     </div>
 
-                    <!-- 第四部分：設備與圖片 (核心需求更新) -->
+                    <!-- 第四部分：設備租用與媒體 (核心更新：從參數區調用項目) -->
                     <div class="form-section">
                         <div class="form-title">4. 設備租用與媒體設定</div>
-                        <label class="flex items-center gap-2 mb-4 cursor-pointer"><input type="checkbox" id="ev-rent-enable"> 本活動提供設備租借</label>
-                        <div class="form-group mb-4">
-                            <label class="field-label">允許租用清單 (名稱需與參數區一致，用逗號隔開)</label>
-                            <input type="text" id="ev-rent-items" class="input-std" placeholder="例如：足球鞋,護具">
+                        <div class="mb-4">
+                            <label class="field-label font-bold text-blue-600">設備租用勾選 (讀取自參數區)</label>
+                            <div id="ev-rent-checkboxes" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 p-3 bg-slate-50 border rounded">
+                                <!-- 由 JS 動態產生勾選清單 -->
+                            </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="form-group">
                                 <label class="field-label">標題圖片 URL (列表顯示圖)</label>
-                                <input type="text" id="ev-title-image" class="input-std" placeholder="請填寫標題圖片上傳後的網址">
+                                <input type="text" id="ev-title-image" class="input-std" placeholder="請填寫標題圖片網址">
                             </div>
                             <div class="form-group">
                                 <label class="field-label">內容圖片 URL (詳細介紹圖)</label>
-                                <input type="text" id="ev-content-image" class="input-std" placeholder="請填寫內容詳細圖上傳後的網址">
+                                <input type="text" id="ev-content-image" class="input-std" placeholder="請填寫內容詳細圖網址">
                             </div>
                         </div>
                     </div>
@@ -347,15 +348,24 @@
         <!-- [管理端] 參數設定 (參數區) -->
         <div id="view-admin-config" class="section-view">
             <h2 class="text-xl font-bold mb-6">核心參數管理 (參數區)</h2>
-            <div class="card"><div class="card-header">首頁系統公告</div><div class="card-body"><textarea id="cfg-announcement" rows="3" class="input-std" placeholder="輸入公告內容..."></textarea></div></div>
             <div class="card">
-                <div class="card-header">設備租用單價資料庫</div>
+                <div class="card-header">首頁系統公告管理</div>
                 <div class="card-body">
-                    <div id="admin-rent-list" class="space-y-2 mb-4"></div>
-                    <div class="flex gap-2"><input type="text" id="new-rent-name" class="input-std" placeholder="設備名稱"><input type="number" id="new-rent-price" class="input-std" placeholder="金額"><button onclick="ConfigManager.addItem()" class="btn btn-blue">新增</button></div>
+                    <textarea id="cfg-announcement" rows="3" class="input-std" placeholder="輸入公告內容..."></textarea>
                 </div>
             </div>
-            <button onclick="ConfigManager.saveAll()" id="btn-save-cfg" class="btn btn-blue w-full py-4 font-bold">同步更新至 Google 雲端伺服器 ➜</button>
+            <div class="card">
+                <div class="card-header">設備租用單價資料庫 (上架清單)</div>
+                <div class="card-body">
+                    <div id="admin-rent-list" class="space-y-2 mb-4"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-rent-name" class="input-std" placeholder="設備名稱 (如：足球鞋)">
+                        <input type="number" id="new-rent-price" class="input-std" placeholder="租金金額">
+                        <button onclick="ConfigManager.addItem()" class="btn btn-blue">新增項目</button>
+                    </div>
+                </div>
+            </div>
+            <button onclick="ConfigManager.saveAll()" id="btn-save-cfg" class="btn btn-blue w-full py-4 font-bold text-base shadow-lg">同步保存至 Google Apps Script ➜</button>
         </div>
 
     </main>
@@ -381,8 +391,8 @@
                     const res = await fetch(`${PROXY_URL}?action=checkUser&uid=${state.uid}`);
                     const r = await res.json();
                     state.role = r.role || '一般用戶';
+                    document.getElementById('admin-nav-group').classList.toggle('hidden', state.role !== '管理員');
                     if (state.role === '管理員') {
-                        document.getElementById('admin-nav-group').classList.remove('hidden');
                         switchAdminView('dashboard');
                     } else {
                         switchView('activity');
@@ -405,6 +415,19 @@
                 document.getElementById('form-title').innerText = id ? '編輯活動內容' : '發佈全新單日活動';
                 document.getElementById('ev-category').innerHTML = (state.config.sportCategories || "足球,籃球,其他").split(',').map(c => `<option value="${c}">${c}</option>`).join('');
                 
+                // 🔹 更新：從參數區渲染設備勾選清單
+                let rentalLib = []; try { rentalLib = JSON.parse(state.config.rentalItems || "[]"); } catch(e){}
+                const rentContainer = document.getElementById('ev-rent-checkboxes');
+                if (rentalLib.length > 0) {
+                    rentContainer.innerHTML = rentalLib.map(it => `
+                        <label class="flex items-center gap-2 text-xs cursor-pointer">
+                            <input type="checkbox" name="ev-rent-pick" value="${it.name}"> ${it.name} ($${it.price})
+                        </label>
+                    `).join('');
+                } else {
+                    rentContainer.innerHTML = '<p class="text-xs text-slate-400">請先在參數區建立設備項目</p>';
+                }
+
                 if (id) {
                     const ev = state.events.find(e => String(e['活動ID']) === String(id));
                     document.getElementById('ev-name').value = ev['活動名稱'] || '';
@@ -418,23 +441,32 @@
                     document.getElementById('ev-early-price').value = ev['全日早鳥價'] || '';
                     document.getElementById('ev-early-deadline').value = (ev['早鳥截止日期']||'').substring(0,16);
                     document.getElementById('ev-level-req').value = ev['標籤'] || '無';
-                    document.getElementById('ev-rent-items').value = ev['備註'] || ''; 
                     document.getElementById('ev-title-image').value = ev['圖片URL'] || '';
-                    document.getElementById('ev-content-image').value = ev['課程代碼'] || ''; // 暫代課程代碼欄位作為內容圖
+                    document.getElementById('ev-content-image').value = ev['課程代碼'] || ''; 
                     document.getElementById('ev-desc').value = ev['描述'] || '';
                     
+                    // 恢復年級勾選
                     const savedGrades = (ev['分類'] || "").split(',');
                     document.querySelectorAll('#grade-options input').forEach(i => i.checked = savedGrades.includes(i.value));
+
+                    // 🔹 恢復設備勾選 (存放在備註欄位)
+                    const savedRents = (ev['備註'] || "").split(',');
+                    document.querySelectorAll('input[name="ev-rent-pick"]').forEach(i => i.checked = savedRents.includes(i.value));
                 } else {
                     document.querySelectorAll('#view-admin-event-form input:not([type="checkbox"]), #view-admin-event-form textarea').forEach(i => i.value = '');
-                    document.querySelectorAll('#grade-options input').forEach(i => i.checked = false);
+                    document.querySelectorAll('#grade-options input, input[name="ev-rent-pick"]').forEach(i => i.checked = false);
+                    document.getElementById('ev-early-enable').checked = false;
                 }
                 showSection('view-admin-event-form');
             },
             async save() {
                 const btn = document.getElementById('btn-save-event');
-                btn.disabled = true; btn.innerText = "正在儲存...";
+                btn.disabled = true; btn.innerText = "資料封裝儲存中...";
+                
                 const grades = Array.from(document.querySelectorAll('#grade-options input:checked')).map(i => i.value).join(',');
+                // 🔹 收集勾選的設備
+                const rents = Array.from(document.querySelectorAll('input[name="ev-rent-pick"]:checked')).map(i => i.value).join(',');
+
                 const payload = {
                     action: 'updateEvent',
                     payload: {
@@ -447,10 +479,11 @@
                         '全日扣除': document.getElementById('ev-deduct').value,
                         '梯次資料': document.getElementById('ev-time-s').value + '-' + document.getElementById('ev-time-e').value,
                         '內容媒體': document.getElementById('ev-capacity').value,
-                        '分類': grades, '標籤': document.getElementById('ev-level-req').value,
-                        '備註': document.getElementById('ev-rent-items').value,
+                        '分類': grades, 
+                        '標籤': document.getElementById('ev-level-req').value,
+                        '備註': rents, // 將勾選的項目存入備註
                         '圖片URL': document.getElementById('ev-title-image').value,
-                        '課程代碼': document.getElementById('ev-content-image').value, // 暫代內容圖
+                        '課程代碼': document.getElementById('ev-content-image').value,
                         '活動型態': '單日型', '狀態': '上架', '描述': document.getElementById('ev-desc').value
                     }
                 };
@@ -480,7 +513,7 @@
                         <td class="text-xs">${m.學校}/${m.年級}</td>
                         <td class="font-bold text-blue-600">${m.聯繫電話}</td>
                         <td class="text-xs text-gray-400">${m.家長姓名}</td>
-                        <td class="text-right"><button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-blue-600 underline font-bold">編輯</button></td>
+                        <td class="text-right"><button onclick="safeNavigate('register.html?edit=${m.學員ID}')" class="text-blue-600 underline font-bold">詳情</button></td>
                     </tr>`).join('');
             },
             filter(q) { this.render(state.adminMembers.filter(m => m.姓名.includes(q) || m.聯繫電話.includes(q))); }
@@ -494,7 +527,12 @@
             },
             addItem() {
                 const n = document.getElementById('new-rent-name').value, p = document.getElementById('new-rent-price').value;
-                if(n && p) { state.tempRentals.push({name:n, price:Number(p)}); document.getElementById('new-rent-name').value=''; document.getElementById('new-rent-price').value=''; this.renderList(); }
+                if(n && p) { 
+                    state.tempRentals.push({name:n, price:Number(p)}); 
+                    document.getElementById('new-rent-name').value=''; 
+                    document.getElementById('new-rent-price').value=''; 
+                    this.renderList(); 
+                }
             },
             renderList() { document.getElementById('admin-rent-list').innerHTML = state.tempRentals.map((it, i) => `<div class="flex justify-between items-center bg-gray-50 p-2 border rounded text-xs mb-1"><span><b>${it.name}</b> ($${it.price})</span><button onclick="ConfigManager.removeItem(${i})" class="text-red-500 font-bold">✕</button></div>`).join(''); },
             removeItem(i) { state.tempRentals.splice(i, 1); this.renderList(); },
@@ -513,7 +551,7 @@
             showSection('view-' + v);
             if(v==='member') loadUserMembers();
         }
-        function toggleAdminNav() { document.getElementById('sub-menu-admin').classList.toggle('active'); switchAdminView('dashboard'); }
+        function toggleAdminNav() { document.getElementById('sub-menu-admin').classList.toggle('active'); }
         function switchAdminView(v) {
             document.querySelectorAll('.nav-item, .sub-item').forEach(el => el.classList.remove('active'));
             document.getElementById('nav-admin').classList.add('active');
