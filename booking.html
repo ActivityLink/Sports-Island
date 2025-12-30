@@ -29,46 +29,47 @@
     </div>
 
     <div class="container">
-        <!-- 頂部活動摘要 -->
+        <!-- 活動摘要 -->
         <div class="card">
-            <div class="card-header"><span id="ev-name-disp">活動載入中...</span></div>
+            <div class="card-header"><span id="ev-name-disp">載入中...</span></div>
             <div class="card-body">
-                <div class="info-row"><span class="text-gray-400">活動日期</span><span id="disp-date" class="font-bold">--</span></div>
+                <div class="info-row"><span class="text-gray-400">日期</span><span id="disp-date" class="font-bold">--</span></div>
                 <div class="info-row"><span class="text-gray-400">剩餘名額</span><span id="disp-quota" class="font-bold text-blue-600">--</span></div>
             </div>
         </div>
 
-        <!-- 步驟 1: 選擇學員並自動審核 -->
+        <!-- 選擇學員 -->
         <div id="step-1" class="card">
             <div class="card-header">1. 選擇預約成員</div>
             <div id="member-list" class="card-body">
-                <!-- 由 JS 產生並執行資格比對 -->
+                <!-- 由 JS 產生 -->
             </div>
         </div>
 
-        <!-- 步驟 2: 匯款提交 (審核通過後顯示) -->
+        <!-- 提交匯款 -->
         <div id="step-2" class="card hidden">
             <div class="card-header">2. 提交匯款資訊</div>
             <div class="card-body">
                 <div class="bg-blue-50 p-4 rounded mb-6 text-center">
-                    <p class="text-xs text-gray-400 uppercase">應付總額</p>
+                    <p class="text-xs text-gray-400 uppercase">應付學費總額</p>
                     <div id="disp-final-price" class="text-3xl font-black text-blue-600">NT$ 0</div>
                 </div>
                 <label class="block text-sm font-bold mb-2">匯款帳號後五碼</label>
-                <input type="text" id="bank-5" maxlength="5" class="w-full border p-3 rounded text-center text-2xl font-bold tracking-widest mb-6">
-                <button onclick="submitBooking()" id="btn-submit" class="w-full bg-blue-600 text-white py-4 rounded font-bold">確認預約 ➜</button>
+                <input type="text" id="bank-5" maxlength="5" class="w-full border p-3 rounded text-center text-2xl font-bold tracking-widest mb-6" placeholder="00000">
+                <button onclick="submitBooking()" id="btn-submit" class="w-full bg-blue-600 text-white py-4 rounded font-bold">確認預約報名 ➜</button>
             </div>
         </div>
     </div>
 
     <script>
+        const LIFF_ID = "2008786875-7COWtgtL";
         const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/";
         const eventId = new URLSearchParams(window.location.search).get('id');
         let state = { uid: null, event: null, members: [], selected: null, basePrice: 0 };
 
         async function init() {
             try {
-                await liff.init({ liffId: "2008786875-7COWtgtL" });
+                await liff.init({ liffId: LIFF_ID });
                 if (!liff.isLoggedIn()) { liff.login(); return; }
                 const profile = await liff.getProfile();
                 state.uid = profile.userId;
@@ -81,6 +82,8 @@
                 state.event = evData.data.find(e => String(e['活動ID']) === String(eventId));
                 state.members = (await memRes.json()).data || [];
 
+                if (!state.event) { alert("找不到課程"); window.location.href='index.html'; return; }
+
                 renderTop();
                 renderMembers();
                 document.getElementById('view-loading').style.display = 'none';
@@ -90,34 +93,38 @@
         function renderTop() {
             const ev = state.event;
             document.getElementById('ev-name-disp').innerText = ev['活動名稱'];
-            document.getElementById('disp-date').innerText = ev['開始日期'].substring(0,10);
+            document.getElementById('disp-date').innerText = (ev['開始日期']||"").substring(0,10);
             document.getElementById('disp-quota').innerText = `${ev['內容媒體'] || 0} 位`;
             
-            // 早鳥邏輯判定
             const now = new Date();
             const deadline = ev['早鳥截止日期'] ? new Date(ev['早鳥截止日期']) : null;
             state.basePrice = (deadline && now <= deadline && ev['全日早鳥價']) ? parseInt(ev['全日早鳥價']) : parseInt(ev['全日價']);
         }
 
         function renderMembers() {
-            const targetGrades = (state.event['分類'] || "").split(',');
+            // 修正點：使用 filter(x => x) 移除 split 產生的空字串項
+            const targetGrades = (state.event['分類'] || "").split(',').filter(x => x.trim());
             const levelReq = state.event['標籤'] || "無";
 
             document.getElementById('member-list').innerHTML = state.members.map(m => {
+                // 如果後台沒勾選任何年級 (targetGrades.length 為 0)，則視為無限制
                 const gradeOk = targetGrades.length === 0 || targetGrades.includes(m.年級);
-                // 假設等級權重: 無=0, 初級=1, 中級=2
-                const levels = ["無", "初級", "中級"];
-                const levelOk = levels.indexOf(m.等級 || "初級") >= levels.indexOf(levelReq);
+                
+                const levels = ["無", "初級", "中級", "高級"];
+                const currentLevel = m.等級 || "初級";
+                const levelOk = levels.indexOf(currentLevel) >= levels.indexOf(levelReq);
+                
                 const canBook = gradeOk && levelOk;
 
                 return `
                     <div class="member-item ${!canBook ? 'disabled' : ''}" onclick="${canBook ? `selectMember('${m.學員ID}')` : ''}" id="m-${m.學員ID}">
                         <div class="flex-1">
                             <p class="font-bold text-sm">${m.姓名} <span class="text-[10px] font-normal text-gray-400">(${m.年級})</span></p>
+                            <p class="text-[10px] text-gray-400">等級：${currentLevel}</p>
                         </div>
                         ${!canBook ? `<span class="status-tag tag-red">資格不符</span>` : `<span class="text-blue-500 text-xs">選擇 ➜</span>`}
                     </div>`;
-            }).join('');
+            }).join('') || '<p class="text-center py-4 text-gray-400">尚未新增成員資料</p>';
         }
 
         function selectMember(id) {
@@ -130,14 +137,33 @@
 
         async function submitBooking() {
             const b5 = document.getElementById('bank-5').value;
-            if (b5.length < 5) return alert("請輸入匯款後五碼");
+            if (b5.length < 5) return alert("請輸入正確的匯款後五碼");
             const btn = document.getElementById('btn-submit');
-            btn.disabled = true; btn.innerText = "正在傳送預約...";
+            btn.disabled = true; btn.innerText = "正在傳送預約中...";
             
-            const payload = { action: 'submitRegistration', payload: { student: state.selected, eventId: state.event['活動ID'], amount: state.basePrice, bankLast5: b5, type: '單日型' } };
-            await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify(payload) });
-            alert("🎉 預約成功！");
-            window.location.href = 'index.html';
+            const payload = { 
+                action: 'submitRegistration', 
+                payload: { 
+                    student: state.selected, 
+                    eventId: state.event['活動ID'], 
+                    eventName: state.event['活動名稱'],
+                    amount: state.basePrice, 
+                    bankLast5: b5, 
+                    type: '單日型' 
+                } 
+            };
+            
+            try {
+                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const r = await res.json();
+                if (r.status === 'success') {
+                    alert("🎉 預約成功！");
+                    window.location.href = 'index.html';
+                } else { throw new Error(r.message); }
+            } catch(e) {
+                alert("提交失敗：" + e.message);
+                btn.disabled = false; btn.innerText = "確認預約報名 ➜";
+            }
         }
 
         window.onload = init;
