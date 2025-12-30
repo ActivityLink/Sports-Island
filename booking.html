@@ -8,453 +8,138 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
-        .main-container { max-width: 600px; margin: 0 auto; padding: 16px; padding-bottom: 140px; }
-        
-        /* 玻璃擬態卡片 */
-        .content-card { background: white; border-radius: 32px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.04); padding: 28px; margin-bottom: 20px; border: 1px solid #f1f5f9; }
-        
-        /* 選擇項目樣式 */
-        .selection-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 20px; border-radius: 20px; border: 2px solid transparent; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .selection-item:hover { background: #f1f5f9; }
-        .selection-item.active { border-color: #1877f2; background: #eef2ff; box-shadow: 0 8px 20px -5px rgba(24,119,242,0.15); }
-        
-        /* 日曆格點 */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-        .cal-day { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
-        .status-attend { background: #eef2ff; color: #1877f2; border-color: #dbeafe; }
-        .status-absent-full { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
-        .status-absent-half { background: #fef3c7; color: #d97706; border-color: #fde68a; }
-        .status-disabled { background: #f8fafc; color: #e2e8f0; opacity: 0.3; pointer-events: none; }
-        .day-label { font-size: 8px; margin-top: 1px; font-weight: 800; }
-
-        /* 活力藍按鈕 */
-        .btn-blue { background: #1877f2; color: white; padding: 18px 40px; border-radius: 20px; font-weight: 900; width: 100%; text-align: center; font-size: 18px; box-shadow: 0 10px 20px -5px rgba(24,119,242,0.3); transition: 0.2s; }
-        .btn-blue:active { transform: scale(0.96); opacity: 0.9; }
-        .btn-blue:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
-
-        /* 底部固定欄 */
-        .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-top: 1px solid #f1f5f9; padding: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); z-index: 100; }
-        
-        .step-dot { height: 6px; flex: 1; border-radius: 10px; background: #e2e8f0; }
-        .step-dot.active { background: #1877f2; }
-
-        /* 裝備租用卡片 */
-        .rent-card { background: #f8fafc; border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid #e2e8f0; cursor: pointer; }
-        .rent-card:has(input:checked) { border-color: #1877f2; background: #e7f3ff; }
-
-        /* 彈出式選單 */
-        .leave-menu { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 32px 32px 0 0; padding: 32px; z-index: 1001; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 -10px 50px rgba(0,0,0,0.1); }
-        .leave-menu.active { transform: translateY(0); }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: none; }
-
-        /* 純黑不加粗樣式 */
-        .text-island-black { color: #000000; font-weight: 400; }
-        
-        /* 診斷訊息小工具 */
-        #diag-info { font-family: monospace; font-size: 10px; color: #94a3b8; text-align: center; margin-top: 10px; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; color: #333; margin: 0; padding-bottom: 50px; }
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        .card { background: white; border: 1px solid #dcdfe6; border-radius: 4px; margin-bottom: 15px; overflow: hidden; }
+        .card-header { padding: 12px 15px; border-bottom: 1px solid #ebeef5; background: #fbfbfc; font-weight: 700; font-size: 15px; }
+        .card-body { padding: 15px; }
+        .member-item { display: flex; align-items: center; padding: 12px; border: 1px solid #eee; border-radius: 4px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; }
+        .member-item.active { border-color: #409eff; background: #ecf5ff; }
+        .member-item.disabled { opacity: 0.5; cursor: not-allowed; background: #f5f7fa; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+        .status-tag { padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; }
+        .tag-red { background: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body>
 
-    <div id="view-loading" class="fixed inset-0 bg-white z-[2000] flex flex-col items-center justify-center">
-        <div class="w-10 h-10 border-4 border-[#1877f2] border-t-transparent rounded-full animate-spin"></div>
-        <p id="loading-text" class="mt-4 font-black text-slate-400 text-xs tracking-widest uppercase text-center">系統資源對接中...</p>
-        <div id="diag-info"></div>
+    <div id="view-loading" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+        <div class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+        <p class="text-gray-400 text-sm">核對預約資格中...</p>
     </div>
 
-    <div class="main-container">
-        <div class="flex gap-2 mb-6">
-            <div id="step-1" class="step-dot active"></div><div id="step-2" class="step-dot"></div><div id="step-3" class="step-dot"></div>
-        </div>
-
-        <!-- 步驟 1: 選擇學員 -->
-        <div id="view-member" class="hidden text-center">
-            <h2 class="text-3xl font-black mb-8 italic tracking-tight text-slate-800">1. 選擇預約成員</h2>
-            <div id="member-list" class="space-y-4 text-left"></div>
-        </div>
-
-        <!-- 步驟 2: 專用報名與扣抵介面 -->
-        <div id="view-details" class="hidden">
-            <div class="content-card">
-                <div class="flex justify-between items-start mb-1">
-                    <h2 id="event-name" class="text-2xl font-black text-[#1877f2] italic leading-tight">---</h2>
-                    <div id="early-bird-tag" class="hidden bg-amber-50 text-amber-600 text-[10px] font-black px-2 py-1 rounded border border-amber-100">早鳥優惠中</div>
-                </div>
-                <div id="event-info" class="text-[10px] font-bold text-slate-400 uppercase mb-8">Loading Spec...</div>
-                
-                <div id="dynamic-booking-ui" class="mt-6">
-                    <!-- 依活動類型注入 UI -->
-                </div>
-            </div>
-
-            <!-- 通用裝備租用區 (由參數區導入) -->
-            <div id="rental-area" class="content-card hidden">
-                <h3 class="font-black text-slate-800 mb-6 italic text-sm uppercase tracking-widest">🎒 裝備租用設定</h3>
-                <div id="rental-list" class="space-y-2"></div>
+    <div class="container">
+        <!-- 頂部活動摘要 -->
+        <div class="card">
+            <div class="card-header"><span id="ev-name-disp">活動載入中...</span></div>
+            <div class="card-body">
+                <div class="info-row"><span class="text-gray-400">活動日期</span><span id="disp-date" class="font-bold">--</span></div>
+                <div class="info-row"><span class="text-gray-400">剩餘名額</span><span id="disp-quota" class="font-bold text-blue-600">--</span></div>
             </div>
         </div>
 
-        <!-- 步驟 3: 最後摘要與結帳 -->
-        <div id="view-checkout" class="hidden">
-            <div class="content-card">
-                <h2 class="text-2xl font-black mb-8 italic text-slate-800">最後預約摘要</h2>
-                <div class="space-y-4 mb-8">
-                    <div class="flex justify-between border-b pb-4"><span class="text-slate-400 font-bold">預約成員</span><span id="summary-member" class="font-black text-island-black">---</span></div>
-                    <div class="flex justify-between border-b pb-4"><span class="text-slate-400 font-bold">報名項目</span><span id="summary-target" class="font-black text-island-black">---</span></div>
-                    <div id="summary-deduction-area" class="flex justify-between border-b pb-4 text-red-500 hidden">
-                        <span class="font-bold">請假扣抵額</span><span id="summary-deduction" class="text-island-black">- NT$ 0</span>
-                    </div>
-                </div>
-                <div class="bg-blue-50 p-8 rounded-3xl text-center mb-8 border border-blue-100">
-                    <p class="text-xs font-black text-[#1877f2] uppercase tracking-widest mb-2">應付學費總金額</p>
-                    <p id="final-amount" class="text-4xl font-black text-[#1877f2] italic">NT$ 0</p>
-                    <p id="summary-price-note" class="text-[10px] text-amber-600 font-bold mt-2"></p>
-                </div>
-                <input type="text" id="bank-5" class="w-full border-2 border-slate-100 p-5 rounded-2xl mb-8 text-center font-black text-2xl outline-none focus:border-[#1877f2]" maxlength="5" placeholder="匯款帳號後五碼">
-                <button onclick="submitBooking()" id="btn-submit" class="btn-blue">確認並送出報名 ➜</button>
+        <!-- 步驟 1: 選擇學員並自動審核 -->
+        <div id="step-1" class="card">
+            <div class="card-header">1. 選擇預約成員</div>
+            <div id="member-list" class="card-body">
+                <!-- 由 JS 產生並執行資格比對 -->
             </div>
-            <button onclick="switchView('details')" class="w-full text-slate-400 font-bold text-xs uppercase mt-4">⬅ 返回修改預約內容</button>
         </div>
-    </div>
 
-    <!-- 底部固定資訊條 -->
-    <div id="footer-bar" class="sticky-footer hidden">
-        <div class="max-w-[600px] mx-auto flex items-center justify-between gap-6">
-            <div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">目前學費</p>
-                <p id="footer-price" class="text-2xl text-island-black italic">NT$ 0</p>
+        <!-- 步驟 2: 匯款提交 (審核通過後顯示) -->
+        <div id="step-2" class="card hidden">
+            <div class="card-header">2. 提交匯款資訊</div>
+            <div class="card-body">
+                <div class="bg-blue-50 p-4 rounded mb-6 text-center">
+                    <p class="text-xs text-gray-400 uppercase">應付總額</p>
+                    <div id="disp-final-price" class="text-3xl font-black text-blue-600">NT$ 0</div>
+                </div>
+                <label class="block text-sm font-bold mb-2">匯款帳號後五碼</label>
+                <input type="text" id="bank-5" maxlength="5" class="w-full border p-3 rounded text-center text-2xl font-bold tracking-widest mb-6">
+                <button onclick="submitBooking()" id="btn-submit" class="w-full bg-blue-600 text-white py-4 rounded font-bold">確認預約 ➜</button>
             </div>
-            <button onclick="switchView('checkout')" class="btn-blue !w-auto !px-12 !py-4 shadow-lg">下一步 ➜</button>
         </div>
-    </div>
-
-    <!-- 修改狀態選單 -->
-    <div id="overlay" class="overlay" onclick="closeLeaveMenu()"></div>
-    <div id="leave-menu" class="leave-menu">
-        <h3 id="menu-date-title" class="text-xl font-black mb-8 italic text-slate-800">修改出席狀態</h3>
-        <div class="grid grid-cols-2 gap-4 mb-8">
-            <button onclick="updateDayStatus('attend')" class="p-6 border-2 border-slate-100 rounded-3xl font-black text-sm">恢復出席</button>
-            <button onclick="updateDayStatus('full')" class="p-6 border-2 border-red-50 bg-red-50 text-red-600 rounded-3xl font-black text-sm">全日請假</button>
-            <button onclick="updateDayStatus('morning')" class="p-6 border-2 border-orange-50 bg-orange-50 text-orange-600 rounded-3xl font-black text-sm">上午請假</button>
-            <button onclick="updateDayStatus('afternoon')" class="p-6 border-2 border-orange-50 bg-orange-50 text-orange-600 rounded-3xl font-black text-sm">下午請假</button>
-        </div>
-        <button onclick="closeLeaveMenu()" class="w-full py-2 text-slate-400 font-bold uppercase tracking-widest">取消</button>
     </div>
 
     <script>
-        const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
-        const LIFF_ID = "2008786875-7COWtgtL";
+        const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/";
         const eventId = new URLSearchParams(window.location.search).get('id');
-        
-        let state = { 
-            uid: null, event: null, members: [], 
-            selectedMember: null, selectedBatch: null, 
-            leaves: {}, rentals: [], allRentals: [], 
-            currentFocusDate: null, basePrice: 0 
-        };
-
-        function diag(msg) {
-            console.log(msg);
-            document.getElementById('diag-info').innerText = msg;
-        }
-
-        function safeNavigate(t) {
-            if (window.location.protocol === 'blob:') return;
-            window.location.replace(new URL(t, window.location.href).href);
-        }
-
-        // 🔹 參數區讀取與強化的 Fetch
-        async function robustFetch(url, options = {}, retries = 3) {
-            try {
-                const res = await fetch(url, options);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return await res.json();
-            } catch (err) {
-                if (retries > 0) {
-                    await new Promise(r => setTimeout(r, 1000));
-                    return robustFetch(url, options, retries - 1);
-                }
-                throw err;
-            }
-        }
+        let state = { uid: null, event: null, members: [], selected: null, basePrice: 0 };
 
         async function init() {
             try {
-                diag("LIFF 初始化中...");
-                await liff.init({ liffId: LIFF_ID });
-                
-                if (!liff.isLoggedIn()) {
-                    diag("跳轉登入中...");
-                    liff.login({ redirectUri: window.location.href });
-                    return;
-                }
-
-                diag("獲取用戶資訊...");
+                await liff.init({ liffId: "2008786875-7COWtgtL" });
+                if (!liff.isLoggedIn()) { liff.login(); return; }
                 const profile = await liff.getProfile();
                 state.uid = profile.userId;
 
-                diag("讀取雲端參數...");
-                const [evData, memData] = await Promise.all([
-                    robustFetch(`${PROXY_URL}?action=getEvents`),
-                    robustFetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`)
+                const [evRes, memRes] = await Promise.all([
+                    fetch(`${PROXY_URL}?action=getEvents`),
+                    fetch(`${PROXY_URL}?action=getFamily&uid=${state.uid}`)
                 ]);
-
-                if (!evData || !evData.data) throw new Error("資料格式異常");
-
-                // 🔹 處理參數區：從雲端獲取所有可能的租用裝備
-                const config = evData.config || {};
-                try {
-                    state.allRentals = typeof config.rentalItems === 'string' ? JSON.parse(config.rentalItems) : (config.rentalItems || []);
-                } catch(e) {
-                    state.allRentals = [];
-                    console.error("租用參數解析失敗");
-                }
-
+                const evData = await evRes.json();
                 state.event = evData.data.find(e => String(e['活動ID']) === String(eventId));
-                if (!state.event) { 
-                    alert("找不到課程資料"); 
-                    safeNavigate('index.html'); 
-                    return; 
-                }
+                state.members = (await memRes.json()).data || [];
 
-                state.members = memData.data || [];
-
-                // 處理學費價格與早鳥
-                const now = new Date();
-                const deadline = state.event['早鳥截止日期'] ? new Date(state.event['早鳥截止日期']) : null;
-                const earlyPrice = parseInt(state.event['全日早鳥價']);
-                
-                if (deadline && now <= deadline && earlyPrice > 0) {
-                    state.basePrice = earlyPrice;
-                    document.getElementById('early-bird-tag').classList.remove('hidden');
-                    document.getElementById('summary-price-note').innerText = "已套用早鳥優惠";
-                } else {
-                    state.basePrice = parseInt(state.event['全日價'] || 0);
-                }
-
-                document.getElementById('event-name').innerText = state.event['活動名稱'];
-                document.getElementById('event-info').innerText = `${state.event['活動型態']} | ${state.event['分類']}`;
-                
+                renderTop();
                 renderMembers();
-                switchView('member');
-                diag("初始化完成");
+                document.getElementById('view-loading').style.display = 'none';
+            } catch (e) { alert("連線錯誤"); }
+        }
 
-            } catch (e) {
-                diag(`連線異常: ${e.message}`);
-                document.getElementById('loading-text').innerText = "系統連線異常，請重開";
-            } finally {
-                document.getElementById('view-loading').style.display='none';
-            }
+        function renderTop() {
+            const ev = state.event;
+            document.getElementById('ev-name-disp').innerText = ev['活動名稱'];
+            document.getElementById('disp-date').innerText = ev['開始日期'].substring(0,10);
+            document.getElementById('disp-quota').innerText = `${ev['內容媒體'] || 0} 位`;
+            
+            // 早鳥邏輯判定
+            const now = new Date();
+            const deadline = ev['早鳥截止日期'] ? new Date(ev['早鳥截止日期']) : null;
+            state.basePrice = (deadline && now <= deadline && ev['全日早鳥價']) ? parseInt(ev['全日早鳥價']) : parseInt(ev['全日價']);
         }
 
         function renderMembers() {
-            document.getElementById('member-list').innerHTML = state.members.map(m => `
-                <div onclick="selectMember('${m.學員ID}')" class="selection-item">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-blue-50 text-[#1877f2] rounded-2xl flex items-center justify-center font-black italic shadow-inner">${(m.姓名||"?").charAt(0)}</div>
-                        <p class="font-black text-xl text-slate-800">${m.姓名}</p>
-                    </div>
-                    <span class="text-[#1877f2] font-black italic text-xs">SELECT ➜</span>
-                </div>`).join('') || '<p class="text-center py-10 text-slate-300 italic text-sm">尚未建立成員個資</p>';
+            const targetGrades = (state.event['分類'] || "").split(',');
+            const levelReq = state.event['標籤'] || "無";
+
+            document.getElementById('member-list').innerHTML = state.members.map(m => {
+                const gradeOk = targetGrades.length === 0 || targetGrades.includes(m.年級);
+                // 假設等級權重: 無=0, 初級=1, 中級=2
+                const levels = ["無", "初級", "中級"];
+                const levelOk = levels.indexOf(m.等級 || "初級") >= levels.indexOf(levelReq);
+                const canBook = gradeOk && levelOk;
+
+                return `
+                    <div class="member-item ${!canBook ? 'disabled' : ''}" onclick="${canBook ? `selectMember('${m.學員ID}')` : ''}" id="m-${m.學員ID}">
+                        <div class="flex-1">
+                            <p class="font-bold text-sm">${m.姓名} <span class="text-[10px] font-normal text-gray-400">(${m.年級})</span></p>
+                        </div>
+                        ${!canBook ? `<span class="status-tag tag-red">資格不符</span>` : `<span class="text-blue-500 text-xs">選擇 ➜</span>`}
+                    </div>`;
+            }).join('');
         }
 
         function selectMember(id) {
-            state.selectedMember = state.members.find(m => String(m.學員ID) === id);
-            document.getElementById('summary-member').innerText = state.selectedMember.姓名;
-            renderDynamicInterface();
-            renderRentals();
-            switchView('details');
-        }
-
-        function renderDynamicInterface() {
-            const container = document.getElementById('dynamic-booking-ui');
-            const type = state.event['活動型態'];
-            state.leaves = {}; 
-
-            if(type === '梯次型') {
-                const batches = JSON.parse(state.event['梯次資料'] || "[]");
-                container.innerHTML = `<label class="block font-black text-slate-400 text-xs mb-4 uppercase tracking-widest text-left">請選擇參加梯次：</label>
-                    <div class="space-y-4 mb-8">${batches.map(b => `
-                        <div onclick="pickBatch('${b.n}', '${b.s}', '${b.e}', this)" class="selection-item">
-                            <div class="text-left">
-                                <p class="font-black text-xl text-slate-800">${b.n}</p>
-                                <p class="text-sm text-island-black italic">${b.s.substring(5,10)} ~ ${b.e.substring(5,10)}</p>
-                            </div>
-                            <span class="bg-blue-50 text-[#1877f2] px-4 py-2 rounded-xl text-[10px] font-black uppercase">選取</span>
-                        </div>`).join('')}</div>
-                    <div id="batch-calendar-area" class="hidden border-t pt-8">
-                        <label class="block font-black text-slate-400 text-xs mb-4 uppercase text-left">不出席日扣抵：</label>
-                        <div id="batch-cal" class="calendar-grid"></div>
-                    </div>`;
-            } else if(type === '常態型') {
-                container.innerHTML = `<div id="term-cal" class="calendar-grid"></div>`;
-                state.selectedBatch = "全學期課程";
-                generateCalendar('term', state.event['開始日期'], state.event['結束日期']);
-            } else {
-                container.innerHTML = `<div class="bg-blue-50 p-8 rounded-3xl border-2 border-blue-100 text-center">
-                    <p class="text-island-black text-xs font-normal mb-1 uppercase tracking-widest italic">${state.event['開始日期']}</p>
-                </div>`;
-                state.selectedBatch = "單日項目";
-            }
-            updatePrice();
-        }
-
-        function pickBatch(name, start, end, el) {
-            state.selectedBatch = name;
-            document.querySelectorAll('#view-details .selection-item').forEach(d => d.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('batch-calendar-area').classList.remove('hidden');
-            generateCalendar('batch', start, end);
-        }
-
-        function generateCalendar(mode, sDate, eDate) {
-            const container = document.getElementById(mode === 'batch' ? 'batch-cal' : 'term-cal');
-            const start = new Date(sDate.substring(0,10));
-            const end = new Date(eDate.substring(0,10));
-            
-            // 🔹 參數區應用：從課程標籤判斷上課日
-            const activeWeekdays = (state.event['梯次資料'] || "").split(',').map(Number);
-            
-            let html = ""; 
-            let curr = new Date(start);
-            while(curr <= end) {
-                const dStr = curr.toISOString().split('T')[0];
-                if (mode === 'term' ? activeWeekdays.includes(curr.getDay()) : true) {
-                    if(!state.leaves[dStr]) state.leaves[dStr] = 'attend';
-                    html += `<div id="day-${dStr}" onclick="openLeaveMenu('${dStr}')" class="cal-day status-attend">
-                        <span>${curr.getDate()}</span><span id="lb-${dStr}" class="day-label">出席</span></div>`;
-                } else {
-                    html += `<div class="cal-day status-disabled"><span>${curr.getDate()}</span></div>`;
-                }
-                curr.setDate(curr.getDate() + 1);
-            }
-            container.innerHTML = html;
-            updatePrice();
-        }
-
-        function openLeaveMenu(d) { 
-            state.currentFocusDate = d; 
-            document.getElementById('menu-date-title').innerText = `${d.substring(5)} 狀態修改`; 
-            document.getElementById('overlay').style.display='block'; 
-            document.getElementById('leave-menu').classList.add('active'); 
-        }
-
-        function closeLeaveMenu() { 
-            document.getElementById('overlay').style.display='none'; 
-            document.getElementById('leave-menu').classList.remove('active'); 
-        }
-
-        function updateDayStatus(s) {
-            state.leaves[state.currentFocusDate] = s;
-            const el = document.getElementById(`day-${state.currentFocusDate}`);
-            const lb = document.getElementById(`lb-${state.currentFocusDate}`);
-            const config = { 
-                'attend': ['status-attend','出席'], 
-                'full': ['status-absent-full','全假'], 
-                'morning': ['status-absent-half','上假'], 
-                'afternoon': ['status-absent-half','下假'] 
-            };
-            el.className = `cal-day ${config[s][0]}`; 
-            lb.innerText = config[s][1];
-            closeLeaveMenu(); 
-            updatePrice();
-        }
-
-        function renderRentals() {
-            // 🔹 參數區對接：比對活動的「內容媒體」與「全域租用清單」
-            const allowed = (state.event['內容媒體'] || "").split(',').filter(i=>i);
-            const items = state.allRentals.filter(i => allowed.includes(i.name));
-            
-            if(items.length === 0) {
-                document.getElementById('rental-area').classList.add('hidden');
-                return;
-            }
-            
-            document.getElementById('rental-area').classList.remove('hidden');
-            document.getElementById('rental-list').innerHTML = items.map(it => `
-                <label class="rent-card">
-                    <div class="flex items-center gap-4">
-                        <input type="checkbox" onchange="toggleRent('${it.name}', ${it.price})" class="w-6 h-6 accent-[#1877f2]">
-                        <span class="font-bold text-slate-700">${it.name}</span>
-                    </div>
-                    <span class="text-island-black italic">+$${it.price}</span>
-                </label>`).join('');
-        }
-
-        function toggleRent(name, price) {
-            const idx = state.rentals.findIndex(i => i.name === name);
-            if(idx > -1) state.rentals.splice(idx, 1); else state.rentals.push({name, price});
-            updatePrice();
-        }
-
-        function updatePrice() {
-            let deduction = 0;
-            Object.values(state.leaves).forEach(v => {
-                if(v === 'full') deduction += Number(state.event['全日扣除'] || 0);
-                else if(v === 'morning' || v === 'afternoon') deduction += Number(state.event['半日扣除'] || 0);
-            });
-            const rentTotal = state.rentals.reduce((a, b) => a + b.price, 0);
-            const final = state.basePrice - deduction + rentTotal;
-            
-            document.getElementById('footer-price').innerText = `NT$ ${final.toLocaleString()}`;
-            document.getElementById('final-amount').innerText = `NT$ ${final.toLocaleString()}`;
-            document.getElementById('summary-target').innerText = state.selectedBatch || "未選項目";
-            
-            if(deduction > 0) { 
-                document.getElementById('summary-deduction-area').classList.remove('hidden'); 
-                document.getElementById('summary-deduction').innerText = `- NT$ ${deduction.toLocaleString()}`; 
-            } else { 
-                document.getElementById('summary-deduction-area').classList.add('hidden'); 
-            }
-        }
-
-        function switchView(v) { 
-            ['member', 'details', 'checkout'].forEach((i, idx) => {
-                document.getElementById('view-' + i).classList.toggle('hidden', i !== v);
-                const dot = document.getElementById('step-' + (idx + 1));
-                if (dot) dot.classList.toggle('active', i === v || ['member', 'details', 'checkout'].indexOf(i) < ['member', 'details', 'checkout'].indexOf(v));
-            });
-            document.getElementById('footer-bar').classList.toggle('hidden', v !== 'details');
-            window.scrollTo(0,0);
+            state.selected = state.members.find(m => String(m.學員ID) === String(id));
+            document.querySelectorAll('.member-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('m-'+id).classList.add('active');
+            document.getElementById('disp-final-price').innerText = `NT$ ${state.basePrice.toLocaleString()}`;
+            document.getElementById('step-2').classList.remove('hidden');
         }
 
         async function submitBooking() {
             const b5 = document.getElementById('bank-5').value;
-            if(b5.length < 5) return alert("請輸入正確的匯款後五碼");
-            if(!state.selectedBatch) return alert("請先選取項目或梯次");
+            if (b5.length < 5) return alert("請輸入匯款後五碼");
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true; btn.innerText = "正在傳送預約...";
             
-            const btn = document.getElementById('btn-submit'); 
-            btn.disabled = true; 
-            btn.innerText = "正在送出...";
-            
-            const payload = { 
-                student: state.selectedMember, 
-                eventId: state.event['活動ID'], 
-                eventName: state.event['活動名稱'], 
-                amount: parseInt(document.getElementById('final-amount').innerText.replace(/\D/g,'')), 
-                bankLast5: b5, 
-                selectedBatch: state.selectedBatch, 
-                selectedDates: Object.entries(state.leaves).filter(e => e[1] !== 'attend').map(e => `${e[0]}:${e[1]}`).join('|') || '全勤參加', 
-                rentedItems: state.rentals.map(r => r.name).join(',') 
-            };
-            
-            try {
-                const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify({ action: 'submitRegistration', payload }) });
-                const r = await res.json();
-                if(r.status === 'success') { 
-                    alert("🎉 預約成功！"); 
-                    safeNavigate('index.html'); 
-                } else {
-                    throw new Error(r.message || "提交失敗");
-                }
-            } catch(e) {
-                alert("提交失敗：" + e.message);
-                btn.disabled = false;
-                btn.innerText = "確認並送出報名 ➜";
-            }
+            const payload = { action: 'submitRegistration', payload: { student: state.selected, eventId: state.event['活動ID'], amount: state.basePrice, bankLast5: b5, type: '單日型' } };
+            await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify(payload) });
+            alert("🎉 預約成功！");
+            window.location.href = 'index.html';
         }
-        
+
         window.onload = init;
     </script>
 </body>
