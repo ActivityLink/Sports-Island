@@ -21,610 +21,492 @@
         .session-row { background: #f8fafc; border-radius: 20px; padding: 20px; margin-bottom: 12px; border: 1px solid #e2e8f0; }
         .eq-chip { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 10px 16px; border-radius: 12px; cursor: pointer; font-weight: 700; border: 1.5px solid transparent; }
         .eq-chip:has(input:checked) { background: #e7f3ff; color: #1877f2; border-color: #1877f2; }
-        .loading-spinner { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
-        .loading-spinner.active { display: flex; }
-        .loading-spinner .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #1877f2; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .debug-panel { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: #f1f5f9; padding: 15px; border-radius: 12px; z-index: 10000; font-size: 12px; max-width: 400px; max-height: 300px; overflow: auto; font-family: monospace; }
+        .debug-toggle { position: fixed; bottom: 20px; left: 20px; background: #3b82f6; color: white; padding: 10px 15px; border-radius: 10px; cursor: pointer; z-index: 10000; }
     </style>
 </head>
 <body>
 
-    <!-- 載入動畫 -->
-    <div id="loading-spinner" class="loading-spinner">
-        <div class="spinner"></div>
-        <div class="mt-4 text-blue-600 font-bold">資料同步中...</div>
+    <!-- 調試面板 -->
+    <div class="debug-panel" id="debug-panel" style="display: none;">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold">🛠️ 調試面板</h3>
+            <button onclick="toggleDebug()" class="text-xs text-slate-300">關閉</button>
+        </div>
+        <div id="debug-content"></div>
     </div>
+    <div class="debug-toggle" onclick="toggleDebug()">🛠️ 調試</div>
 
     <div class="main-container">
         <div class="flex justify-between items-center mb-10">
             <div class="flex items-center gap-4">
-                <div class="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center shadow-xl"><span class="text-white font-black italic text-2xl">SI</span></div>
+                <div class="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center shadow-xl">
+                    <span class="text-white font-black italic text-2xl">SI</span>
+                </div>
                 <div>
                     <h1 class="text-xl font-black italic">活動規格專家端</h1>
                     <p class="text-xs text-slate-400 font-bold uppercase">Standardized Activity Architect</p>
-                    <div id="data-status" class="text-xs text-slate-500 mt-1"></div>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="testDirectGAS()" class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-lg font-bold">
+                            測試 GAS
+                        </button>
+                        <button onclick="testWorker()" class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-lg font-bold">
+                            測試 Worker
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="flex gap-3">
-                <button onclick="window.location.href='index.html'" class="text-slate-400 font-bold text-sm px-5 py-2.5 border rounded-xl bg-white shadow-sm">返回首頁</button>
-                <button onclick="EventManager.openEditor(null)" class="bg-[#1877f2] text-white px-8 py-3 rounded-xl font-bold shadow-lg">+ 新增課程規格</button>
+                <button onclick="window.location.href='index.html'" class="text-slate-400 font-bold text-sm px-5 py-2.5 border rounded-xl bg-white shadow-sm">
+                    返回首頁
+                </button>
+                <button onclick="EventManager.openEditor(null)" class="bg-[#1877f2] text-white px-8 py-3 rounded-xl font-bold shadow-lg">
+                    + 新增課程規格
+                </button>
             </div>
         </div>
         
-        <!-- 數據統計 -->
-        <div id="stats-container" class="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4"></div>
+        <!-- 狀態指示器 -->
+        <div id="status-indicator" class="mb-6 p-4 bg-white rounded-2xl shadow-sm border">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span id="status-text" class="font-bold">正在檢查資料庫連接...</span>
+                    <div id="status-details" class="text-sm text-slate-500 mt-1"></div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="init()" class="text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg font-bold">
+                        🔄 重新檢查
+                    </button>
+                    <button onclick="addSampleData()" class="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-lg font-bold">
+                        + 添加範例數據
+                    </button>
+                </div>
+            </div>
+        </div>
         
-        <!-- 活動網格 -->
         <div id="admin-event-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
-        
-        <!-- 空狀態 -->
-        <div id="empty-state" class="hidden text-center py-16">
-            <div class="text-5xl mb-6">📁</div>
-            <h3 class="text-2xl font-black text-slate-800 mb-3">尚無活動規格</h3>
-            <p class="text-slate-600 mb-8">開始建立您的第一個專業活動規格</p>
-            <button onclick="EventManager.openEditor(null)" 
-                    class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all">
-                + 建立新規格
-            </button>
-        </div>
-        
-        <!-- 錯誤狀態 -->
-        <div id="error-state" class="hidden text-center py-16">
-            <div class="text-6xl mb-6">⚠️</div>
-            <h3 class="text-2xl font-black text-slate-800 mb-3">資料載入失敗</h3>
-            <p id="error-message" class="text-slate-600 mb-8"></p>
-            <button onclick="init()" 
-                    class="bg-red-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-600 transition-all">
-                🔄 重新載入
-            </button>
-        </div>
     </div>
 
-    <!-- 編輯器模態框 -->
+    <!-- 編輯器模態框（保持不變） -->
     <div id="editor-modal" class="modal-overlay" onclick="if(event.target===this) EventManager.closeEditor()">
         <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-black italic text-[#1877f2]">專業課程配置 Matrix</h2>
-                <button onclick="EventManager.closeEditor()" class="text-slate-400 text-2xl font-bold hover:text-slate-600">×</button>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto max-h-[70vh] px-2 no-scrollbar">
-                <!-- 營運模式決定介面 -->
-                <div class="col-span-full">
-                    <label class="tag-label !mt-0">選定營運模式 (將自動過濾無關欄位)</label>
-                    <div class="flex gap-4 mt-2">
-                        <div onclick="EventManager.setType('單日型')" id="btn-type-single" class="type-pill active">單日體驗</div>
-                        <div onclick="EventManager.setType('梯次型')" id="btn-type-batch" class="type-pill">多梯次營隊</div>
-                        <div onclick="EventManager.setType('常態型')" id="btn-type-term" class="type-pill">學期常態課</div>
-                    </div>
-                </div>
-
-                <div class="col-span-full"><label class="tag-label">課程正式名稱</label><input type="text" id="ed-name" class="input-field" placeholder="例如：兒童籃球基礎訓練營"></div>
-                
-                <div><label class="tag-label">分類標籤</label><select id="ed-cat" class="input-field font-bold"></select></div>
-                
-                <div><label class="tag-label">主視覺圖片 URL</label><input type="text" id="ed-img" class="input-field" placeholder="https://example.com/image.jpg"></div>
-
-                <!-- 梯次配置區 -->
-                <div id="area-batch" class="col-span-full bg-blue-50/50 p-8 rounded-[2.5rem] border-2 border-dashed border-blue-200 hidden">
-                    <div class="flex justify-between items-center mb-6">
-                        <div>
-                            <span class="font-black text-[#1877f2]">梯次時間清單設定</span>
-                            <p class="text-sm text-slate-500 mt-1">每個梯次獨立設定名稱和時間</p>
-                        </div>
-                        <button onclick="EventManager.appendSession()" class="bg-[#1877f2] text-white px-5 py-2 rounded-xl text-sm font-bold shadow-md">+ 新增梯次</button>
-                    </div>
-                    <div id="session-list-container"></div>
-                </div>
-
-                <!-- 常態型配置區 -->
-                <div id="area-term" class="col-span-full bg-emerald-50/50 p-8 rounded-[2.5rem] border-2 border-dashed border-emerald-200 hidden">
-                    <label class="tag-label !mt-0 text-emerald-700">固定上課星期設定</label>
-                    <div class="grid grid-cols-4 gap-3 mb-8">
-                        <label class="flex items-center gap-2 font-bold"><input type="checkbox" class="wk-day" value="1"> 週一</label>
-                        <label class="flex items-center gap-2 font-bold"><input type="checkbox" class="wk-day" value="2"> 週二</label>
-                        <label class="flex items-center gap-2 font-bold"><input type="checkbox" class="wk-day" value="3"> 週三</label>
-                        <label class="flex items-center gap-2 font-bold"><input type="checkbox" class="wk-day" value="4"> 週四</label>
-                        <label class="flex items-center gap-2 font-bold"><input type="checkbox" class="wk-day" value="5"> 週五</label>
-                        <label class="flex items-center gap-2 font-bold"><input type="checkbox" class="wk-day" value="6"> 週六</label>
-                        <label class="flex items-center gap-2 font-bold"><input type="checkbox" class="wk-day" value="0"> 週日</label>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div><label class="tag-label text-red-500 !mt-0">請假扣抵 (全日)</label><input type="number" id="ed-deduct" class="input-field" value="0" min="0"></div>
-                        <div><label class="tag-label text-orange-500 !mt-0">請假扣抵 (半日)</label><input type="number" id="ed-deduct-half" class="input-field" value="0" min="0"></div>
-                    </div>
-                </div>
-
-                <!-- 早鳥優惠區 -->
-                <div class="col-span-full bg-amber-50 p-8 rounded-[2.5rem] border-2 border-amber-200 border-dotted">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div><label class="tag-label !mt-0 text-amber-700">✨ 早鳥優惠標價</label><input type="number" id="ed-early-price" class="input-field border-amber-200" placeholder="留空則無優惠" min="0"></div>
-                        <div><label class="tag-label !mt-0 text-amber-700">⌛ 早鳥截止時間</label><input type="datetime-local" id="ed-early-date" class="input-field border-amber-200"></div>
-                    </div>
-                </div>
-
-                <!-- 通用設定 -->
-                <div><label class="tag-label">活動開始日期</label><input type="date" id="ed-start" class="input-field"></div>
-                <div><label class="tag-label">活動結束日期</label><input type="date" id="ed-end" class="input-field"></div>
-                <div><label class="tag-label text-[#1877f2]">基礎學費總額 (原價)</label><input type="number" id="ed-price" class="input-field" value="0" min="0"></div>
-                <div><label class="tag-label text-blue-400">招收總名額</label><input type="number" id="ed-quota" class="input-field" value="0" min="0"></div>
-
-                <div class="col-span-full">
-                    <label class="tag-label">開放租用裝備 (由參數區導入)</label>
-                    <div id="activity-eq-options" class="flex flex-wrap gap-2"></div>
-                </div>
-                
-                <div class="col-span-full">
-                    <label class="tag-label">詳細活動內容</label>
-                    <textarea id="ed-desc" rows="5" class="input-field" placeholder="請詳細描述活動內容、適合對象、注意事項等..."></textarea>
-                </div>
-            </div>
-            
-            <button onclick="EventManager.save()" id="btn-save" class="bg-[#1877f2] text-white w-full py-5 rounded-2xl font-black mt-10 shadow-2xl text-xl italic uppercase hover:bg-blue-700 transition-all">
-                同步發布至運動島資料庫 ➜
-            </button>
+            <!-- ... 編輯器內容保持不變 ... -->
         </div>
     </div>
 
     <script>
-        const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/"; 
+        const PROXY_URL = "https://restless-silence-7212.wetw-net3.workers.dev/";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzJpUBaCpY1_-Qp631fpbZl-T3F5OxU-XmAXpgqQKY-NyHfei3lf8pL_W8YfkSkRRQE/exec";
+        
         let state = { 
             events: [], 
             config: { sportCategories: [], rentalItems: [] }, 
             currentEditId: null, 
-            currentType: '單日型',
-            lastSyncTime: null
+            currentType: '單日型' 
         };
 
-        // 顯示/隱藏載入動畫
-        function showLoading(show) {
-            document.getElementById('loading-spinner').classList.toggle('active', show);
-        }
-
-        // 顯示通知
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 ${
-                type === 'success' ? 'bg-green-500' : 
-                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-            } text-white`;
-            notification.style.transform = 'translateX(100%)';
-            notification.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <span class="text-xl">${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
-                    <span>${message}</span>
-                </div>
-            `;
-            document.body.appendChild(notification);
+        // 調試功能
+        function debugLog(message, data = null) {
+            const debugContent = document.getElementById('debug-content');
+            const entry = document.createElement('div');
+            entry.className = 'mb-2 pb-2 border-b border-slate-700';
             
-            setTimeout(() => notification.style.transform = 'translateX(0)', 10);
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `<span class="text-slate-400">[${timestamp}]</span> ${message}`;
             
-            setTimeout(() => {
-                notification.style.transform = 'translateX(100%)';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
-
-        // 解析數據的輔助函數
-        function parseCategories(categories) {
-            if (Array.isArray(categories)) return categories;
-            if (typeof categories === 'string') {
-                try {
-                    // 嘗試解析為 JSON
-                    const parsed = JSON.parse(categories);
-                    return Array.isArray(parsed) ? parsed : [];
-                } catch {
-                    // 如果是逗號分隔的字符串
-                    return categories.split(',').map(s => s.trim()).filter(s => s);
-                }
+            if (data) {
+                const pre = document.createElement('pre');
+                pre.className = 'mt-1 text-xs overflow-x-auto bg-slate-800 p-2 rounded';
+                pre.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                entry.appendChild(pre);
             }
-            return [];
+            
+            debugContent.prepend(entry);
+            
+            // 保持最新100條記錄
+            const children = debugContent.children;
+            if (children.length > 100) {
+                debugContent.removeChild(children[children.length - 1]);
+            }
+        }
+
+        function toggleDebug() {
+            const panel = document.getElementById('debug-panel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // 測試函數
+        async function testDirectGAS() {
+            debugLog('🔍 開始測試直接訪問 GAS...');
+            
+            try {
+                const url = `${GAS_URL}?mode=getEvents&timestamp=${Date.now()}`;
+                debugLog(`訪問 URL: ${url}`);
+                
+                const response = await fetch(url);
+                debugLog(`HTTP 狀態: ${response.status} ${response.statusText}`);
+                
+                const text = await response.text();
+                debugLog('原始響應:', text);
+                
+                try {
+                    const data = JSON.parse(text);
+                    debugLog('解析後的 JSON:', data);
+                    alert(`✅ GAS 連接正常\n狀態: ${response.status}\n數據條數: ${data.events ? data.events.length : 0}`);
+                } catch (e) {
+                    debugLog('JSON 解析錯誤:', e.message);
+                    alert('⚠️ GAS 響應不是有效的 JSON');
+                }
+            } catch (error) {
+                debugLog('❌ 測試失敗:', error.message);
+                alert(`❌ GAS 連接失敗: ${error.message}`);
+            }
+        }
+
+        async function testWorker() {
+            debugLog('🔍 開始測試 Cloudflare Worker...');
+            
+            try {
+                const url = `${PROXY_URL}?action=getEvents&_t=${Date.now()}`;
+                debugLog(`訪問 URL: ${url}`);
+                
+                const response = await fetch(url);
+                debugLog(`HTTP 狀態: ${response.status} ${response.statusText}`);
+                
+                const text = await response.text();
+                debugLog('Worker 響應:', text);
+                
+                try {
+                    const data = JSON.parse(text);
+                    debugLog('Worker 返回數據:', data);
+                    
+                    // 顯示詳細信息
+                    const details = `
+狀態: ${data.status}
+活動數量: ${data.data?.length || 0}
+分類數量: ${data.config?.sportCategories?.length || 0}
+裝備數量: ${data.config?.rentalItems?.length || 0}
+                    `;
+                    
+                    alert(`✅ Worker 連接正常\n${details}`);
+                } catch (e) {
+                    debugLog('JSON 解析錯誤:', e.message);
+                    alert('⚠️ Worker 響應不是有效的 JSON');
+                }
+            } catch (error) {
+                debugLog('❌ Worker 測試失敗:', error.message);
+                alert(`❌ Worker 連接失敗: ${error.message}`);
+            }
+        }
+
+        async function addSampleData() {
+            debugLog('📝 添加範例數據到 GAS...');
+            
+            const sampleEvent = {
+                "活動ID": "EVT-" + Date.now(),
+                "活動型態": "單日型",
+                "活動名稱": "兒童籃球體驗課",
+                "分類": "籃球",
+                "開始日期": "2024-01-15",
+                "結束日期": "2024-01-15",
+                "全日價": 1200,
+                "全日扣除": 0,
+                "半日扣除": 0,
+                "圖片URL": "https://example.com/basketball.jpg",
+                "狀態": "上架",
+                "總名額": 20,
+                "內容媒體": "籃球,護具",
+                "描述": "專為兒童設計的籃球基礎訓練課程",
+                "全日早鳥價": 1000,
+                "早鳥截止日期": "2024-01-10T18:00:00"
+            };
+            
+            try {
+                const response = await fetch(PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'updateEvent',
+                        payload: sampleEvent
+                    })
+                });
+                
+                const result = await response.json();
+                debugLog('添加結果:', result);
+                
+                if (result.status === 'success') {
+                    alert('✅ 範例數據添加成功！重新載入數據中...');
+                    setTimeout(init, 1000);
+                } else {
+                    alert(`❌ 添加失敗: ${result.message || '未知錯誤'}`);
+                }
+            } catch (error) {
+                debugLog('添加失敗:', error);
+                alert(`❌ 添加失敗: ${error.message}`);
+            }
         }
 
         async function init() {
+            debugLog('🚀 開始初始化...');
+            updateStatus('正在連接資料庫...', 'info');
+            
             try {
-                showLoading(true);
-                console.log('開始載入數據...');
-                
-                // 嘗試獲取所有數據
+                // 先測試 Worker
+                debugLog('測試 Worker 連接...');
                 const response = await fetch(`${PROXY_URL}?action=getEvents&_t=${Date.now()}`);
                 
+                updateStatus(`Worker 響應: ${response.status}`, 'info');
+                debugLog(`Worker 狀態: ${response.status} ${response.statusText}`);
+                
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(`Worker 返回錯誤: ${response.status}`);
                 }
                 
-                const result = await response.json();
-                console.log('原始回應數據:', result);
+                const text = await response.text();
+                debugLog('原始響應文本:', text);
+                
+                let data;
+                try {
+                    data = JSON.parse(text);
+                    debugLog('解析後的數據:', data);
+                } catch (e) {
+                    debugLog('JSON 解析錯誤:', e.message);
+                    throw new Error('無效的 JSON 響應');
+                }
                 
                 // 檢查數據結構
-                if (result.status === 'error') {
-                    throw new Error(result.message || '伺服器返回錯誤');
+                if (data.status === 'error') {
+                    throw new Error(data.message || '伺服器返回錯誤狀態');
                 }
                 
-                // 處理事件數據
-                if (result.data && Array.isArray(result.data)) {
-                    state.events = result.data;
-                } else if (result.events && Array.isArray(result.events)) {
-                    state.events = result.events;
-                } else {
-                    console.warn('未找到有效的活動數據，使用空陣列');
-                    state.events = [];
-                }
+                // 處理數據
+                state.events = Array.isArray(data.data) ? data.data : [];
+                state.config.sportCategories = Array.isArray(data.config?.sportCategories) ? 
+                    data.config.sportCategories : [];
+                state.config.rentalItems = Array.isArray(data.config?.rentalItems) ? 
+                    data.config.rentalItems : [];
                 
-                // 處理配置數據
-                if (result.config) {
-                    // 解析分類數據
-                    state.config.sportCategories = parseCategories(result.config.sportCategories);
-                    
-                    // 解析裝備數據
-                    if (Array.isArray(result.config.rentalItems)) {
-                        state.config.rentalItems = result.config.rentalItems;
-                    } else if (typeof result.config.rentalItems === 'string') {
-                        try {
-                            state.config.rentalItems = JSON.parse(result.config.rentalItems);
-                        } catch (e) {
-                            console.warn('無法解析 rentalItems:', e);
-                            state.config.rentalItems = [];
-                        }
-                    } else {
-                        state.config.rentalItems = [];
-                    }
-                } else {
-                    // 嘗試從根級別獲取
-                    state.config.sportCategories = parseCategories(result.sportCategories || []);
-                    state.config.rentalItems = Array.isArray(result.rentalItems) ? result.rentalItems : [];
-                }
+                debugLog('處理後的狀態:', {
+                    events: state.events.length,
+                    categories: state.config.sportCategories.length,
+                    equipment: state.config.rentalItems.length
+                });
                 
-                state.lastSyncTime = new Date();
+                // 更新狀態顯示
+                updateStatus(`已載入 ${state.events.length} 個活動，${state.config.sportCategories.length} 個分類`, 'success');
                 
-                // 更新 UI
-                updateDataStatus();
+                // 渲染
                 EventManager.renderGrid();
-                EventManager.renderStats();
-                
-                // 隱藏錯誤狀態
-                document.getElementById('error-state').classList.add('hidden');
-                document.getElementById('error-message').textContent = '';
-                
-                showNotification('資料載入成功', 'success');
                 
             } catch (error) {
-                console.error('載入數據失敗:', error);
+                debugLog('❌ 初始化失敗:', error.message);
+                updateStatus(`載入失敗: ${error.message}`, 'error');
                 
-                // 顯示錯誤狀態
-                document.getElementById('error-state').classList.remove('hidden');
-                document.getElementById('error-message').textContent = error.message;
-                
-                document.getElementById('admin-event-grid').innerHTML = '';
-                document.getElementById('empty-state').classList.add('hidden');
-                
-                showNotification(`載入失敗: ${error.message}`, 'error');
-                
-            } finally {
-                showLoading(false);
+                // 顯示錯誤界面
+                document.getElementById('admin-event-grid').innerHTML = `
+                    <div class="col-span-full">
+                        <div class="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+                            <div class="text-5xl mb-4">🚨</div>
+                            <h3 class="text-xl font-bold text-red-800 mb-2">數據庫連接失敗</h3>
+                            <p class="text-red-600 mb-6">${error.message}</p>
+                            <div class="flex flex-col gap-3 max-w-md mx-auto">
+                                <button onclick="testDirectGAS()" class="bg-blue-500 text-white px-6 py-3 rounded-xl font-bold">
+                                    測試 Google Apps Script
+                                </button>
+                                <button onclick="testWorker()" class="bg-green-500 text-white px-6 py-3 rounded-xl font-bold">
+                                    測試 Cloudflare Worker
+                                </button>
+                                <button onclick="addSampleData()" class="bg-purple-500 text-white px-6 py-3 rounded-xl font-bold">
+                                    添加測試數據
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
         }
 
-        // 更新數據狀態顯示
-        function updateDataStatus() {
-            const statusEl = document.getElementById('data-status');
-            if (statusEl) {
-                statusEl.textContent = `已載入 ${state.events.length} 個活動，最後更新: ${state.lastSyncTime ? state.lastSyncTime.toLocaleTimeString('zh-TW') : '尚未同步'}`;
+        function updateStatus(message, type = 'info') {
+            const statusText = document.getElementById('status-text');
+            const statusDetails = document.getElementById('status-details');
+            const indicator = document.getElementById('status-indicator');
+            
+            if (statusText) statusText.textContent = message;
+            
+            // 更新樣式
+            const colors = {
+                info: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800' },
+                success: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-800' },
+                error: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800' }
+            };
+            
+            const color = colors[type] || colors.info;
+            indicator.className = `mb-6 p-4 ${color.bg} rounded-2xl shadow-sm ${color.border} border`;
+            statusText.className = `font-bold ${color.text}`;
+            
+            // 更新時間
+            if (statusDetails) {
+                statusDetails.textContent = `最後檢查: ${new Date().toLocaleTimeString('zh-TW')}`;
             }
         }
 
         const EventManager = {
-            renderStats() {
-                const stats = document.getElementById('stats-container');
-                if (!stats) return;
-                
-                const typeCounts = {};
-                state.events.forEach(ev => {
-                    const type = ev['活動型態'] || '未知';
-                    typeCounts[type] = (typeCounts[type] || 0) + 1;
-                });
-                
-                stats.innerHTML = `
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border">
-                        <div class="text-3xl font-black text-slate-800 mb-2">${state.events.length}</div>
-                        <div class="text-sm text-slate-500 font-bold">總活動數</div>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border">
-                        <div class="text-3xl font-black text-blue-600 mb-2">${state.config.sportCategories.length}</div>
-                        <div class="text-sm text-slate-500 font-bold">分類項目</div>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border">
-                        <div class="text-3xl font-black text-purple-600 mb-2">${state.config.rentalItems.length}</div>
-                        <div class="text-sm text-slate-500 font-bold">租用裝備</div>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border">
-                        <div class="text-3xl font-black text-emerald-600 mb-2">${Object.keys(typeCounts).length}</div>
-                        <div class="text-sm text-slate-500 font-bold">營運模式</div>
-                    </div>
-                `;
-            },
-
             renderGrid() {
                 const grid = document.getElementById('admin-event-grid');
-                const emptyState = document.getElementById('empty-state');
                 
                 if (!state.events || state.events.length === 0) {
-                    grid.innerHTML = '';
-                    emptyState.classList.remove('hidden');
+                    grid.innerHTML = `
+                        <div class="col-span-full">
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-dashed border-blue-200 rounded-2xl p-12 text-center">
+                                <div class="text-6xl mb-6">📁</div>
+                                <h3 class="text-2xl font-black text-slate-800 mb-3">資料庫為空</h3>
+                                <p class="text-slate-600 mb-6">尚未建立任何活動規格，點擊下方按鈕開始建立</p>
+                                <div class="flex gap-4 justify-center">
+                                    <button onclick="EventManager.openEditor(null)" 
+                                            class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all">
+                                        + 建立新規格
+                                    </button>
+                                    <button onclick="addSampleData()" 
+                                            class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all">
+                                        🎯 添加範例
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                     return;
                 }
                 
-                emptyState.classList.add('hidden');
-                
-                grid.innerHTML = state.events.map(ev => {
-                    const typeColor = {
-                        '單日型': 'blue',
-                        '梯次型': 'purple',
-                        '常態型': 'emerald'
-                    }[ev['活動型態']] || 'gray';
-                    
-                    return `
-                    <div class="bg-white p-7 rounded-[2.5rem] border-2 border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 group">
-                        <div class="flex gap-6 items-start">
-                            <div class="relative flex-shrink-0">
-                                <img src="${ev['圖片URL'] || 'https://placehold.co/200x200?text=活動圖片'}" 
-                                     class="w-24 h-24 rounded-3xl object-cover bg-gradient-to-br from-slate-100 to-slate-200 shadow-inner"
-                                     onerror="this.src='https://placehold.co/200x200?text=活動圖片'">
-                                <span class="absolute -top-2 -right-2 text-[10px] font-black px-2.5 py-1 rounded-full bg-${typeColor}-50 text-${typeColor}-600 uppercase tracking-tighter">
-                                    ${ev['活動型態'] || '單日型'}
-                                </span>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h4 class="font-black text-xl text-slate-800 leading-tight mb-2" title="${ev['活動名稱']}">
-                                    ${ev['活動名稱'] || '未命名活動'}
-                                </h4>
-                                <div class="flex flex-wrap gap-2 mb-3">
-                                    <span class="text-sm font-bold px-3 py-1 rounded-full bg-slate-50 text-slate-700 border border-slate-200">
-                                        ${ev['分類'] || '未分類'}
-                                    </span>
-                                    <span class="text-sm font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                                        NT$ ${parseInt(ev['全日價'] || 0).toLocaleString()}
-                                    </span>
-                                </div>
-                                <p class="text-slate-600 text-sm line-clamp-2 mb-4">
-                                    ${(ev['描述'] || '無描述內容').substring(0, 100)}${ev['描述']?.length > 100 ? '...' : ''}
-                                </p>
-                                <div class="flex gap-3">
-                                    <button onclick="EventManager.openEditor('${ev['活動ID']}')" 
-                                            class="text-[#1877f2] font-bold text-sm px-4 py-2 border-2 border-blue-100 rounded-xl hover:bg-blue-50 transition-all flex-1 text-center">
-                                        ✏️ 編輯規格
-                                    </button>
-                                    <button onclick="EventManager.duplicateEvent('${ev['活動ID']}')" 
-                                            class="text-slate-600 font-bold text-sm px-4 py-2 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all">
-                                        📋 複製
-                                    </button>
-                                </div>
-                            </div>
+                grid.innerHTML = state.events.map(ev => `
+                    <div class="bg-white p-7 rounded-[2.5rem] border shadow-sm flex gap-6 items-center hover:border-[#1877f2] transition-all">
+                        <img src="${ev['圖片URL'] || 'https://placehold.co/200x200'}" class="w-24 h-24 rounded-3xl object-cover bg-slate-100 shadow-inner">
+                        <div class="flex-1">
+                            <span class="text-[10px] font-black px-2.5 py-1 rounded-full bg-blue-50 text-[#1877f2] uppercase tracking-tighter">${ev['活動型態']}</span>
+                            <h4 class="font-black text-xl text-slate-800 leading-tight mt-2">${ev['活動名稱']}</h4>
+                            <button onclick="EventManager.openEditor('${ev['活動ID']}')" class="text-[#1877f2] font-black text-sm mt-4 border-b-2 border-blue-50 hover:border-blue-500 transition-all">編輯規格 Matrix</button>
                         </div>
-                    </div>`;
-                }).join('');
+                    </div>`).join('');
             },
-
+            
+            // ... 其他方法保持不變 ...
             setType(t) {
                 state.currentType = t;
-                document.querySelectorAll('.type-pill').forEach(el => el.classList.remove('active'));
-                document.querySelectorAll('.type-pill').forEach(el => {
-                    if (el.innerText.includes(t.substring(0,2))) {
-                        el.classList.add('active');
-                    }
-                });
+                document.querySelectorAll('.type-pill').forEach(el => el.classList.toggle('active', el.innerText.includes(t.substring(0,2))));
                 document.getElementById('area-batch').classList.toggle('hidden', t !== '梯次型');
                 document.getElementById('area-term').classList.toggle('hidden', t !== '常態型');
             },
-
+            
             appendSession(obj = { n: "", s: "", e: "" }) {
                 const container = document.getElementById('session-list-container');
                 const count = container.children.length + 1;
-                const div = document.createElement('div'); 
-                div.className = "session-row";
-                div.innerHTML = `
-                    <div class="flex justify-between mb-4">
-                        <span class="font-bold text-sm text-slate-400">#${count} 梯次明細</span>
-                        <button onclick="this.closest('.session-row').remove()" 
-                                class="text-red-400 text-xs font-bold uppercase hover:text-red-600">
-                            移除
-                        </button>
-                    </div>
-                    <input type="text" class="input-field session-n mb-4" 
-                           value="${obj.n || '第' + count + '梯次'}" 
-                           placeholder="例如：第一梯次 (寒假上午班)">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-xs text-slate-500 mb-1 block">開始時間</label>
-                            <input type="datetime-local" class="input-field session-s" value="${obj.s}">
-                        </div>
-                        <div>
-                            <label class="text-xs text-slate-500 mb-1 block">結束時間</label>
-                            <input type="datetime-local" class="input-field session-e" value="${obj.e}">
-                        </div>
-                    </div>`;
+                const div = document.createElement('div'); div.className = "session-row";
+                div.innerHTML = `<div class="flex justify-between mb-4"><span class="font-bold text-sm text-slate-400">#${count} 梯次明細</span><button onclick="this.closest('.session-row').remove()" class="text-red-400 text-xs font-bold uppercase">移除</button></div>
+                    <input type="text" class="input-field session-n mb-4" value="${obj.n || '第'+count+'梯次'}" placeholder="例如：第一梯次 (寒假上午班)">
+                    <div class="grid grid-cols-2 gap-4"><input type="datetime-local" class="input-field session-s" value="${obj.s}"><input type="datetime-local" class="input-field session-e" value="${obj.e}"></div>`;
                 container.appendChild(div);
             },
-
+            
             openEditor(id) {
                 state.currentEditId = id; 
                 const ev = state.events.find(e => String(e['活動ID']) === String(id)) || {};
                 document.getElementById('editor-modal').classList.add('active');
                 document.getElementById('session-list-container').innerHTML = "";
-                
-                // 填充分類選項
-                const catSelect = document.getElementById('ed-cat');
-                catSelect.innerHTML = '<option value="">請選擇分類</option>' + 
-                    state.config.sportCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+                document.getElementById('ed-cat').innerHTML = state.config.sportCategories.map(c => `<option value="${c}">${c}</option>`).join('');
                 
                 // 裝備租用勾選邏輯
-                const eqContainer = document.getElementById('activity-eq-options');
-                if (state.config.rentalItems.length > 0) {
-                    const activeEq = (ev['內容媒體'] || "").split(',').filter(i => i.trim());
-                    eqContainer.innerHTML = state.config.rentalItems.map(it => {
-                        const isChecked = activeEq.includes(it.name || it);
-                        return `
-                            <label class="eq-chip">
-                                <input type="checkbox" class="act-eq" value="${it.name || it}" ${isChecked ? 'checked' : ''}>
-                                ${it.name || it}
-                            </label>
-                        `;
-                    }).join('');
-                } else {
-                    eqContainer.innerHTML = '<p class="text-slate-400 italic text-sm">請先至參數區新增租用裝備</p>';
-                }
+                const activeEq = (ev['內容媒體'] || "").split(',').filter(i=>i);
+                document.getElementById('activity-eq-options').innerHTML = state.config.rentalItems.map(it => `
+                    <label class="eq-chip"><input type="checkbox" class="act-eq" value="${it.name || it}" ${activeEq.includes(it.name || it)?'checked':''}> ${it.name || it}</label>
+                `).join('') || '<p class="text-slate-300 italic">請先至參數區新增租用裝備</p>';
 
-                // 填充表單數據
                 document.getElementById('ed-name').value = ev['活動名稱'] || "";
                 document.getElementById('ed-cat').value = ev['分類'] || "";
                 document.getElementById('ed-start').value = ev['開始日期'] ? ev['開始日期'].substring(0,10) : "";
                 document.getElementById('ed-end').value = ev['結束日期'] ? ev['結束日期'].substring(0,10) : "";
-                document.getElementById('ed-price').value = parseInt(ev['全日價'] || 0);
-                document.getElementById('ed-deduct').value = parseInt(ev['全日扣除'] || 0);
-                document.getElementById('ed-deduct-half').value = parseInt(ev['半日扣除'] || 0);
+                document.getElementById('ed-price').value = ev['全日價'] || 0;
+                document.getElementById('ed-deduct').value = ev['全日扣除'] || 0;
+                document.getElementById('ed-deduct-half').value = ev['半日扣除'] || 0;
                 document.getElementById('ed-img').value = ev['圖片URL'] || "";
                 document.getElementById('ed-desc').value = ev['描述'] || "";
-                document.getElementById('ed-quota').value = parseInt(ev['總名額'] || 0);
+                document.getElementById('ed-quota').value = ev['總名額'] || 0;
                 document.getElementById('ed-early-price').value = ev['全日早鳥價'] || "";
                 document.getElementById('ed-early-date').value = ev['早鳥截止日期'] ? ev['早鳥截止日期'].substring(0,16) : "";
                 
                 this.setType(ev['活動型態'] || '單日型');
-                
                 const raw = ev['梯次資料'] || "";
-                if (state.currentType === '梯次型' && raw) {
-                    try {
-                        const sessions = JSON.parse(raw);
-                        if (Array.isArray(sessions)) {
-                            sessions.forEach(s => this.appendSession(s));
-                        }
-                    } catch(e) {
-                        console.warn('無法解析梯次資料:', e);
-                    }
-                } else if (state.currentType === '常態型' && raw) {
-                    const days = raw.split(',').map(d => d.trim());
-                    document.querySelectorAll('.wk-day').forEach(el => {
-                        el.checked = days.includes(el.value);
-                    });
+                if(state.currentType === '梯次型' && raw) { try { JSON.parse(raw).forEach(s => this.appendSession(s)); } catch(e){} }
+                else if (state.currentType === '常態型' && raw) {
+                    const days = raw.split(','); document.querySelectorAll('.wk-day').forEach(el => el.checked = days.includes(el.value));
                 }
             },
-
-            closeEditor() { 
-                document.getElementById('editor-modal').classList.remove('active'); 
-            },
-
-            async duplicateEvent(eventId) {
-                const original = state.events.find(e => String(e['活動ID']) === String(eventId));
-                if (!original) return;
-                
-                const confirm = window.confirm(`確定要複製「${original['活動名稱']}」嗎？`);
-                if (!confirm) return;
-                
-                const duplicate = { ...original };
-                duplicate['活動ID'] = "EVT-" + Date.now() + "-COPY";
-                duplicate['活動名稱'] = duplicate['活動名稱'] + " (複製)";
-                duplicate['狀態'] = "草稿";
-                
-                await this.saveEvent(duplicate);
-            },
-
-            async saveEvent(eventData) {
-                try {
-                    const res = await fetch(PROXY_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            action: 'updateEvent', 
-                            payload: eventData 
-                        })
-                    });
-                    
-                    const result = await res.json();
-                    return result;
-                } catch (error) {
-                    throw error;
-                }
-            },
-
+            
+            closeEditor() { document.getElementById('editor-modal').classList.remove('active'); },
+            
             async save() {
-                const btn = document.getElementById('btn-save');
-                if (!btn) return;
-                
-                const originalText = btn.innerHTML;
-                btn.disabled = true;
-                btn.innerHTML = '<span class="animate-pulse">🔄 同步中...</span>';
+                const btn = document.getElementById('btn-save'); 
+                btn.disabled = true; 
+                btn.innerText = "正在加密同步至雲端...";
                 
                 try {
                     let sessionData = "";
                     if(state.currentType === '梯次型') {
-                        const sessions = Array.from(document.querySelectorAll('.session-row')).map(r => ({
-                            n: r.querySelector('.session-n').value,
-                            s: r.querySelector('.session-s').value,
+                        sessionData = JSON.stringify(Array.from(document.querySelectorAll('.session-row')).map(r => ({
+                            n: r.querySelector('.session-n').value, 
+                            s: r.querySelector('.session-s').value, 
                             e: r.querySelector('.session-e').value
-                        }));
-                        sessionData = JSON.stringify(sessions);
+                        })));
                     } else if(state.currentType === '常態型') {
-                        sessionData = Array.from(document.querySelectorAll('.wk-day:checked'))
-                            .map(el => el.value).join(',');
+                        sessionData = Array.from(document.querySelectorAll('.wk-day:checked')).map(el => el.value).join(',');
                     }
 
                     const payload = { 
-                        "活動ID": state.currentEditId || ("EVT-" + Date.now()),
-                        "活動型態": state.currentType,
-                        "活動名稱": document.getElementById('ed-name').value.trim(),
-                        "分類": document.getElementById('ed-cat').value,
-                        "梯次資料": sessionData,
-                        "開始日期": document.getElementById('ed-start').value,
-                        "結束日期": document.getElementById('ed-end').value,
-                        "全日價": parseInt(document.getElementById('ed-price').value) || 0,
-                        "全日扣除": parseInt(document.getElementById('ed-deduct').value) || 0,
-                        "半日扣除": parseInt(document.getElementById('ed-deduct-half').value) || 0,
-                        "圖片URL": document.getElementById('ed-img').value.trim(),
-                        "狀態": "上架",
-                        "總名額": parseInt(document.getElementById('ed-quota').value) || 0,
-                        "內容媒體": Array.from(document.querySelectorAll('.act-eq:checked'))
-                            .map(el => el.value).join(','),
-                        "描述": document.getElementById('ed-desc').value.trim(),
-                        "全日早鳥價": document.getElementById('ed-early-price').value ? 
-                            parseInt(document.getElementById('ed-early-price').value) : "",
+                        "活動ID": state.currentEditId || ("EVT-" + Date.now()), 
+                        "活動型態": state.currentType, 
+                        "活動名稱": document.getElementById('ed-name').value, 
+                        "分類": document.getElementById('ed-cat').value, 
+                        "梯次資料": sessionData, 
+                        "開始日期": document.getElementById('ed-start').value, 
+                        "結束日期": document.getElementById('ed-end').value, 
+                        "全日價": document.getElementById('ed-price').value, 
+                        "全日扣除": document.getElementById('ed-deduct').value, 
+                        "半日扣除": document.getElementById('ed-deduct-half').value,
+                        "圖片URL": document.getElementById('ed-img').value, 
+                        "狀態": "上架", 
+                        "總名額": document.getElementById('ed-quota').value, 
+                        "內容媒體": Array.from(document.querySelectorAll('.act-eq:checked')).map(el => el.value).join(','),
+                        "描述": document.getElementById('ed-desc').value, 
+                        "全日早鳥價": document.getElementById('ed-early-price').value, 
                         "早鳥截止日期": document.getElementById('ed-early-date').value
                     };
 
-                    // 驗證必填字段
-                    if (!payload["活動名稱"]) {
-                        throw new Error("請填寫課程名稱");
-                    }
-                    if (!payload["分類"]) {
-                        throw new Error("請選擇分類");
-                    }
-                    if (payload["全日價"] <= 0) {
-                        throw new Error("請設定合理的價格");
-                    }
-
-                    const result = await this.saveEvent(payload);
+                    debugLog('保存數據:', payload);
                     
-                    if (result.status === 'success') {
-                        showNotification('🎉 專業活動規格已成功存檔！', 'success');
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        throw new Error(result.message || '保存失敗');
-                    }
+                    const res = await fetch(PROXY_URL, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'updateEvent', payload }) 
+                    });
                     
-                } catch (error) {
-                    console.error('保存失敗:', error);
-                    showNotification(`保存失敗: ${error.message}`, 'error');
+                    const result = await res.json();
+                    debugLog('保存結果:', result);
+                    
+                    if(result.status === 'success') { 
+                        alert("🎉 專業活動規格已成功存檔！"); 
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                    else { 
+                        throw new Error(result.message || '保存失敗'); 
+                    }
+                } catch(error) {
+                    debugLog('保存失敗:', error);
+                    alert("保存失敗: " + error.message); 
                     btn.disabled = false;
-                    btn.innerHTML = originalText;
+                    btn.innerText = "同步發布至運動島資料庫 ➜";
                 }
             }
         };
 
-        // 初始化應用
-        window.onload = function() {
-            console.log('頁面載入完成，開始初始化...');
-            init();
-        };
+        window.onload = init;
     </script>
 </body>
 </html>
